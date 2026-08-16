@@ -1,6 +1,6 @@
 import pymupdf
 
-pdf_path = "data/raw/Introduction.to_.Algorithms.4th.Leiserson.Stein_.Rivest.Cormen.MIT_.Press.pdf"
+pdf_path = "PATH"
 output_path = "data/corpus_raw.txt"
 
 doc = pymupdf.open(pdf_path)
