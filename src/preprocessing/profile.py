@@ -4,7 +4,7 @@ import re
 import unicodedata
 
 
-CORPUS_PATH = Path("data/corpus_raw.txt")
+CORPUS_PATH = Path("data/corpus_clean.txt")
 
 
 def load_corpus(path):
