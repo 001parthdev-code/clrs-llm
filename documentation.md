@@ -61,3 +61,14 @@ Cleaned corpus:
 - Multiple-space runs: 0
 - Soft hyphens: 0
 - Form feeds: 0
+
+6. I decided to remove the front matter from the corpus.
+7. The front matter includes:
+   - title/publication information
+   - copyright information
+   - author/publisher metadata
+   - table of contents
+   - preface
+8. I removed these sections because they provide little useful training signal for an LLM whose target domain is algorithms.
+9. I kept chapter headings and chapter-level introductions because they provide useful semantic structure for the technical content.
+10. I will preserve the main chapters, algorithms, pseudocode, exercises, and references.
