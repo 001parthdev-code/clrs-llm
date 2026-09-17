@@ -1,0 +1,210 @@
+5.1 The hiring problem
+
+Suppose that you need to hire a new office assistant. Your previous
+attempts at hiring have been unsuccessful, and you decide to use an
+employment agency. The employment agency sends you one candidate
+each day. You interview that person and then decide either to hire that
+person or not. You must pay the employment agency a small fee to
+interview an applicant. To actually hire an applicant is more costly,
+however, since you must fire your current office assistant and also pay a
+substantial hiring fee to the employment agency. You are committed to
+having, at all times, the best possible person for the job. Therefore, you
+decide that, after interviewing each applicant, if that applicant is better
+qualified than the current office assistant, you will fire the current office
+assistant and hire the new applicant. You are willing to pay the resulting
+price of this strategy, but you wish to estimate what that price will be.
+
+The procedure HIRE-ASSISTANT on the facing page expresses this
+strategy for hiring in pseudocode. The candidates for the office assistant
+
+job are numbered 1 through n and interviewed in that order. The
+procedure assumes that after interviewing candidate i, you can
+determine whether candidate i is the best candidate you have seen so
+
+far. It starts by creating a dummy candidate, numbered 0, who is less
+qualified than each of the other candidates.
+
+The cost model for this problem differs from the model described in
+Chapter 2. We focus not on the running time of HIRE-ASSISTANT,
+but instead on the fees paid for interviewing and hiring. On the surface,
+analyzing the cost of this algorithm may seem very different from
+analyzing the running time of, say, merge sort. The analytical techniques
+used, however, are identical whether we are analyzing cost or running
+time. In either case, we are counting the number of times certain basic
+operations are executed.
+
+HIRE-ASSISTANT(n)
+
+1 best = 0 // candidate 0 is a least-qualified dummy candidate
+
+2 for i = 1 to n
+
+3 interview candidate i
+
+4 if candidate i is better than candidate best
+
+5 best = i
+
+6 hire candidate i
+
+Interviewing has a low cost, say ci, whereas hiring is expensive,
+costing ch. Letting m be the number of people hired, the total cost
+associated with this algorithm is O(cin + chm). No matter how many
+people you hire, you always interview n candidates and thus always
+incur the cost cin associated with interviewing. We therefore
+concentrate on analyzing chm, the hiring cost. This quantity depends on
+
+the order in which you interview candidates.
+
+This scenario serves as a model for a common computational
+
+paradigm. Algorithms often need to find the maximum or minimum
+
+value in a sequence by examining each element of the sequence and
+
+maintaining a current "winner." The hiring problem models how often a
+
+procedure updates its notion of which element is currently winning.
+
+Worst-case analysis
+
+In the worst case, you actually hire every candidate that you interview.
+This situation occurs if the candidates come in strictly increasing order
+
+of quality, in which case you hire n times, for a total hiring cost of
+O(chn).
+
+Of course, the candidates do not always come in increasing order of
+quality. In fact, you have no idea about the order in which they arrive,
+nor do you have any control over this order. Therefore, it is natural to
+ask what we expect to happen in a typical or average case.
+
+Probabilistic analysis
+
+Probabilistic analysis is the use of probability in the analysis of
+
+problems. Most commonly, we use probabilistic analysis to analyze the
+running time of an algorithm. Sometimes we use it to analyze other
+quantities, such as the hiring cost in procedure HIRE-ASSISTANT. In
+order to perform a probabilistic analysis, we must use knowledge of, or
+make assumptions about, the distribution of the inputs. Then we
+analyze our algorithm, computing an average-case running time, where
+we take the average, or expected value, over the distribution of the
+possible inputs. When reporting such a running time, we refer to it as
+
+the average-case running time.
+
+You must be careful in deciding on the distribution of inputs. For
+some problems, you may reasonably assume something about the set of
+all possible inputs, and then you can use probabilistic analysis as a
+technique for designing an efficient algorithm and as a means for
+gaining insight into a problem. For other problems, you cannot
+characterize a reasonable input distribution, and in these cases you
+cannot use probabilistic analysis.
+
+For the hiring problem, we can assume that the applicants come in a
+random order. What does that mean for this problem? We assume that
+you can compare any two candidates and decide which one is better
+qualified, which is to say that there is a total order on the candidates.
+(See Section B.2 for the definition of a total order.) Thus, you can rank
+
+each candidate with a unique number from 1 through n, using rank(i) to
+
+denote the rank of applicant i, and adopt the convention that a higher
+
+rank corresponds to a better qualified applicant. The ordered list
+
+rank(1), rank(2), ... , rank(n) is a permutation of the list 1, 2, ... , n.
+
+Saying that the applicants come in a random order is equivalent to
+
+saying that this list of ranks is equally likely to be any one of the n!
+permutations of the numbers 1 through n. Alternatively, we say that the
+ranks form a uniform random permutation, that is, each of the possible n!
+
+permutations appears with equal probability.
+Section 5.2 contains a probabilistic analysis of the hiring problem.
+
+Randomized algorithms
+
+In order to use probabilistic analysis, you need to know something
+about the distribution of the inputs. In many cases, you know little
+about the input distribution. Even if you do know something about the
+distribution, you might not be able to model this knowledge
+computationally. Yet, probability and randomness often serve as tools
+for algorithm design and analysis, by making part of the algorithm
+behave randomly.
+
+In the hiring problem, it may seem as if the candidates are being
+presented to you in a random order, but you have no way of knowing
+whether they really are. Thus, in order to develop a randomized
+algorithm for the hiring problem, you need greater control over the
+order in which you'll interview the candidates. We will, therefore,
+change the model slightly. The employment agency sends you a list of
+
+the n candidates in advance. On each day, you choose, randomly, which
+
+candidate to interview. Although you know nothing about the
+candidates (besides their names), we have made a significant change.
+Instead of accepting the order given to you by the employment agency
+and hoping that it's random, you have instead gained control of the
+process and enforced a random order.
+
+More generally, we call an algorithm randomized if its behavior is
+
+determined not only by its input but also by values produced by a
+
+random-number generator. We assume that we have at our disposal a
+random-number generator RANDOM. A call to RANDOM(a, b)
+returns an integer between a and b, inclusive, with each such integer
+
+being equally likely. For example, RANDOM(0, 1) produces 0 with
+probability 1/2, and it produces 1 with probability 1/2. A call to
+RANDOM(3, 7) returns any one of 3, 4, 5, 6, or 7, each with probability
+1/5. Each integer returned by RANDOM is independent of the integers
+
+returned on previous calls. You may imagine RANDOM as rolling a (b
+a + 1)-sided die to obtain its output. (In practice, most programming
+environments offer a pseudorandom-number generator: a deterministic
+
+algorithm returning numbers that "look" statistically random.)
+When analyzing the running time of a randomized algorithm, we
+
+take the expectation of the running time over the distribution of values
+returned by the random number generator. We distinguish these
+algorithms from those in which the input is random by referring to the
+
+running time of a randomized algorithm as an expected running time. In
+
+general, we discuss the average-case running time when the probability
+distribution is over the inputs to the algorithm, and we discuss the
+expected running time when the algorithm itself makes random choices.
+
+Exercises
+
+5.1-1
+
+Show that the assumption that you are always able to determine which
+candidate is best, in line 4 of procedure HIRE-ASSISTANT, implies
+that you know a total order on the ranks of the candidates.
+
+5.1-2
+Describe an implementation of the procedure RANDOM(a, b) that
+
+makes calls only to RANDOM(0, 1). What is the expected running time
+
+of your procedure, as a function of a and b?
+
+5.1-3
+
+You wish to implement a program that outputs 0 with probability 1/2
+and 1 with probability 1/2. At your disposal is a procedure BIASEDRANDOM that outputs either 0 or 1, but it outputs 1 with some
+
+probability p and 0 with probability 1 p, where 0 < p < 1. You do not
+know what p is. Give an algorithm that uses BIASED-RANDOM as a
+
+subroutine, and returns an unbiased answer, returning 0 with
+
+probability 1/2 and 1 with probability 1/2. What is the expected running
+
+time of your algorithm as a function of p?

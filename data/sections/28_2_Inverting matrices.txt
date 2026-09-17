@@ -1,0 +1,265 @@
+28.2 Inverting matrices
+
+Although you can use equation (28.3) to solve a system of linear
+equations by computing a matrix inverse, in practice you are better off
+using more numerically stable techniques, such as LUP decomposition.
+Sometimes, however, you really do need to compute a matrix inverse.
+This section shows how to use LUP decomposition to compute a matrix
+inverse. It also proves that matrix multiplication and computing the
+inverse of a matrix are equivalently hard problems, in that (subject to
+technical conditions) an algorithm for one can solve the other in the
+same asymptotic running time. Thus, you can use Strassen's algorithm
+(see Section 4.2) for matrix multiplication to invert a matrix. Indeed,
+Strassen's original paper was motivated by the idea that a set of a linear
+equations could be solved more quickly than by the usual method.
+
+Computing a matrix inverse from an LUP decomposition
+
+Suppose that you have an LUP decomposition of a matrix A in the form
+of three matrices L, U, and P such that PA = LU. Using LUP-SOLVE,
+you can solve an equation of the form Ax = b in (n2) time. Since the
+LUP decomposition depends on A but not b, you can run LUP-SOLVE
+on a second set of equations of the form Ax = b in (n2) additional
+time. In general, once you have the LUP decomposition of A, you can
+solve, in (kn2) time, k versions of the equation Ax = b that differ only
+in the vector b.
+
+Let's think of the equation
+
+which defines the matrix X, the inverse of A, as a set of n distinct
+equations of the form Ax = b. To be precise, let Xi denote the ith
+column of X, and recall that the unit vector ei is the ith column of In.
+
+You can then solve equation (28.11) for X by using the LUP
+decomposition for A to solve each equation
+
+AXi = ei
+separately for Xi. Once you have the LUP decomposition, you can
+compute each of the n columns Xi in (n2) time, and so you can
+compute X from the LUP decomposition of A in (n3) time. Since you
+find the LUP decomposition of A in (n3) time, you can compute the
+inverse A-1 of a matrix A in (n3) time.
+
+Matrix multiplication and matrix inversion
+
+Now let's see how the theoretical speedups obtained for matrix
+multiplication translate to speedups for matrix inversion. In fact, we'll
+prove something stronger: matrix inversion is equivalent to matrix
+
+multiplication, in the following sense. If M(n) denotes the time to
+multiply two n × n matrices, then a nonsingular n × n matrix can be
+inverted in O(M(n)) time. Moreover, if I(n) denotes the time to invert a
+nonsingular n × n matrix, then two n × n matrices can be multiplied in
+O(I(n)) time. We prove these results as two separate theorems.
+
+Theorem 28.1 (Multiplication is no harder than inversion)
+If an n × n matrix can be inverted in I(n) time, where I(n) = (n2) and
+I(n) satisfies the regularity condition I(3n) = O(I(n)), then two n × n
+matrices can be multiplied in O(I(n)) time.
+
+Proof Let A and B be n × n matrices. To compute their product C =
+AB, define the 3n × 3n matrix D by
+
+The inverse of D is
+
+and thus to compute the product AB, just take the upper right n × n
+submatrix of D-1.
+
+Constructing matrix D takes (n2) time, which is O(I(n)) from the
+assumption that I(n) = (n2), and inverting D takes O(I(3n)) = O(I(n))
+time, by the regularity condition on I(n). We thus have M(n) = O(I(n)).
+
+Note that I(n) satisfies the regularity condition whenever I(n) = (nc
+lgdn) for any constants c > 0 and d 0.
+
+The proof that matrix inversion is no harder than matrix
+multiplication relies on some properties of symmetric positive-definite
+matrices proved in Section 28.3.
+
+Theorem 28.2 (Inversion is no harder than multiplication)
+Suppose that two n × n real matrices can be multiplied in M(n) time,
+where M(n) = (n2) and M(n) satisfies the following two regularity
+
+conditions:
+
+1. M(n + k) = O(M(n)) for any k in the range 0 k < n, and
+2. M(n/2) cM(n) for some constant c < 1/2.
+
+Then the inverse of any real nonsingular n×n matrix can be computed in
+O(M(n)) time.
+
+Proof Let A be an n × n matrix with real-valued entries that is
+nonsingular. Assume that n is an exact power of 2 (i.e., n = 2l for some
+integer l); we'll see at the end of the proof what to do if n is not an exact
+
+power of 2.
+
+For the moment, assume that the n × n matrix A is symmetric and
+positive-definite. Partition each of A and its inverse A-1 into four n/2 ×
+n/2 submatrices:
+
+Then, if we let
+
+be the Schur complement of A with respect to B (we'll see more about
+
+this form of Schur complement in Section 28.3), we have
+
+since AA-1 = In, as you can verify by performing the matrix
+multiplication. Because A is symmetric and positive-definite, Lemmas
+28.4 and 28.5 in Section 28.3 imply that B and S are both symmetric
+
+and positive-definite. By Lemma 28.3 in Section 28.3, therefore, the
+
+inverses B-1 and S-1 exist, and by Exercise D.2-6 on page 1223, B-1
+and S-1 are symmetric, so that (B-1)T = B-1 and (S-1)T = S-1.
+
+Therefore, to compute the submatrices
+
+R = B-1 + B-1CTS-1CB-1,
+T = -B-1CTS-1,
+U = -S-1CB-1, and
+V = S-1
+
+of A-1, do the following, where all matrices mentioned are n/2 × n/2:
+
+1. Form the submatrices B, C, CT, and D of A.
+2. Recursively compute the inverse B-1 of B.
+3. Compute the matrix product W = CB-1, and then compute its
+
+transpose WT, which equals B-1CT (by Exercise D.1-2 on page
+1219 and (B-1)T = B-1).
+4. Compute the matrix product X = WCT, which equals CB-1CT,
+and then compute the matrix S = D - X = D - CB-1CT.
+5. Recursively compute the inverse S-1 of S.
+
+6. Compute the matrix product Y = S-1W, which equals
+S-1CB-1, and then compute its transpose YT, which equals
+B-1CTS-1 (by Exercise D.1-2, (B-1)T = B-1, and (S-1)T =
+S-1).
+
+7. Compute the matrix product Z = WTY, which equals
+B-1CTS-1CB-1.
+
+8. Set R = B-1 + Z.
+
+9. Set T = -YT.
+10. Set U = -Y.
+
+11. Set V = S-1.
+
+Thus, to invert an n×n symmetric positive-definite matrix, invert two
+n/2×n/2 matrices in steps 2 and 5; perform four multiplications of n/2 ×
+n/2 matrices in steps 3, 4, 6, and 7; plus incur an additional cost of
+O(n2) for extracting submatrices from A, inserting submatrices into
+A-1, and performing a constant number of additions, subtractions, and
+transposes on n/2 × n/2 matrices. The running time is given by the
+
+recurrence
+
+The second line follows from the assumption that M(n) = (n2) and
+
+from the second regularity condition in the statement of the theorem,
+
+which implies that 4M(n/2) < 2M(n). Because M(n) = (n2), case 3 of
+
+the master theorem (Theorem 4.1) applies to the recurrence (28.15),
+
+giving the O(M(n)) result.
+
+It remains to prove how to obtain the same asymptotic running time
+
+for matrix multiplication as for matrix inversion when A is invertible but
+
+not symmetric and positive-definite. The basic idea is that for any
+
+nonsingular matrix A, the matrix ATA is symmetric (by Exercise D.1-2)
+
+and positive-definite (by Theorem D.6 on page 1222). The trick, then, is
+
+to reduce the problem of inverting A to the problem of inverting ATA.
+The reduction is based on the observation that when A is an n × n
+
+nonsingular matrix, we have
+
+A-1 = (ATA)-1AT,
+
+since ((ATA)-1AT)A = (ATA)-1(ATA) = In and a matrix inverse is
+unique. Therefore, to compute A-1, first multiply AT by A to obtain
+ATA, then invert the symmetric positive-definite matrix ATA using the
+
+above divide-and-conquer algorithm, and finally multiply the result by
+
+AT. Each of these three steps takes O(M(n)) time, and thus any
+nonsingular matrix with real entries can be inverted in O(M(n)) time.
+
+The above proof assumed that A is an n × n matrix, where n is an
+exact power of 2. If n is not an exact power of 2, then let k < n be such
+that n + k is an exact power of 2, and define the (n + k) × (n + k) matrix
+A as
+
+Then the inverse of A is
+
+Apply the method of the proof to A to compute the inverse of A, and
+take the first n rows and n columns of the result as the desired answer
+A-1. The first regularity condition on M(n) ensures that enlarging the
+
+matrix in this way increases the running time by at most a constant
+factor.
+
+The proof of Theorem 28.2 suggests how to solve the equation Ax =
+b by using LU decomposition without pivoting, so long as A is
+nonsingular. Let y = ATb. Multiply both sides of the equation Ax = b
+by AT, yielding (ATA)x = ATb = y. This transformation doesn't affect
+
+the solution x, since AT is invertible. Because ATA is symmetric
+
+positive-definite, it can be factored by computing an LU decomposition.
+
+Then, use forward and back substitution to solve for x in the equation
+(ATA)x = y. Although this method is theoretically correct, in practice
+
+the procedure LUP-DECOMPOSITION works much better. LUP
+decomposition requires fewer arithmetic operations by a constant
+factor, and it has somewhat better numerical properties.
+
+Exercises
+
+28.2-1
+Let M(n) be the time to multiply two n × n matrices, and let S(n) denote
+the time required to square an n × n matrix. Show that multiplying and
+squaring matrices have essentially the same difficulty: an M(n)-time
+matrix-multiplication algorithm implies an O(M(n))-time squaring
+algorithm, and an S(n)-time squaring algorithm implies an O(S(n))-time
+
+matrix-multiplication algorithm.
+
+28.2-2
+Let M(n) be the time to multiply two n × n matrices. Show that an
+M(n)-time matrix-multiplication algorithm implies an O(M(n))-time
+
+LUP-decomposition algorithm. (The LUP decomposition your method
+produces need not be the same as the result produced by the LUPDECOMPOSITION procedure.)
+
+28.2-3
+Let M(n) be the time to multiply two n × n boolean matrices, and let
+T(n) be the time to find the transitive closure of an n × n boolean
+matrix. (See Section 23.2.) Show that an M(n)-time boolean matrixmultiplication algorithm implies an O(M(n) lg n)-time transitive-closure
+algorithm, and a T(n)-time transitive-closure algorithm implies an O(T
+(n))-time boolean matrix-multiplication algorithm.
+
+28.2-4
+
+Does the matrix-inversion algorithm based on Theorem 28.2 work when
+matrix elements are drawn from the field of integers modulo 2? Explain.
+
+28.2-5
+
+Generalize the matrix-inversion algorithm of Theorem 28.2 to handle
+matrices of complex numbers, and prove that your generalization works
+
+correctly. (Hint: Instead of the transpose of A, use the conjugate
+transpose A*, which you obtain from the transpose of A by replacing
+
+every entry with its complex conjugate. Instead of symmetric matrices,
+
+consider Hermitian matrices, which are matrices A such that A = A*.)

@@ -1,0 +1,542 @@
+15.4 Offline caching
+
+Computer systems can decrease the time to access data by storing a
+
+subset of the main memory in the cache: a small but faster memory. A
+cache organizes data into cache blocks typically comprising 32, 64, or
+
+128 bytes. You can also think of main memory as a cache for diskresident data in a virtual-memory system. Here, the blocks are called
+
+pages, and 4096 bytes is a typical size.
+
+As a computer program executes, it makes a sequence of memory
+
+requests. Say that there are n memory requests, to data in blocks b1, b2,
+... , bn, in that order. The blocks in the access sequence might not be
+
+distinct, and indeed, any given block is usually accessed multiple times.
+
+For example, a program that accesses four distinct blocks p, q, r, s might
+make a sequence of requests to blocks s, q, s, q, q, s, p, p, r, s, s, q, p, r, q.
+The cache can hold up to some fixed number k of cache blocks. It starts
+
+out empty before the first request. Each request causes at most one
+block to enter the cache and at most one block to be evicted from the
+
+cache. Upon a request for block bi, any one of three scenarios may
+
+occur:
+
+1. Block bi is already in the cache, due to a previous request for the
+
+same block. The cache remains unchanged. This situation is
+
+known as a cache hit.
+
+2. Block bi is not in the cache at that time, but the cache contains
+fewer than k blocks. In this case, block bi is placed into the
+
+cache, so that the cache contains one more block than it did
+before the request.
+
+3. Block bi is not in the cache at that time and the cache is full: it
+contains k blocks. Block bi is placed into the cache, but before
+
+that happens, some other block in the cache must be evicted
+from the cache in order to make room.
+
+The latter two situations, in which the requested block is not already
+
+in the cache, are called cache misses. The goal is to minimize the number
+
+of cache misses or, equivalently, to maximize the number of cache hits,
+
+over the entire sequence of n requests. A cache miss that occurs while
+the cache holds fewer than k blocks--that is, as the cache is first being
+filled up--is known as a compulsory miss, since no prior decision could
+
+have kept the requested block in the cache. When a cache miss occurs
+and the cache is full, ideally the choice of which block to evict should
+allow for the smallest possible number of cache misses over the entire
+sequence of future requests.
+
+Typically, caching is an online problem. That is, the computer has to
+decide which blocks to keep in the cache without knowing the future
+requests. Here, however, let's consider the offline version of this
+problem, in which the computer knows in advance the entire sequence
+
+of n requests and the cache size k, with a goal of minimizing the total
+
+number of cache misses.
+To solve this offline problem, you can use a greedy strategy called
+
+furthest-in-future, which chooses to evict the block in the cache whose
+
+next access in the request sequence comes furthest in the future.
+Intuitively, this strategy makes sense: if you're not going to need
+something for a while, why keep it around? We'll show that the furthestin-future strategy is indeed optimal by showing that the offline caching
+problem exhibits optimal substructure and that furthest-in-future has
+the greedy-choice property.
+
+Now, you might be thinking that since the computer usually doesn't
+know the sequence of requests in advance, there is no point in studying
+the offline problem. Actually, there is. In some situations, you do know
+the sequence of requests in advance. For example, if you view the main
+
+memory as the cache and the full set of data as residing on disk (or a
+solid-state drive), there are algorithms that plan out the entire set of
+reads and writes in advance. Furthermore, we can use the number of
+cache misses produced by an optimal algorithm as a baseline for
+comparing how well online algorithms perform. We'll do just that in
+Section 27.3.
+
+Offline caching can even model real-world problems. For example,
+
+consider a scenario where you know in advance a fixed schedule of n
+
+events at known locations. Events may occur at a location multiple
+
+times, not necessarily consecutively. You are managing a group of k
+
+agents, you need to ensure that you have one agent at each location
+when an event occurs, and you want to minimize the number of times
+that agents have to move. Here, the agents are like the blocks, the
+events are like the requests, and moving an agent is akin to a cache
+miss.
+
+Optimal substructure of offline caching
+
+To show that the offline problem exhibits optimal substructure, let's
+
+define the subproblem (C, i) as processing requests for blocks bi, bi+1,
+... , bn with cache configuration C at the time that the request for block
+bi occurs, that is, C is a subset of the set of blocks such that |C | k. A
+solution to subproblem (C, i) is a sequence of decisions that specifies
+which block to evict (if any) upon each request for blocks bi, bi+1, ... ,
+bn. An optimal solution to subproblem (C, i) minimizes the number of
+
+cache misses.
+
+Consider an optimal solution S to subproblem (C, i), and let C be
+the contents of the cache after processing the request for block bi in
+solution S. Let S be the subsolution of S for the resulting subproblem
+(C, i + 1). If the request for bi results in a cache hit, then the cache
+remains unchanged, so that C = C. If the request for block bi results in
+a cache miss, then the contents of the cache change, so that C C. We
+claim that in either case, S is an optimal solution to subproblem (C, i +
+1). Why? If S is not an optimal solution to subproblem (C, i + 1), then
+
+there exists another solution S to subproblem (C, i + 1) that makes
+fewer cache misses than S. Combining S with the decision of S at the
+request for block bi yields another solution that makes fewer cache
+misses than S, which contradicts the assumption that S is an optimal
+solution to subproblem (C, i).
+
+To quantify a recursive solution, we need a little more notation. Let
+
+RC,i be the set of all cache configurations that can immediately follow
+configuration C after processing a request for block bi. If the request
+results in a cache hit, then the cache remains unchanged, so that RC,i =
+{C }. If the request for bi results in a cache miss, then there are two
+possibilities. If the cache is not full (|C | < k), then the cache is filling up
+and the only choice is to insert bi into the cache, so that RC,i= {C
+{bi}}. If the cache is full (|C | = k) upon a cache miss, then RC,i
+contains k potential configurations: one for each candidate block in C
+that could be evicted and replaced by block bi. In this case, RC,i = {(C
+- {x}) {bi} : x C }. For example, if C = {p, q, r}, k = 3, and block s
+is requested, then RC,i = {{p, q, s},{p, r, s},{q, r, s}}.
+
+Let miss(C, i) denote the minimum number of cache misses in a
+solution for subproblem (C, i). Here is a recurrence for miss(C, i):
+
+Greedy-choice property
+
+To prove that the furthest-in-future strategy yields an optimal solution,
+we need to show that optimal offline caching exhibits the greedy-choice
+property. Combined with the optimal-substructure property, the
+greedy-choice property will prove that furthest-in-future produces the
+minimum possible number of cache misses.
+
+Theorem 15.5 (Optimal offline caching has the greedy-choice property)
+
+Consider a subproblem (C, i) when the cache C contains k blocks, so
+that it is full, and a cache miss occurs. When block bi is requested, let z
+= bm be the block in C whose next access is furthest in the future. (If
+
+some block in the cache will never again be referenced, then consider
+
+any such block to be block z, and add a dummy request for block z =
+bm = bn+1.) Then evicting block z upon a request for block bi is
+included in some optimal solution for the subproblem (C, i).
+
+Proof Let S be an optimal solution to subproblem (C, i). If S evicts
+block z upon the request for block bi, then we are done, since we have
+shown that some optimal solution includes evicting z.
+
+So now suppose that optimal solution S evicts some other block x
+when block bi is requested. We'll construct another solution S to
+subproblem (C, i) which, upon the request for bi, evicts block z instead
+of x and induces no more cache misses than S does, so that S is also
+
+optimal. Because different solutions may yield different cache
+
+configurations, denote by CS,j the configuration of the cache under
+solution S just before the request for some block bj, and likewise for
+solution S and CS,j. We'll show how to construct S with the following
+
+properties:
+
+1. For j = i + 1, ... , m, let Dj = CS,j CS,j. Then, |Dj | k - 1, so
+that the cache configurations CS,j and CS,j differ by at most
+one block. If they differ, then CS,j = Dj {z} and CS,j = Dj
+{y} for some block y z.
+
+2. For each request of blocks bi, ... , bm-1, if solution S has a
+cache hit, then solution S also has a cache hit.
+
+3. For all j > m, the cache configurations CS,j and CS,j are
+
+identical.
+
+4. Over the sequence of requests for blocks bi, ... , bm, the number
+of cache misses produced by solution S is at most the number of
+cache misses produced by solution S.
+
+We'll prove inductively that these properties hold for each request.
+
+1. We proceed by induction on j, for j = i +1, ... , m. For the base
+case, the initial caches CS,i and CS,i are identical. Upon the
+request for block bi, solution S evicts x and solution S evicts z.
+Thus, cache configurations CS,i+1 and CS,i+1 differ by just one
+block, CS,i+1 = Di+1 {z}, CS,i+1 = Di+1 {x}, and x z.
+
+The inductive step defines how solution S behaves upon a
+request for block bj for i + 1 j m - 1. The inductive
+hypothesis is that property 1 holds when bj is requested. Because
+z = bm is the block in CS,i whose next reference is furthest in the
+future, we know that bj z. We consider several scenarios:
+
+If CS,j = CS,j (so that |Dj | = k), then solution S makes
+the same decision upon the request for bj as S makes, so
+that CS,j+1 = CS,j+1.
+If |Dj| = k - 1 and bj Dj, then both caches already
+contain block bj, and both solutions S and S have cache
+hits. Therefore, CS,j+1 = CS,j and CS,j+1 = CS,j.
+If |Dj | = k - 1 and bj Dj, then because CS,j = Dj {z}
+and bj z, solution S has a cache miss. It evicts either
+block z or some block w Dj.
+
+If solution S evicts block z, then CS,j+1 = Dj {bj}.
+There are two cases, depending on whether bj = y:
+
+If bj = y, then solution S has a cache hit, so
+that CS,j+1 = CS,j = Dj {bj}. Thus, CS,j+1
+= CS,j +1.
+
+If bj y, then solution S has a cache miss. It
+evicts block y, so that CS,j+1 = Dj {bj },
+and again CS,j+1 = CS,j+1.
+
+If solution S evicts some block w Dj, then CS,j+1
+= (Dj - {w}) {bj, z}. Once again, there are two
+cases, depending on whether bj = y:
+
+If bj = y, then solution S has a cache hit, so
+that CS,j+1 = CS,j = Dj {bj}. Since w Dj
+and w was not evicted by solution S, we have
+w CS,j +1. Therefore, w Dj+1 and bj
+Dj+1, so that Dj+1 = (Dj - {w}) {bj }. Thus,
+CS,j+1 = Dj+1 {z},CS,j+1 = Dj +1 {w},
+and because w z, property 1 holds when
+block bj+1 is requested. (In other words, block
+w replaces block y in property 1.)
+
+If bj y, then solution S has a cache miss. It
+evicts block w, so that CS,j +1 = (Dj - {w})
+{bj, y}. Therefore, we have that Dj+1 = (Dj -
+{w}) {bj } and so CS,j+1 = Dj+1 {z} and
+CS,j+1 = Dj +1 {y}.
+
+2. In the above discussion about maintaining property 1, solution S
+may have a cache hit in only the first two cases, and solution S
+has a cache hit in these cases if and only if S does.
+
+3. If CS,m = CS,m, then solution S makes the same decision upon
+the request for block z = bm as S makes, so that CS,m+1 =
+CS,m+1. If CS,m CS,m, then by property 1, CS,m = Dm{z}
+and CS,m = Dm{y}, where y z. In this case, solution S has a
+cache hit, so that CS,m+1 = CS,m = Dm {z}. Solution S evicts
+block y and brings in block z, so that CS,m+1 = Dm {z} =
+CS,m+1. Thus, regardless of whether or not CS,m = CS,m, we
+have CS,m+1 = CS,m+1, and starting with the request for block
+bm+1, solution S simply makes the same decisions as S.
+
+4. By property 2, upon the requests for blocks bi, ... , bm-1,
+whenever solution S has a cache hit, so does S. Only the request
+for block bm = z remains to be considered. If S has a cache miss
+upon the request for bm, then regardless of whether S has a
+cache hit or a cache miss, we are done: S has at most the same
+number of cache misses as S.
+
+So now suppose that S has a cache hit and S has a cache miss
+upon the request for bm. We'll show that there exists a request
+for at least one of blocks bi+1, ... , bm-1 in which the request
+results in a cache miss for S and a cache hit for S, thereby
+compensating for what happens upon the request for block bm.
+
+The proof is by contradiction. Assume that no request for
+
+blocks bi+1, ... , bm-1 results in a cache miss for S and a cache
+hit for S.
+
+We start by observing that once the caches CS,j and CSj are
+equal for some j > i, they remain equal thereafter. Observe also
+that if bm CS,m and bm CS,m, then CS,m CS,m.
+Therefore, solution S cannot have evicted block z upon the
+requests for blocks bi, ... , bm-1, for if it had, then these two
+
+cache configurations would be equal. The remaining possibility is
+
+that upon each of these requests, we had CS,j = Dj {z}, CS,j =
+Dj {y} for some block y z, and solution S evicted some block
+w Dj. Moreover, since none of these requests resulted in a
+
+cache miss for S and a cache hit for S, the case of bj = y never
+occurred. That is, for every request of blocks bi+1, ... , bm-1,
+the requested block bj was never the block y CS,j - CS,j. In
+these cases, after processing the request, we had CS,j +1 = Dj
++1 {y}: the difference between the two caches did not change.
+Now, let's go back to the request for block bi, where afterward,
+we had CS,i+1 = Di+1 {x}. Because every succeeding request
+
+until requesting block bm did not change the difference between
+the caches, we had CS,j = Dj {x} for j = i + 1, ... , m.
+
+By definition, block z = bm is requested after block x. That
+means at least one of blocks bi+1, ... , bm-1 is block x. But for j
+= i + 1, ... , m, we have x CS,j and x CS,j, so that at least
+one of these requests had a cache hit for S and a cache miss for
+S, a contradiction. We conclude that if solution S has a cache hit
+and solution S has a cache miss upon the request for block bm,
+
+then some earlier request had the opposite result, and so
+
+solution S produces no more cache misses than solution S.
+Since S is assumed to be optimal, S is optimal as well.
+
+Along with the optimal-substructure property, Theorem 15.5 tells us
+that the furthest-in-future strategy yields the minimum number of
+cache misses.
+
+Exercises
+
+15.4-1
+
+Write pseudocode for a cache manager that uses the furthest-in-future
+
+strategy. It should take as input a set C of blocks in the cache, the
+number of blocks k that the cache can hold, a sequence b1, b2, ... , bn
+of requested blocks, and the index i into the sequence for the block bi
+
+being requested. For each request, it should print out whether a cache
+hit or cache miss occurs, and for each cache miss, it should also print
+out which block, if any, is evicted.
+
+15.4-2
+
+Real cache managers do not know the future requests, and so they
+
+often use the past to decide which block to evict. The least-recentlyused, or LRU, strategy evicts the block that, of all blocks currently in
+
+the cache, was the least recently requested. (You can think of LRU as
+"furthest-in-past.") Give an example of a request sequence in which the
+
+LRU strategy is not optimal, by showing that it induces more cache
+misses than the furthest-in-future strategy does on the same request
+sequence.
+
+15.4-3
+
+Professor Croesus suggests that in the proof of Theorem 15.5, the last
+
+clause in property 1 can change to CS,j = Dj {x} or, equivalently,
+require the block y given in property 1 to always be the block x evicted
+by solution S upon the request for block bi. Show where the proof
+
+breaks down with this requirement.
+
+15.4-4
+
+This section has assumed that at most one block is placed into the
+cache whenever a block is requested. You can imagine, however, a
+strategy in which multiple blocks may enter the cache upon a single
+request. Show that for every solution that allows multiple blocks to
+enter the cache upon each request, there is another solution that brings
+in only one block upon each request and is at least as good.
+
+Problems
+
+15-1 Coin changing
+Consider the problem of making change for n cents using the smallest
+
+number of coins. Assume that each coin's value is an integer.
+
+a. Describe a greedy algorithm to make change consisting of quarters,
+
+dimes, nickels, and pennies. Prove that your algorithm yields an
+optimal solution.
+
+b. Suppose that the available coins are in denominations that are powers
+of c: the denominations are c0, c1, ... , ck for some integers c > 1 and
+k 1. Show that the greedy algorithm always yields an optimal
+
+solution.
+
+c. Give a set of coin denominations for which the greedy algorithm does
+
+not yield an optimal solution. Your set should include a penny so that
+
+there is a solution for every value of n.
+
+d. Give an O(nk)-time algorithm that makes change for any set of k
+
+different coin denominations using the smallest number of coins,
+assuming that one of the coins is a penny.
+
+15-2 Scheduling to minimize average completion time
+You are given a set S = {a1, a2, ... , an} of tasks, where task ai requires
+pi units of processing time to complete. Let Ci be the completion time of
+task ai, that is, the time at which task ai completes processing. Your goal
+
+is to minimize the average completion time, that is, to minimize
+
+. For example, suppose that there are two tasks a1 and a2
+with p1 = 3 and p2 = 5, and consider the schedule in which a2 runs first,
+followed by a1. Then we have C2 = 5, C1 = 8, and the average
+completion time is (5 + 8)/2 = 6.5. If task a1 runs first, however, then we
+have C1 = 3, C2 = 8, and the average completion time is (3 + 8)/2 = 5.5.
+
+a. Give an algorithm that schedules the tasks so as to minimize the
+
+average completion time. Each task must run nonpreemptively, that is,
+
+once task ai starts, it must run continuously for pi units of time until it
+
+is done. Prove that your algorithm minimizes the average completion
+time, and analyze the running time of your algorithm.
+
+b. Suppose now that the tasks are not all available at once. That is, each
+task cannot start until its release time bi. Suppose also that tasks may
+be preempted, so that a task can be suspended and restarted at a later
+time. For example, a task ai with processing time pi = 6 and release
+time bi = 1 might start running at time 1 and be preempted at time 4.
+
+It might then resume at time 10 but be preempted at time 11, and it
+
+might finally resume at time 13 and complete at time 15. Task ai has
+
+run for a total of 6 time units, but its running time has been divided
+into three pieces. Give an algorithm that schedules the tasks so as to
+minimize the average completion time in this new scenario. Prove that
+
+your algorithm minimizes the average completion time, and analyze
+the running time of your algorithm.
+
+Chapter notes
+
+Much more material on greedy algorithms can be found in Lawler [276]
+and Papadimitriou and Steiglitz [353]. The greedy algorithm first
+appeared in the combinatorial optimization literature in a 1971 article
+by Edmonds [131].
+
+The proof of correctness of the greedy algorithm for the activityselection problem is based on that of Gavril [179].
+
+Huffman codes were invented in 1952 [233]. Lelewer and Hirschberg
+[294] surveys data-compression techniques known as of 1987.
+
+The furthest-in-future strategy was proposed by Belady [41], who
+suggested it for virtual-memory systems. Alternative proofs that
+furthest-in-future is optimal appear in articles by Lee et al. [284] and
+Van Roy [443].
+
+1 We sometimes refer to the sets Sk as subproblems rather than as just sets of activities. The
+context will make it clear whether we are referring to Sk as a set of activities or as a
+
+subproblem whose input is that set.
+
+2 Because the pseudocode takes s and f as arrays, it indexes into them with square brackets
+
+rather than with subscripts.
+
+16 Amortized Analysis
+
+Imagine that you join Buff 's Gym. Buff charges a membership fee of
+$60 per month, plus $3 for every time you use the gym. Because you are
+disciplined, you visit Buff 's Gym every day during the month of
+November. On top of the $60 monthly charge for November, you pay
+another 3 × $30 = $90 that month. Although you can think of your fees
+as a flat fee of $60 and another $90 in daily fees, you can think about it
+in another way. All together, you pay $150 over 30 days, or an average
+of $5 per day. When you look at your fees in this way, you are
+
+amortizing the monthly fee over the 30 days of the month, spreading it
+
+out at $2 per day.
+You can do the same thing when you analyze running times. In an
+
+amortized analysis, you average the time required to perform a sequence
+
+of data-structure operations over all the operations performed. With
+amortized analysis, you show that if you average over a sequence of
+operations, then the average cost of an operation is small, even though
+a single operation within the sequence might be expensive. Amortized
+analysis differs from average-case analysis in that probability is not
+
+involved. An amortized analysis guarantees the average performance of
+each operation in the worst case.
+
+The first three sections of this chapter cover the three most common
+techniques used in amortized analysis. Section 16.1 starts with
+
+aggregate analysis, in which you determine an upper bound T (n) on the
+total cost of a sequence of n operations. The average cost per operation
+
+is then T (n)/n. You take the average cost as the amortized cost of each
+
+operation, so that all operations have the same amortized cost.
+Section 16.2 covers the accounting method, in which you determine
+
+an amortized cost of each operation. When there is more than one type
+of operation, each type of operation may have a different amortized
+cost. The accounting method overcharges some operations early in the
+sequence, storing the overcharge as "prepaid credit" on specific objects
+in the data structure. Later in the sequence, the credit pays for
+operations that are charged less than they actually cost.
+
+Section 16.3 discusses the potential method, which is like the
+accounting method in that you determine the amortized cost of each
+operation and may overcharge operations early on to compensate for
+undercharges later. The potential method maintains the credit as the
+"potential energy" of the data structure as a whole instead of
+associating the credit with individual objects within the data structure.
+
+We'll use use two examples in this chapter to examine each of these
+three methods. One is a stack with the additional operation
+MULTIPOP, which pops several objects at once. The other is a binary
+counter that counts up from 0 by means of the single operation
+INCREMENT.
+
+While reading this chapter, bear in mind that the charges assigned
+during an amortized analysis are for analysis purposes only. They need
+not--and should not--appear in the code. If, for example, you assign a
+
+credit to an object x when using the accounting method, you have no
+
+need to assign an appropriate amount to some attribute, such as
+
+x.credit, in the code.
+
+When you perform an amortized analysis, you often gain insight into
+a particular data structure, and this insight can help you optimize the
+design. For example, Section 16.4 will use the potential method to
+analyze a dynamically expanding and contracting table.

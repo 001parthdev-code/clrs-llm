@@ -1,0 +1,301 @@
+10.1 Simple array-based data structures: arrays, matrices,
+stacks, queues
+
+10.1.1 Arrays
+We assume that, as in most programming languages, an array is stored
+as a contiguous sequence of bytes in memory. If the first element of an
+
+array has index s (for example, in an array with 1-origin indexing, s = 1),
+the array starts at memory address a, and each array element occupies
+b bytes, then the ith element occupies bytes a + b(i s) through a + b(i
+s + 1) 1. Since most of the arrays in this book are indexed starting at
+1, and a few starting at 0, we can simplify these formulas a little. When s
+= 1, the ith element occupies bytes a + b(i 1) through a + bi 1, and
+when s = 0, the ith element occupies bytes a + bi through a + b(i + 1)
+
+1. Assuming that the computer can access all memory locations in the
+same amount of time (as in the RAM model described in Section 2.2), it
+takes constant time to access any array element, regardless of the index.
+
+Most programming languages require each element of a particular
+array to be the same size. If the elements of a given array might occupy
+
+different numbers of bytes, then the above formulas fail to apply, since
+
+the element size b is not a constant. In such cases, the array elements
+
+are usually objects of varying sizes, and what actually appears in each
+array element is a pointer to the object. The number of bytes occupied
+by a pointer is typically the same, no matter what the pointer
+references, so that to access an object in an array, the above formulas
+give the address of the pointer to the object and then the pointer must
+be followed to access the object itself.
+
+Figure 10.1 Four ways to store the 2 × 3 matrix M from equation (10.1). (a) In row-major
+
+order, in a single array. (b) In column-major order, in a single array. (c) In row-major order,
+with one array per row (tan) and a single array (blue) of pointers to the row arrays. (d) In
+column-major order, with one array per column (tan) and a single array (blue) of pointers to
+the column arrays.
+
+10.1.2 Matrices
+We typically represent a matrix or two-dimensional array by one or
+more one-dimensional arrays. The two most common ways to store a
+
+matrix are row-major and column-major order. Let's consider an m × n
+matrix--a matrix with m rows and n columns. In row-major order, the
+matrix is stored row by row, and in column-major order, the matrix is
+
+stored column by column. For example, consider the 2 × 3 matrix
+
+Row-major order stores the two rows 1 2 3 and 4 5 6, whereas columnmajor order stores the three columns 1 4; 2 5; and 3 6.
+
+Parts (a) and (b) of Figure 10.1 show how to store this matrix using
+a single one-dimensional array. It's stored in row-major order in part (a)
+and in column-major order in part (b). If the rows, columns, and the
+
+single array all are indexed starting at s, then M [i, j]--the element in
+
+row i and column j--is at array index s + (n(i s)) + (j s) with rowmajor order and s + (m(j s)) + (i s) with column-major order. When
+s = 1, the single-array indices are n(i 1) + j with row-major order and i
++ m(j 1) with column-major order. When s = 0, the single-array
+indices are simpler: ni + j with row-major order and i + mj with columnmajor order. For the example matrix M with 1-origin indexing, element
+M [2, 1] is stored at index 3(2 1) + 1 = 4 in the single array using row-
+
+major order and at index 2 + 2(1 1) = 2 using column-major order.
+Parts (c) and (d) of Figure 10.1 show multiple-array strategies for
+
+storing the example matrix. In part (c), each row is stored in its own
+
+array of length n, shown in tan. Another array, with m elements, shown
+in blue, points to the m row arrays. If we call the blue array A, then A[i]
+points to the array storing the entries for row i of M, and array element
+A[i] [j] stores matrix element M [i, j]. Part (d) shows the column-major
+version of the multiple-array representation, with n arrays, each of
+length m, representing the n columns. Matrix element M [i, j] is stored in
+array element A[j] [i].
+
+Single-array representations are typically more efficient on modern
+machines than multiple-array representations. But multiple-array
+representations can sometimes be more flexible, for example, allowing
+for "ragged arrays," in which the rows in the row-major version may
+have different lengths, or symmetrically for the column-major version,
+where columns may have different lengths.
+
+Occasionally, other schemes are used to store matrices. In the block
+representation, the matrix is divided into blocks, and each block is
+
+stored contiguously. For example, a 4 × 4 matrix that is divided into 2 ×
+2 blocks, such as
+
+might be stored in a single array in the order 1, 2, 5, 6, 3, 4, 7, 8, 9, 10,
+13, 14, 11, 12, 15, 16.
+
+10.1.3 Stacks and queues
+
+Stacks and queues are dynamic sets in which the element removed from
+
+the set by the DELETE operation is prespecified. In a stack, the
+
+element deleted from the set is the one most recently inserted: the stack
+
+implements a last-in, first-out, or LIFO, policy. Similarly, in a queue, the
+
+element deleted is always the one that has been in the set for the longest
+
+time: the queue implements a first-in, first-out, or FIFO, policy. There
+
+are several efficient ways to implement stacks and queues on a
+computer. Here, you will see how to use an array with attributes to store
+them.
+
+Stacks
+
+The INSERT operation on a stack is often called PUSH, and the
+DELETE operation, which does not take an element argument, is often
+called POP. These names are allusions to physical stacks, such as the
+spring-loaded stacks of plates used in cafeterias. The order in which
+plates are popped from the stack is the reverse of the order in which
+they were pushed onto the stack, since only the top plate is accessible.
+
+Figure 10.2 shows how to implement a stack of at most n elements
+with an array S[1 : n]. The stack has attributes S.top, indexing the most
+recently inserted element, and S.size, equaling the size n of the array.
+The stack consists of elements S[1 : S.top], where S[1] is the element at
+the bottom of the stack and S[S.top] is the element at the top.
+
+Figure 10.2 An array implementation of a stack S. Stack elements appear only in the tan
+positions. (a) Stack S has 4 elements. The top element is 9. (b) Stack S after the calls PUSH(S,
+17) and PUSH(S, 3). (c) Stack S after the call POP(S) has returned the element 3, which is the
+
+one most recently pushed. Although element 3 still appears in the array, it is no longer in the
+stack. The top is element 17.
+
+When S.top = 0, the stack contains no elements and is empty. We
+
+can test whether the stack is empty with the query operation STACK-
+
+EMPTY. Upon an attempt to pop an empty stack, the stack underflows,
+which is normally an error. If S.top exceeds S.size, the stack overflows.
+
+The procedures STACK-EMPTY, PUSH, and POP implement each
+of the stack operations with just a few lines of code. Figure 10.2 shows
+the effects of the modifying operations PUSH and POP. Each of the
+
+three stack operations takes O(1) time.
+
+STACK-EMPTY(S)
+
+1 if S.top == 0
+
+2 return TRUE
+3 else return FALSE
+
+PUSH(S, x)
+
+1 if S.top == S.size
+
+2 error "overflow"
+
+3 else S.top = S.top + 1
+4 S[S.top] = x
+
+POP(S)
+
+1 if STACK-EMPTY(S)
+
+2 error "underflow"
+
+3 else S.top = S.top 1
+4 return S[S.top + 1]
+
+Figure 10.3 A queue implemented using an array Q[1 : 12]. Queue elements appear only in the
+tan positions. (a) The queue has 5 elements, in locations Q[7 : 11]. (b) The configuration of the
+queue after the calls ENQUEUE(Q, 17), ENQUEUE(Q, 3), and ENQUEUE(Q, 5). (c) The
+configuration of the queue after the call DEQUEUE(Q) returns the key value 15 formerly at
+
+the head of the queue. The new head has key 6.
+
+Queues
+
+We call the INSERT operation on a queue ENQUEUE, and we call the
+DELETE operation DEQUEUE. Like the stack operation POP,
+DEQUEUE takes no element argument. The FIFO property of a queue
+causes it to operate like a line of customers waiting for service. The
+
+queue has a head and a tail. When an element is enqueued, it takes its
+
+place at the tail of the queue, just as a newly arriving customer takes a
+place at the end of the line. The element dequeued is always the one at
+the head of the queue, like the customer at the head of the line, who has
+waited the longest.
+
+Figure 10.3 shows one way to implement a queue of at most n 1
+elements using an array Q[1 : n], with the attribute Q.size equaling the
+size n of the array. The queue has an attribute Q.head that indexes, or
+points to, its head. The attribute Q.tail indexes the next location at
+
+which a newly arriving element will be inserted into the queue. The
+
+elements in the queue reside in locations Q.head, Q.head + 1, ... , Q.tail
+
+1, where we "wrap around" in the sense that location 1 immediately
+
+follows location n in a circular order. When Q.head = Q.tail, the queue is
+empty. Initially, we have Q.head = Q.tail = 1. An attempt to dequeue an
+
+element from an empty queue causes the queue to underflow. When
+
+Q.head = Q.tail + 1 or both Q.head = 1 and Q.tail = Q.size, the queue is
+
+full, and an attempt to enqueue an element causes the queue to
+overflow.
+
+In the procedures ENQUEUE and DEQUEUE, we have omitted the
+error checking for underflow and overflow. (Exercise 10.1-5 asks you to
+supply these checks.) Figure 10.3 shows the effects of the ENQUEUE
+
+and DEQUEUE operations. Each operation takes O(1) time.
+
+ENQUEUE(Q, x)
+
+1 Q[Q.tail] = x
+2 if Q.tail == Q.size
+3 Q.tail = 1
+4 else Q.tail = Q.tail + 1
+
+DEQUEUE(Q)
+
+1 x = Q[Q.head]
+2 if Q.head == Q.size
+3 Q.head = 1
+4 else Q.head = Q.head + 1
+5 return x
+
+Exercises
+
+10.1-1
+Consider an m × n matrix in row-major order, where both m and n are
+
+powers of 2 and rows and columns are indexed from 0. We can
+
+represent a row index i in binary by the lg m bits ilg m 1, ilg m 2, ... ,
+i0 and a column index j in binary by the lg n bits jlg n 1, jlg n 2, ... ,
+j0. Suppose that this matrix is a 2 × 2 block matrix, where each block
+
+has m/2 rows and n/2 columns, and it is to be represented by a single
+
+array with 0-origin indexing. Show how to construct the binary
+
+representation of the (lg m + lg n)-bit index into the single array from
+the binary representations of i and j.
+
+10.1-2
+
+Using Figure 10.2 as a model, illustrate the result of each operation in
+
+the sequence PUSH(S, 4), PUSH(S, 1), PUSH(S, 3), POP(S), PUSH(S,
+8), and POP(S) on an initially empty stack S stored in array S[1 : 6]
+
+10.1-3
+Explain how to implement two stacks in one array A[1 : n] in such a way
+
+that neither stack overflows unless the total number of elements in both
+
+stacks together is n. The PUSH and POP operations should run in O(1)
+
+time.
+
+10.1-4
+
+Using Figure 10.3 as a model, illustrate the result of each operation in
+
+the sequence ENQUEUE(Q, 4), ENQUEUE(Q, 1), ENQUEUE(Q, 3),
+DEQUEUE(Q), ENQUEUE(Q, 8), and DEQUEUE(Q) on an initially
+empty queue Q stored in array Q[1 : 6].
+
+10.1-5
+
+Rewrite ENQUEUE and DEQUEUE to detect underflow and overflow
+of a queue.
+
+10.1-6
+
+Whereas a stack allows insertion and deletion of elements at only one
+end, and a queue allows insertion at one end and deletion at the other
+
+end, a deque (double-ended queue, pronounced like "deck") allows
+insertion and deletion at both ends. Write four O(1)-time procedures to
+
+insert elements into and delete elements from both ends of a deque
+implemented by an array.
+
+10.1-7
+
+Show how to implement a queue using two stacks. Analyze the running
+time of the queue operations.
+
+10.1-8
+
+Show how to implement a stack using two queues. Analyze the running
+time of the stack operations.

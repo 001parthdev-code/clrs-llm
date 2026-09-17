@@ -1,0 +1,1279 @@
+33.3 Gradient descent
+
+Suppose that you have a set {p1, p2, ..., pn} of points and you want to
+
+find the line that best fits these points. For any line , there is a distance
+
+di between each point pi and the line. You want to find the line that
+minimizes some function f(d1, ..., dn). There are many possible choices
+for the definition of distance and for the function f. For example, the
+
+distance can be the projection distance to the line and the function can
+be the sum of the squares of the distances. This type of problem is
+common in data science and machine learning--the line is the
+hypothesis that best describes the data--where the particular definition
+
+of best is determined by the definition of distance and the objective f. If
+the definition of distance and the function f are linear, then we have a
+
+linear-programming problem, as discussed in Chapter 29. Although the
+
+linear-programming framework captures several important problems,
+many other problems, including various machine-learning problems,
+have objectives and constraints that are not necessarily linear. We need
+frameworks and algorithms to solve such problems.
+
+In this section, we consider the problem of optimizing a continuous
+function and discuss one of the most popular methods to do so:
+gradient descent. Gradient descent is a general method for finding a
+
+local minimum of a function f : n , where informally, a local
+minimum of a function f is a point x for which f(x) f(x) for all x that
+
+are "near" x. When the function is convex, it can find a point near the
+
+global minimizer of f: an n-vector argument x = (x1, x2, ..., xn) such
+that f(x) is minimum. For the intuitive idea behind gradient descent,
+
+imagine being in a landscape of hills and valleys, and wanting to get to a
+low point as quickly as possible. You survey the terrain and choose to
+move in the direction that takes you downhill the fastest from your
+current position. You move in that direction, but only for a short while,
+because as you proceed, the terrain changes and you might need to
+choose a different direction. So you stop, reevaluate the possible
+directions and move another short distance in the steepest downhill
+direction, which might differ from the direction of your previous
+movement. You continue this process until you reach a point from
+which all directions lead up. Such a point is a local minimum.
+
+In order to make this informal procedure more formal, we need to
+define the gradient of a function, which in the analogy above is a
+
+measure of the steepness of the various directions. Given a function f :
+n , its gradient f is a function f : n n comprising n partial
+
+derivatives: . Analogous to the derivative of a
+
+function of a single variable, the gradient can be viewed as a direction in
+
+which the function value locally increases the fastest, and the rate of
+
+that increase. This view is informal; in order to make it formal we would
+
+have to define what local means and place certain conditions, such as
+
+continuity or existence of derivatives, on the function. Nevertheless, this
+
+view motivates the key step of gradient descent--move in the direction
+
+opposite to the gradient, by a distance influenced by the magnitude of
+the gradient.
+
+The general procedure of gradient descent proceeds in steps. You
+
+start at some initial point x(0), which is an n-vector. At each step t, you
+compute the value of the gradient of f at point x(t), that is, (f)(x(t)),
+which is also an n-vector. You then move in the direction opposite to
+the gradient in each dimension at x(t) to arrive at the next point x(t+1),
+which again is an n-vector. Because you moved in a monotonically
+decreasing direction in each dimension, you should have that f(x(t+1))
+f(x(t)). Several details are needed to turn this idea into an actual
+
+algorithm. The two main details are that you need an initial point and
+that you need to decide how far to move in the direction of the negative
+gradient. You also need to understand when to stop and what you can
+conclude about the quality of the solution found. We will explore these
+issues further in this section, for both constrained minimization, where
+there are additional constraints on the points, and unconstrained
+minimization, where there are none.
+
+Unconstrained gradient descent
+
+In order to gain intuition, let's consider unconstrained gradient descent
+
+in just one dimension, that is, when f is a function of a scalar x, so that f
+: . In this case, the gradient f of f is just f(x), the derivative of f
+with respect to x. Consider the function f shown in blue in Figure 33.3,
+with minimizer x* and starting point x(0). The gradient (derivative) f
+(x(0)), shown in orange, has a negative slope, so that a small step from
+x(0) in the direction of increasing x results in a point x for which f(x) <
+f(x(0)). Too large a step, however, results in a
+
+Figure 33.3 A function f : , shown in blue. Its gradient at point x(0), in orange, has a
+negative slope, and so a small increase in x from x(0) to x results in f(x) < f(x(0)). Small
+increases in x from x(0) head toward , which gives a local minimum. Too large an increase in
+x can end up at x, where f(x) > f(x(0)). Small steps starting from x(0) and going only in the
+direction of decreasing values of f cannot end up at the global minimizer x*.
+
+point x for which f(x) > f(x(0)), so this is a bad idea. Restricting
+ourselves to small steps, where each one has f(x) < f(x), eventually
+
+results in getting close to point , which gives a local minimum. By
+taking only small downhill steps, however, gradient descent has no
+
+chance to get to the global minimizer x*, given the starting point x(0).
+
+We draw two observations from this simple example. First, gradient
+descent converges toward a local minimum, and not necessarily a global
+minimum. Second, the speed at which it converges and how it behaves
+are related to properties of the function, to the initial point, and to the
+step size of the algorithm.
+
+The procedure GRADIENT-DESCENT on the facing page takes as
+
+input a function f, an initial point x(0) n, a fixed step-size multiplier
+> 0, and a number T > 0 of steps to take. Each iteration of the for
+loop of lines 24 performs a step by computing the n-dimensional
+gradient at point x(t) and then moving distance in the opposite
+direction in the n-dimensional space. The complexity of computing the
+gradient depends on the function f and can sometimes be expensive.
+
+Line 3 sums the points visited. After the loop terminates, line 6 returns
+
+x-avg, the average of all the points visited except for the last one, x(T).
+It might seem more natural to return x(T), and in fact, in many
+circumstances, you might prefer to have the function return x(T). For
+
+the version we will analyze, however, we use x-avg.
+
+GRADIENT-DESCENT(f, x(0), , T)
+
+1 sum = 0 // n-dimensional vector, initially all 0
+
+2 for t = 0 to T 1
+
+3 sum = sum + x(t) // add each of n dimensions into sum
+
+4 x(t+1) = x(t) · (f)(x(t)) // (f)(x(t)), x(t+1) are n-
+
+5 x-avg = sum/T dimensional
+
+// divide each of n dimensions by T
+
+6 return x-avg
+
+Figure 33.4 depicts how gradient descent ideally runs on a convex 1dimensional function.1 We'll define convexity more formally below, but
+the figure shows that each iteration moves in the direction opposite to
+the gradient, with the distance moved being proportional to the
+magnitude of the gradient. As the iterations proceed, the magnitude of
+the gradient decreases, and thus the distance moved along the
+horizontal axis decreases. After each iteration, the distance to the
+optimal point x* decreases. This ideal behavior is not guaranteed to
+occur in general, but the analysis in the remainder of this section
+formalizes when this behavior occurs and quantifies the number of
+iterations needed. Gradient descent does not always work, however. We
+have already seen that if the function is not convex, gradient descent
+can converge to a local, rather than global, minimum. We have also seen
+that if the step size is too large, GRADIENT-DESCENT can overshoot
+the minimum and wind up farther away. (It is also possible to overshoot
+the minimum and wind up closer to the optimum.)
+
+Analysis of unconstrained gradient descent for convex functions
+
+Our analysis of gradient descent focuses on convex functions.
+Inequality (C.29) on page 1194 defines a convex function of one
+variable, as shown in Figure 33.5. We can extend that definition to a
+
+function f : n and say that f is convex if for all x, y n and for
+
+all 0 1, we have
+
+(Inequalities (33.18) and (C.29) are the same, except for the dimensions
+of x and y.) We also assume that our convex functions are closed2 and
+differentiable.
+
+Figure 33.4 An example of running gradient descent on a convex function f : , shown in
+
+blue. Beginning at point x(0), each iteration moves in the direction opposite to the gradient,
+and the distance moved is proportional to the magnitude of the gradient. Orange lines
+represent the negative of the gradient at each point, scaled by the step size . As the iterations
+proceed, the magnitude of the gradient decreases, and the distance moved decreases
+correspondingly. After each iteration, the distance to the optimal point x* decreases.
+
+Figure 33.5 A convex function f : , shown in blue, with local and global minimizer x*.
+Because f is convex, f(x + (1 )y) f(x) + (1 )f(y) for any two values x and y and all 0
+
+1, shown for a particular value of . Here, the orange line segment represents all values
+
+f(x) + (1 )f(y) for 0 1, and it is above the blue line.
+
+A convex function has the property that any local minimum is also a
+global minimum. To verify this property, consider inequality (33.18),
+and suppose for the purpose of contradiction that x is a local minimum
+
+but not a global minimum and y x is a global minimum, so f(y) < f(x).
+
+Then we have
+
+f(x + (1 )y) f(x) + (1 )f(y) (by inequality (33.18))
+< f(x) + (1 )f(x)
+= f(x).
+
+Thus, letting approach 1, we see that there is another point near x, say
+
+x, such that f(x) < f(x), so x is not a local minimum.
+
+Convex functions have several useful properties. The first property,
+whose proof we leave as Exercise 33.3-1, says that a convex function
+always lies above its tangent hyperplane. In the context of gradient
+descent, angle brackets denote the notation for inner product defined
+on page 1219 rather than denoting a sequence.
+
+Lemma 33.6
+For any convex differentiable function f : n and for all x, y n,
+we have f(x) f(y) + (f)(x), x y.
+
+The second property, which Exercise 33.3-2 asks you to prove, is a
+repeated application of the definition of convexity in inequality (33.18).
+
+Lemma 33.7
+For any convex function f : n , for any integer T 1, and for all
+x(0), ..., x(T1) n, we have
+
+The left-hand side of inequality (33.19) is the value of f at the vector
+
+x-avg that GRADIENT-DESCENT returns.
+We now proceed to analyze GRADIENT-DESCENT. It might not
+
+return the exact global minimizer x*. We use an error bound , and we
+
+want to choose T so that f(x-avg) f(x*) at termination. The value
+of depends on the number T of iterations and two additional values.
+
+First, since you expect it to be better to start close to the global
+minimizer, is a function of
+
+the euclidean norm (or distance, defined on page 1219) of the difference
+between x(0) and x*. The error bound is also a function of a quantity
+
+we call L, which is an upper bound on the magnitude (f)(x) of the
+
+gradient, so that
+
+where x ranges over all the points x(0), ..., x(T1) whose gradients are
+
+computed by GRADIENT-DESCENT. Of course, we don't know the
+
+values of L and R, but for now let's assume that we do. We'll discuss
+
+later how to remove these assumptions. The analysis of GRADIENTDESCENT is summarized in the following theorem.
+
+Theorem 33.8
+Let x* n be the minimizer of a convex function f, and suppose that
+an execution of GRADIENT-DESCENT(f, x(0), , T) returns x-avg,
+
+where and R and L are defined in equations (33.20) and
+(33.21). Let . Then we have f(x-avg) f(x*) .
+
+We now prove this theorem. We do not give an absolute bound on
+
+how much progress each iteration makes. Instead, we use a potential
+
+function, as in Section 16.3. Here, we define a potential (t) after
+computing x(t), such that (t) 0 for t = 0, ..., T. We define the
+amortized progress in the iteration that computes x(t) as
+
+Along with including the change in potential ((t + 1) (t)), equation
+
+(33.22) also subtracts the minimum value f(x*) because ultimately, you
+care not about the values f(x(t)) but about how close they are to f(x*).
+Suppose that we can show that p(t) B for some value B and t = 0, ...,
+T 1. Then we can substitute for p(t) using equation (33.22), giving
+
+Summing inequality (33.23) over t = 0, ..., T 1 yields
+
+Observing that we have a telescoping series on the right and regrouping
+terms, we have that
+
+Dividing by T and dropping the positive term (T) gives
+
+and thus we have
+
+In other words, if we can show that p(t) B for some value B and
+
+choose a potential function where (0) is not too large, then inequality
+
+(33.25) tells us how close the function value f(x-avg) is to the function
+value f(x*) after T iterations. That is, we can set the error bound to B
++ (0)/T.
+
+In order to bound the amortized progress, we need to come up with
+
+a concrete potential function. Define the potential function (t) by
+
+that is, the potential function is proportional to the square of the
+distance between the current point and the minimizer x*. With this
+potential function in hand, the next lemma provides a bound on the
+amortized progress made in any iteration of GRADIENT-DESCENT.
+
+Lemma 33.9
+Let x* n be the minimizer of a convex function f, and consider an
+execution of GRADIENT-DESCENT(f, x(0), , T). Then for each point
+x(t) computed by the procedure, we have that
+
+Proof We first bound the potential change (t + 1) (t). Using the
+definition of (t) from equation (33.26), we have
+
+From line 4 in GRADIENT-DESCENT, we know that
+
+and so we would like to rewrite equation (33.27) to have x(t+1) x(t)
+
+terms. As Exercise 33.3-3 asks you to prove, for any two vectors a, b
+
+n, we have
+
+Letting a = x(t) x* and b = x(t+1) x(t), we can write the right-hand
+
+side of equation (33.27) as . Then we can express the
+potential change as
+
+and thus we have
+
+We can now proceed to bound p(t). By the bound on the potential
+change from inequality (33.31), and using the definition of L (inequality
+
+(33.21)), we have
+
+sult in the following theorem
+
+Having bounded the amortized progress in one step, we now analyze
+the entire GRADIENT-DESCENT procedure, completing the proof of
+Theorem 33.8.
+
+Proof of Theorem 33.8 Inequality (33.25) tells us that if we have an
+upper bound of B for p(t), then we also have the bound f(x-avg) f(x*)
+B + (0)/T. By equations (33.20) and (33.26), we have that (0) =
+R2/(2). Lemma 33.9 gives us the upper bound of B = L2/2, and so we
+
+have
+
+Our choice of in the statement of Theorem 33.8 balances
+
+the two terms, and we obtain
+
+Since we chose in the theorem statement, the proof is
+complete.
+
+Continuing under the assumption that we know R (from equation
+
+(33.20)) and L (from inequality (33.21)), we can think of the analysis in
+
+a slightly different way. We can presume that we have a target accuracy
+
+and then compute the number of iterations needed. That is, we can
+
+solve for T, obtaining T = R2L2/2. The number of
+
+iterations thus depends on the square of R and L and, most
+
+importantly, on 1/2. (The definition of L from inequality (33.21)
+
+depends on T, but we may know an upper bound on L that doesn't
+
+depend on the particular value of T.) Thus, if you want to halve your
+
+error bound, you need to run four times as many iterations.
+
+It is quite possible that we don't really know R and L, since you'd
+need to know x* in order to know R (since R = x(0) x*), and you
+
+might not have an explicit upper bound on the gradient, which would
+
+provide L. You can, however, interpret the analysis of gradient descent
+
+as a proof that there is some step size for which the procedure makes
+progress toward the minimum. You can then compute a step size for
+
+which f(x(t)) f(x(t+1)) is large enough. In fact, not having a fixed step
+
+size multiplier can actually help in practice, as you are free to use any
+
+step size s that achieves sufficient decrease in the value of f. You can
+
+search for a step size that achieves a large decrease via a binary-search-
+
+like routine, which is often called line search. For a given function f and
+step size s, define the function g(x(t), s) = f(x(t)) s(f)(x(t)). Start
+with a small step size s for which g(x(t), s) f(x(t)). Then repeatedly
+double s until g(x(t), 2s) g(x(t), s), and then perform a binary search
+in the interval [s, 2s]. This procedure can produce a step size that
+
+achieves a significant decrease in the objective function. In other
+
+circumstances, however, you may know good upper bounds on R and L,
+
+typically from problem-specific information, which can suffice.
+
+The dominant computational step in each iteration of the for loop of
+lines 24 is computing the gradient. The complexity of computing and
+evaluating a gradient varies widely, depending on the application at
+hand. We'll discuss several applications later.
+
+Constrained gradient descent
+
+We can adapt gradient descent for constrained minimization to
+
+minimize a closed convex function f(x), subject to the additional
+requirement that x K, where K is a closed convex body. A body K
+n is convex if for all x, y K, the convex combination x+(1)y K
+for all 0 1. A closed convex body contains its limit points.
+
+Somewhat surprisingly, restricting to the constrained problem does not
+significantly increase the number of iterations of gradient descent. The
+
+idea is that you run the same algorithm, but in each iteration, check
+
+whether the current point x(t) is still within the convex body K. If it is
+not, just move to the closest point in K. Moving to the closest point is
+known as projection. We formally define the projection K(x) of a point
+x in n dimensions onto a convex body K as the point y K such that x
+y = min {x z : z K}. If we have x K, then K(x) = x.
+
+This one change yields the procedure GRADIENT-DESCENT-
+
+CONSTRAINED, in which line 4 of GRADIENT-DESCENT is
+
+replaced by two lines. It assumes that x(0) K. Line 4 of GRADIENT-
+
+DESCENT-CONSTRAINED moves in the direction of the negative
+
+gradient, and line 5 projects back onto K. The lemma that follows helps
+to show that when x* K, if the projection step in line 5 moves from a
+point outside of K to a point in K, it cannot be moving away from x*.
+
+GRADIENT-DESCENT-CONSTRAINED(f, x(0), , T, K)
+
+1 sum = 0 // n-dimensional vector, initially all 0
+
+2 for t = 0 to T 1
+
+3 sum = sum + x(t) // add each of n dimensions into sum
+
+4 x(t+1) = x(t) · (f)(x(t))// (f)(x(t)), x(t+1) are n-
+
+5 x(t+1) = K(x(t+1)) dimensional
+6 x-avg = sum/T
+// project onto K
+
+// divide each of n dimensions by T
+
+7 return x-avg
+
+Lemma 33.10
+Consider a convex body K n and points a K and b n. Let b =
+K(b). Then b a2 b a2.
+
+Proof If b K, then b = b and the claim is true. Otherwise, b b, and
+
+as Figure 33.6 shows, we can extend the line segment between b and b
+to a line . Let c be the projection of a onto . Point c may or may not be
+
+in K, and if a is on the boundary of K, then c could coincide with b. If c
+
+coincides with b (part (c) of the figure), then abb is a right triangle, and
+so b a2 b a2. If c does not coincide with b (parts (a) and (b)
+of the figure), then because of convexity, the angle abb must be
+obtuse. Because angle abb is obtuse, b lies between c and b on .
+Furthermore, because c is the projection of a onto line , acb and acb
+must be right triangles. By the Pythagorean theorem, we have that b
+a2 = a c2+c b2 and b a2 = a c2+c b2. Subtracting
+these two equations gives b a2 b a2 = c b2 c b2.
+Because b is between c and b, we must have c b2 c b2, and
+thus b a2 b a2 0. The lemma follows.
+
+Figure 33.6 Projecting a point b outside the convex body K to the closest point b = K(b) in
+K. Line is the line containing b and b, and point c is the projection of a onto . (a) When c is
+in K. (b) When c is not in K. (c) When a is on the boundary of K and c coincides with b.
+
+We can now repeat the entire proof for the unconstrained case and
+
+obtain the same bounds. Lemma 33.10 with a = x*, b = x(t+1), and b =
+x(t+1) tells us that x(t+1)x*2 x(t+1)x*2. We can therefore
+
+derive an upper bound that matches inequality (33.31). We continue to
+
+define (t) as in equation (33.26), but noting that x(t+1), computed in
+
+line 5 of GRADIENT-DESCENT-CONSTRAINED, has a different
+meaning here from in inequality (33.31):
+
+With the same upper bound on the change in the potential function as
+in equation (33.30), the entire proof of Lemma 33.9 can proceed as
+before. We can therefore conclude that the procedure GRADIENTDESCENT-CONSTRAINED has the same asymptotic complexity as
+GRADIENT-DESCENT. We summarize this result in the following
+theorem.
+
+Theorem 33.11
+
+Let K n be a convex body, x* n be the minimizer of a convex
+
+function f over K, and , where R and L are defined in
+
+equations (33.20) and (33.21). Suppose that the vector x-avg is returned
+
+by an execution of GRADIENT-DESCENT-CONSTRAINED(f, x(0),
+
+, T, K). Let . Then we have f(x-avg) f(x*) .
+
+Applications of gradient descent
+
+Gradient descent has many applications to minimizing functions and is
+widely used in optimization and machine learning. Here we sketch how
+it can be used to solve linear systems. Then we discuss an application to
+machine learning: prediction using linear regression.
+
+In Chapter 28, we saw how to use Gaussian elimination to solve a
+
+system of linear equations Ax = b, thereby computing x = A-1b. If A is
+an n × n matrix and b is a length-n vector, then the running time of
+
+Gaussian elimination is (n3), which for large matrices might be
+
+prohibitively expensive. If an approximate solution is acceptable,
+
+however, you can use gradient descent.
+
+First, let's see how to use gradient descent as a roundabout--and
+
+admittedly inefficient--way to solve for x in the scalar equation ax = b,
+
+where a, x, b . This equation is equivalent to ax b = 0. If ax b is
+
+the derivative of a convex function f(x), then ax b = 0 for the value of
+
+x that minimizes f(x). Given f(x), gradient descent can then determine
+
+this minimizer. Of course, f(x) is just the integral of ax b, that is,
+
+, which is convex if a 0. Therefore, one way to solve ax
+
+= b for a 0 is to find the minimizer for via gradient descent.
+
+We now generalize this idea to higher dimensions, where using
+
+gradient descent may actually lead to a faster algorithm. One n-
+
+dimensional analog is the function , where A is an n ×
+
+n matrix. The gradient of f with respect to x is the function Ax b. To
+
+find the value of x that minimizes f, we set the gradient of f to 0 and
+
+solve for x. Solving Axb = 0 for x, we obtain x = A-1b, Thus,
+
+minimizing f(x) is equivalent to solving Ax = b. If f(x) is convex, then
+
+gradient descent can approximately compute this minimum.
+
+A 1-dimensional function is convex when its second derivative is
+
+positive. The equivalent definition for a multidimensional function is
+
+that it is convex when its Hessian matrix is positive-semidefinite (see
+
+page 1222 for a definition), where the Hessian matrix (2f)(x) of a
+
+function f(x) is the matrix in which entry (i, j) is the partial derivative of
+
+f with respect to i and j:
+
+Analogous to the 1-dimensional case, the Hessian of f is just A, and so
+if A is a positive-semidefinite matrix, then we can use gradient descent
+
+to find a point x where Ax b. If R and L are not too large, then this
+
+method is faster than using Gaussian elimination.
+
+Gradient descent in machine learning
+
+As a concrete example of supervised learning for prediction, suppose
+that you want to predict whether a patient will develop heart disease.
+
+For each of m patients, you have n different attributes. For example, you
+might have n = 4 and the four pieces of data are age, height, blood
+
+pressure, and number of close family members with heart disease.
+
+Denote the data for patient i as a vector x(i) n, with giving the
+jth entry in vector x(i). The label of patient i is denoted by a scalar y(i)
+
+, signifying the severity of the patient's heart disease. The hypothesis
+
+should capture a relationship between the x(i) values and y(i). For this
+
+example, we make the modeling assumption that the relationship is
+linear, and therefore the goal is to compute the "best" linear
+
+relationship between the x(i) values and y(i): a linear function f : n
+such that f(x(i)) y(i) for each patient i. Of course, no such function
+
+may exist, but you would like one that comes as close as possible. A
+
+linear function f can be defined by a vector of weights w = (w0, w1, ...,
+wn), with
+
+When evaluating a machine-learning model, you need to measure
+
+how close each value f(x(i)) is to its corresponding label y(i). In this
+example, we define the error e(i) associated with patient i as e(i) =
+f(x(i)) y(i). The objective function we choose is to minimize the sum of
+
+squares of the errors, which is
+
+The objective function is typically called the loss function, and the
+least-squares error given by equation (33.33) is just one example of
+many possible loss functions. The goal is then, given the x(i) and y(i)
+values, to compute the weights w0, w1, ..., wn so as to minimize the loss
+function in equation (33.33). The variables here are the weights w0, w1,
+..., wn and not the x(i) or y(i) values.
+
+This particular objective is sometimes known as a least-squares fit,
+
+and the problem of finding a linear function to fit data and minimize the
+
+least-squares error is called linear regression. Finding a least-squares fit
+
+is also addressed in Section 28.3.
+
+When the function f is linear, the loss function defined in equation
+
+(33.33) is convex, because it is the sum of squares of linear functions,
+
+which are themselves convex. Therefore, we can apply gradient descent
+
+to compute a set of weights to approximately minimize the least-squares
+
+error. The concrete goal of learning is to be able to make predictions on
+
+new data. Informally, if the features are all reported in the same units
+
+and are from the same range (perhaps from being normalized), then the
+
+weights tend to have a natural interpretation because the features of the
+
+data that are better predictors of the label have a larger associated
+
+weight. For example, you would expect that, after normalization, the
+
+weight associated with the number of family members with heart
+
+disease would be larger than the weight associated with height.
+
+The computed weights form a model of the data. Once you have a
+
+model, you can make predictions, so that given new data, you can
+
+predict its label. In our example, given a new patient x who is not part
+
+of the original training data set, you would still hope to predict the
+
+chance that the new patient develops heart disease. You can do so by
+
+computing the label f(x), incorporating the weights computed by
+
+gradient descent.
+
+For this linear-regression problem, the objective is to minimize the
+
+expression in equation (33.33), which is a quadratic in each of the n+1
+weights wj. Thus, entry j in the gradient is linear in wj. Exercise 33.3-5
+
+asks you to explicitly compute the gradient and see that it can be
+
+computed in O(nm) time, which is linear in the input size. Compared
+
+with the exact method of solving equation (33.33) in Chapter 28, which
+
+needs to invert a matrix, gradient descent is typically much faster.
+
+Section 33.1 briefly discussed regularization--the idea that a
+
+complicated hypothesis should be penalized in order to avoid overfitting
+
+the training data. Regularization often involves adding a term to the
+
+objective function, but it can also be achieved by adding a constraint.
+
+One way to regularize this example would be to explicitly limit the norm
+
+of the weights, adding a constraint that w B for some bound B > 0.
+
+(Recall again that the components of the vector w are the variables in
+
+the present application.) Adding this constraint controls the complexity
+
+of the model, as the number of values wj that can have large absolute
+
+value is now limited.
+
+In order to run GRADIENT-DESCENT-CONSTRAINED for any
+
+problem, you need to implement the projection step, as well as to
+
+compute bounds on R and L. We conclude this section by describing
+these calculations for gradient descent with the constraint w B.
+
+First, consider the projection step in line 5. Suppose that the update in
+
+line 4 results in a vector w. The projection is implemented by
+
+computing k(w) where K is defined by w B. This particular
+
+projection can be accomplished by simply scaling w, since we know that
+
+closest point in K to w must be the point along the vector whose norm
+is exactly B. The amount z by which we need to scale w to hit the
+boundary of K is the solution to the equation z w = B, which is
+solved by z = B/w. Hence line 5 is implemented by computing w =
+wB/w. Because we always have w B, Exercise 33.3-6 asks you to
+show that the upper bound on the magnitude L of the gradient is O(B).
+We also get a bound on R, as follows. By the constraint w B, we
+
+know that both w(0) B and w* B, and thus w(0) w* 2B.
+Using the definition of R in equation (33.20), we have R = O(B). The
+
+bound on the accuracy of the solution after T iterations in
+
+Theorem 33.11 becomes .
+
+Exercises
+
+33.3-1
+
+Prove Lemma 33.6. Start from the definition of a convex function given
+
+in equation (33.18). (Hint: You can prove the statement when n = 1 first.
+The proof for general values of n is similar.)
+
+33.3-2
+
+Prove Lemma 33.7.
+
+33.3-3
+Prove equation (33.29). (Hint: The proof for n = 1 dimension is
+straightforward. The proof for general values of n dimensions follows
+
+along similar lines.)
+
+33.3-4
+Show that the function f in equation (33.32) is a convex function of the
+variables w0, w1, ..., wn.
+
+33.3-5
+
+Compute the gradient of expression (33.33) and explain how to evaluate
+
+the gradient in O(nm) time.
+
+33.3-6
+Consider the function f defined in equation (33.32), and suppose that
+you have a bound w B, as is considered in the discussion on
+regularization. Show that L = O(B) in this case.
+
+33.3-7
+
+Equation (33.2) on page 1009 gives a function that, when minimized,
+
+gives an optimal solution to the k-means problem. Explain how to use
+gradient descent to solve the k-means problem.
+
+Problems
+
+33-1 Newton's method
+
+Gradient descent iteratively moves closer to a desired value (the
+minimum) of a function. Another algorithm in this spirit is known as
+
+Newton's method, which is an iterative algorithm that finds the root of a
+function. Here, we consider Newton's method which, given a function f :
+, finds a value x* such that f(x* ) = 0. The algorithm moves
+through a series of points x(0), x(1), .... If the algorithm is currently at
+a point x(t), then to find point x(t+1), it first takes the equation of the
+line tangent to the curve at x = x(t),
+y = f(x(t))(x x(t)) + f(x(t)).
+It then uses the x-intercept of this line as the next point x(t+1).
+a. Show that the algorithm described above can be summarized by the
+
+update rule
+
+We restrict our attention to some domain I and assume that f(x) 0 for
+all x I and that f(x) is continuous. We also assume that the starting
+point x(0) is sufficiently close to x*, where "sufficiently close" means
+that we can use only the first two terms of the Taylor expansion of f(x*)
+about x(0), namely
+
+where (0) is some value between x(0) and x*. If the approximation in
+equation (33.34) holds for x(0), it also holds for any point closer to x*.
+b. Assume that the function f has exactly one point x* for which f(x*) =
+
+0. Let (t) = |x(t) x*|. Using the Taylor expansion in equation
+
+(33.34), show that
+
+where (t) is some value between x(t) and x*.
+c. If
+
+for some constant c and (0) < 1, then we say that the function f has
+quadratic convergence, since the error decreases quadratically.
+Assuming that f has quadratic convergence, how many iterations are
+needed to find a root of f(x) to an accuracy of ? Your answer should
+
+include .
+
+d. Suppose you wish to find a root of the function f(x) = (x 3)2, which
+is also the minimizer, and you start at x(0) = 3.5. Compare the number
+
+of iterations needed by gradient descent to find the minimizer and
+Newton's method to find the root.
+
+33-2 Hedge
+
+Another variant in the multiplicative-weights framework is known as
+
+HEDGE. It differs from WEIGHTED MAJORITY in two ways. First,
+
+HEDGE makes the prediction randomly--in iteration t, it assigns a
+
+probability to expert Ei, where . It then
+
+chooses an expert Ei according to this probability distribution and
+
+predicts according to Ei. Second, the update rule is different. If an
+
+expert makes a mistake, line 16 updates that expert's weight by the rule
+
+, for some 0 < < 1. Show that the expected number of
+
+mistakes made by HEDGE, running for T rounds, is at most m* + (ln
+n)/ + T.
+
+33-3 Nonoptimality of Lloyd's procedure in one dimension
+
+Give an example to show that even in one dimension, Lloyd's procedure
+for finding clusters does not always return an optimum result. That is,
+
+Lloyd's procedure may terminate and return as a result a set C of
+
+clusters that does not minimize f(S, C), even when S is a set of points
+
+on a line.
+
+33-4 Stochastic gradient descent
+Consider the problem described in Section 33.3 of fitting a line f(x) = ax
++ b to a given set of point/value pairs S = {(x1, y1), ..., (xT, yT)} by
+optimizing the choice of the parameters a and b using gradient descent
+to find a best least-squares fit. Here we consider the case where x is a
+
+real-valued variable, rather than a vector.
+
+Suppose that you are not given the point/value pairs in S all at once,
+
+but only one at a time in an online manner. Furthermore, the points are
+
+given in random order. That is, you know that there are n points, but in
+iteration t you are given only (xi, yi) where i is independently and
+randomly chosen from {1, ..., T}.
+
+You can use gradient descent to compute an estimate to the
+
+function. As each point (xi, yi) is considered, you can update the
+current values of a and b by taking the derivative with respect to a and
+b of the term of the objective function depending on (xi, yi). Doing so
+
+gives you a stochastic estimate of the gradient, and you can then take a
+small step in the opposite direction.
+
+Give pseudcode to implement this variant of gradient descent. What
+
+would the expected value of the error be as a function of T, L, and R?
+(Hint: Replicate the analysis of GRADIENT-DESCENT in Section
+
+33.3 for this variant.)
+
+This procedure and its variants are known as stochastic gradient
+descent.
+
+Chapter notes
+
+For a general introduction to artificial intelligence, we recommend
+Russell and Norvig [391]. For a general introduction to machine
+learning, we recommend Murphy [340].
+
+Lloyd's procedure for the k-means problem was first proposed by
+
+Lloyd [304] and also later by Forgy [151]. It is sometimes called "Lloyd's
+
+algorithm" or the "Lloyd-Forgy algorithm." Although Mahajan et al.
+[310] showed that finding an optimal clustering is NP-hard, even in the
+plane, Kanungo et al. [241] have shown that there is an approximation
+
+algorithm for the k-means problem with approximation ratio 9 + , for
+
+any > 0.
+The multiplicative-weights method is surveyed by Arora, Hazan, and
+
+Kale [25]. The main idea of updating weights based on feedback has
+been rediscovered many times. One early use is in game theory, where
+Brown defined "Fictitious Play" [74] and conjectured its convergence to
+the value of a zero-sum game. The convergence properties were
+established by Robinson [382].
+
+In machine learning, the first use of multiplicative weights was by
+Littlestone in the Winnow algorithm [300], which was later extended by
+Littlestone and Warmuth to the weighted-majority algorithm described
+in Section 33.2 [301]. This work is closely connected to the boosting
+algorithm, originally due to Freund and Shapire [159]. The
+multiplicative-weights idea is also closely related to several more general
+optimization algorithms, including the perceptron algorithm [328] and
+algorithms for optimization problems such as packing linear programs
+[177, 359].
+
+The treatment of gradient descent in this chapter draws heavily on
+the unpublished manuscript of Bansal and Gupta [35]. They emphasize
+the idea of using a potential function and using ideas from amortized
+analysis to explain gradient descent. Other presentations and analyses
+of gradient descent include works by Bubeck [75], Boyd and
+Vanderberghe [69], and Nesterov [343].
+
+Gradient descent is known to converge faster when functions obey
+
+stronger properties than general convexity. For example, a function f is
+-strongly convex if f(y) f(x) + (f)(x), (y x) + y x for all x, y
+n. In this case, GRADIENT-DESCENT can use a variable step size
+and return x(T). The step size at step t becomes t = 1/((t + 1)), and
+the procedure returns a point such that f(x-avg) f(x*) L2/((T + 1)).
+
+This convergence is better than that of Theorem 33.8 because the
+number of iterations needed is linear, rather than quadratic, in the
+
+desired error parameter , and because the performance is independent
+of the initial point.
+
+Another case in which gradient descent can be shown to perform
+better than the analysis in Section 33.3 suggests is for smooth convex
+
+functions. We say that a function is -smooth if
+
+. This inequality goes in the
+
+opposite direction from the one for -strong convexity. Better bounds
+
+on gradient descent are possible here as well.
+
+1 Although the curve in Figure 33.4 looks concave, according to the definition of convexity
+
+that we'll see below, the function f in the figure is convex.
+2 A function f : n is closed if, for each , the set {x dom(f) : f(x) } is closed,
+where dom(f) is the domain of f.
+
+34 NP-Completeness
+
+Almost all the algorithms we have studied thus far have been
+
+polynomial-time algorithms: on inputs of size n, their worst-case running
+time is O(nk) for some constant k. You might wonder whether all
+
+problems can be solved in polynomial time. The answer is no. For
+example, there are problems, such as Turing's famous "Halting
+Problem," that cannot be solved by any computer, no matter how long
+you're willing to wait for an answer.1 There are also problems that can
+
+be solved, but not in O(nk) time for any constant k. Generally, we think
+
+of problems that are solvable by polynomial-time algorithms as being
+tractable, or "easy," and problems that require superpolynomial time as
+being intractable, or "hard."
+
+The subject of this chapter, however, is an interesting class of
+problems, called the "NP-complete" problems, whose status is
+unknown. No polynomial-time algorithm has yet been discovered for an
+NP-complete problem, nor has anyone yet been able to prove that no
+polynomial-time algorithm can exist for any one of them. This so-called
+P NP question has been one of the deepest, most perplexing open
+research problems in theoretical computer science since it was first
+posed in 1971.
+
+Several NP-complete problems are particularly tantalizing because
+they seem on the surface to be similar to problems that we know how to
+solve in polynomial time. In each of the following pairs of problems, one
+is solvable in polynomial time and the other is NP-complete, but the
+difference between the problems appears to be slight:
+
+Shortest versus longest simple paths: In Chapter 22, we saw that even
+
+with negative edge weights, we can find shortest paths from a single
+source in a directed graph G = (V, E) in O(VE) time. Finding a longest
+
+simple path between two vertices is difficult, however. Merely
+determining whether a graph contains a simple path with at least a
+given number of edges is NP-complete.
+
+Euler tour versus hamiltonian cycle: An Euler tour of a strongly
+connected, directed graph G = (V, E) is a cycle that traverses each
+edge of G exactly once, although it is allowed to visit each vertex more
+
+than once. Problem 20-3 on page 583 asks you to show how to
+determine whether a strongly connected, directed graph has an Euler
+
+tour and, if it does, the order of the edges in the Euler tour, all in O(E)
+time. A hamiltonian cycle of a directed graph G = (V, E) is a simple
+cycle that contains each vertex in V. Determining whether a directed
+
+graph has a hamiltonian cycle is NP-complete. (Later in this chapter,
+
+we'll prove that determining whether an undirected graph has a
+
+hamiltonian cycle is NP-complete.)
+
+2-CNF satisfiability versus 3-CNF satisfiability: Boolean formulas
+contain binary variables whose values are 0 or 1; boolean connectives
+such as (AND), (OR), and ¬ (NOT); and parentheses. A boolean
+
+formula is satisfiable if there exists some assignment of the values 0
+
+and 1 to its variables that causes it to evaluate to 1. We'll define terms
+more formally later in this chapter, but informally, a boolean formula
+
+is in k-conjunctive normal form, or k-CNF if it is the AND of clauses
+of ORs of exactly k variables or their negations. For example, the
+boolean formula (x1 x2) (¬x1 x3) (¬x2 ¬x3) is in 2-CNF
+(with satisfying assignment x1 = 1, x2 = 0, and x3 = 1). Although
+
+there is a polynomial-time algorithm to determine whether a 2-CNF
+formula is satisfiable, we'll see later in this chapter that determining
+whether a 3-CNF formula is satisfiable is NP-complete.
+
+NP-completeness and the classes P and NP
+
+Throughout this chapter, we refer to three classes of problems: P, NP,
+and NPC, the latter class being the NP-complete problems. We describe
+them informally here, with formal definitions to appear later on.
+
+The class P consists of those problems that are solvable in
+polynomial time. More specifically, they are problems that can be solved
+
+in O(nk) time for some constant k, where n is the size of the input to the
+
+problem. Most of the problems examined in previous chapters belong
+to P.
+
+The class NP consists of those problems that are "verifiable" in
+polynomial time. What do we mean by a problem being verifiable? If
+you were somehow given a "certificate" of a solution, then you could
+verify that the certificate is correct in time polynomial in the size of the
+input to the problem. For example, in the hamiltonian-cycle problem,
+
+given a directed graph G = (V, E), a certificate would be a sequence v1,
+v2, v3, ..., v|V| of |V| vertices. You could check in polynomial time that
+the sequence contains each of the |V| vertices exactly once, that (vi,
+vi+1) E for i = 1, 2, 3, ..., |V| - 1, and that (v|V|, v1) E. As another
+
+example, for 3-CNF satisfiability, a certificate could be an assignment of
+values to variables. You could check in polynomial time that this
+assignment satisfies the boolean formula.
+
+Any problem in P also belongs to NP, since if a problem belongs to P
+then it is solvable in polynomial time without even being supplied a
+certificate. We'll formalize this notion later in this chapter, but for now
+you can believe that P NP. The famous open question is whether P is
+a proper subset of NP.
+
+Informally, a problem belongs to the class NPC--and we call it NPcomplete--if it belongs to NP and is as "hard" as any problem in NP.
+
+We'll formally define what it means to be as hard as any problem in NP
+
+later in this chapter. In the meantime, we state without proof that if any
+NP-complete problem can be solved in polynomial time, then every
+
+problem in NP has a polynomial-time algorithm. Most theoretical
+computer scientists believe that the NP-complete problems are
+intractable, since given the wide range of NP-complete problems that
+have been studied to date--without anyone having discovered a
+
+polynomial-time solution to any of them--it would be truly astounding
+if all of them could be solved in polynomial time. Yet, given the effort
+devoted thus far to proving that NP-complete problems are intractable
+--without a conclusive outcome--we cannot rule out the possibility
+that the NP-complete problems could turn out to be solvable in
+polynomial time.
+
+To become a good algorithm designer, you must understand the
+rudiments of the theory of NP-completeness. If you can establish a
+problem as NP-complete, you provide good evidence for its
+intractability. As an engineer, you would then do better to spend your
+time developing an approximation algorithm (see Chapter 35) or solving
+a tractable special case, rather than searching for a fast algorithm that
+solves the problem exactly. Moreover, many natural and interesting
+problems that on the surface seem no harder than sorting, graph
+searching, or network flow are in fact NP-complete. Therefore, you
+should become familiar with this remarkable class of problems.
+
+Overview of showing problems to be NP-complete
+
+The techniques used to show that a particular problem is NP-complete
+differ fundamentally from the techniques used throughout most of this
+book to design and analyze algorithms. If you can demonstrate that a
+problem is NP-complete, you are making a statement about how hard it
+is (or at least how hard we think it is), rather than about how easy it is.
+If you prove a problem NP-complete, you are saying that searching for
+efficient algorithm is likely to be a fruitless endeavor. In this way, NPcompleteness proofs bear some similarity to the proof in Section 8.1 of
+
+an (n lg n)-time lower bound for any comparison sort algorithm,
+
+although the specific techniques used for showing NP-completeness
+differ from the decision-tree method used in Section 8.1.
+
+We rely on three key concepts in showing a problem to be NPcomplete:
+
+Decision problems versus optimization problems
+
+Many problems of interest are optimization problems, in which each
+
+feasible (i.e., "legal") solution has an associated value, and the goal is to
+
+find a feasible solution with the best value. For example, in a problem
+
+that we call SHORTEST-PATH, the input is an undirected graph G and
+vertices u and v, and the goal is to find a path from u to v that uses the
+
+fewest edges. In other words, SHORTEST-PATH is the single-pair
+shortest-path problem in an unweighted, undirected graph. NPcompleteness applies directly not to optimization problems, however,
+
+but to decision problems, in which the answer is simply "yes" or "no"
+
+(or, more formally, "1" or "0").
+Although NP-complete problems are confined to the realm of
+
+decision problems, there is usually a way to cast a given optimization
+problem as a related decision problem by imposing a bound on the
+value to be optimized. For example, a decision problem related to
+
+SHORTEST-PATH is PATH: given an undirected graph G, vertices u
+and v, and an integer k, does a path exist from u to v consisting of at
+most k edges?
+
+The relationship between an optimization problem and its related
+decision problem works in your favor when you try to show that the
+optimization problem is "hard." That is because the decision problem is
+in a sense "easier," or at least "no harder." As a specific example, you
+can solve PATH by solving SHORTEST-PATH and then comparing the
+number of edges in the shortest path found to the value of the decision-
+
+problem parameter k. In other words, if an optimization problem is
+
+easy, its related decision problem is easy as well. Stated in a way that has
+more relevance to NP-completeness, if you can provide evidence that a
+decision problem is hard, you also provide evidence that its related
+optimization problem is hard. Thus, even though it restricts attention to
+decision problems, the theory of NP-completeness often has
+implications for optimization problems as well.
+
+Reductions
+
+The above notion of showing that one problem is no harder or no easier
+than another applies even when both problems are decision problems.
+Almost every NP-completeness proof takes advantage of this idea, as
+
+follows. Consider a decision problem A, which you would like to solve in
+polynomial time. We call the input to a particular problem an instance
+
+of that problem. For example, in PATH, an instance is a particular
+
+graph G, particular vertices u and v of G, and a particular integer k.
+
+Now suppose that you already know how to solve a different decision
+
+problem B in polynomial time. Finally, suppose that you have a
+procedure that transforms any instance of A into some instance of B
+
+with the following characteristics:
+
+Figure 34.1 How to use a polynomial-time reduction algorithm to solve a decision problem A
+in polynomial time, given a polynomial-time decision algorithm for another problem B. In
+polynomial time, transform an instance of A into an instance of B, solve B in polynomial
+
+time, and use the answer for as the answer for .
+
+The transformation takes polynomial time.
+The answers are the same. That is, the answer for is "yes" if and
+only if the answer for is also "yes."
+
+We call such a procedure a polynomial-time reduction algorithm and, as
+Figure 34.1 shows, it provides us a way to solve problem A in
+
+polynomial time:
+
+1. Given an instance of problem A, use a polynomial-time
+
+reduction algorithm to transform it to an instance of problem
+
+B.
+2. Run the polynomial-time decision algorithm for B on the
+
+instance .
+3. Use the answer for as the answer for .
+
+As long as each of these steps takes polynomial time, all three together
+do also, and so you have a way to decide on in polynomial time. In
+
+other words, by "reducing" solving problem A to solving problem B,
+you use the "easiness" of B to prove the "easiness" of A.
+
+Recalling that NP-completeness is about showing how hard a
+problem is rather than how easy it is, you use polynomial-time
+reductions in the opposite way to show that a problem is NP-complete.
+Let's take the idea a step further and show how you can use polynomialtime reductions to show that no polynomial-time algorithm can exist for
+
+a particular problem B. Suppose that you have a decision problem A for
+
+which you already know that no polynomial-time algorithm can exist.
+
+(Ignore for the moment how to find such a problem A.) Suppose further
+that you have a polynomial-time reduction transforming instances of A
+to instances of B. Now you can use a simple proof by contradiction to
+show that no polynomial-time algorithm can exist for B. Suppose
+otherwise, that is, suppose that B has a polynomial-time algorithm.
+
+Then, using the method shown in Figure 34.1, you would have a way to
+
+solve problem A in polynomial time, which contradicts the assumption
+that there is no polynomial-time algorithm for A.
+
+To prove that a problem B is NP-complete, the methodology is
+
+similar. Although you cannot assume that there is absolutely no
+
+polynomial-time algorithm for problem A, you prove that problem B is
+NP-complete on the assumption that problem A is also NP-complete.
+
+A first NP-complete problem
+
+Because the technique of reduction relies on having a problem already
+known to be NP-complete in order to prove a different problem NPcomplete, there must be some "first" NP-complete problem. We'll use
+the circuit-satisfiability problem, in which the input is a boolean
+combinational circuit composed of AND, OR, and NOT gates, and the
+question is whether there exists some set of boolean inputs to this
+circuit that causes its output to be 1. Section 34.3 will prove that this
+first problem is NP-complete.
+
+Chapter outline
+
+This chapter studies the aspects of NP-completeness that bear most
+directly on the analysis of algorithms. Section 34.1 formalizes the
+notion of "problem" and defines the complexity class P of polynomialtime solvable decision problems. We'll also see how these notions fit into
+
+the framework of formal-language theory. Section 34.2 defines the class
+NP of decision problems whose solutions are verifiable in polynomial
+time. It also formally poses the P NP question.
+
+Section 34.3 shows how to relate problems via polynomial-time
+"reductions." It defines NP-completeness and sketches a proof that the
+circuit-satisfiability problem is NP-complete. With one problem proven
+NP-complete, Section 34.4 demonstrates how to prove other problems
+to be NP-complete much more simply by the methodology of
+reductions. To illustrate this methodology, the section shows that two
+formula-satisfiability problems are NP-complete. Section 34.5 proves a
+variety of other problems to be NP-complete by using reductions. You
+will probably find several of these reductions to be quite creative,
+because they convert a problem in one domain to a problem in a
+completely different domain.

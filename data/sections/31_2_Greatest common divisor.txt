@@ -1,0 +1,289 @@
+31.2 Greatest common divisor
+
+In this section, we describe Euclid's algorithm for efficiently computing
+the greatest common divisor of two integers. When we analyze the
+running time, we'll see a surprising connection with the Fibonacci
+numbers, which yield a worst-case input for Euclid's algorithm.
+
+We restrict ourselves in this section to nonnegative integers. This
+
+restriction is justified by equation (31.8), which states that gcd(a, b) =
+gcd(|a|, |b|).
+
+In principle, for positive integers a and b, their prime factorizations
+suffice to compute gcd(a, b). Indeed, if
+
+with 0 exponents being used to make the set of primes p1, p2, ..., pr the
+same for both a and b, then, as Exercise 31.2-1 asks you to show,
+
+The best algorithms to date for factoring do not run in polynomial time.
+Thus, this approach to computing greatest common divisors seems
+unlikely to yield an efficient algorithm.
+
+Euclid's algorithm for computing greatest common divisors relies on
+the following theorem.
+
+Theorem 31.9 (GCD recursion theorem)
+For any nonnegative integer a and any positive integer b,
+
+gcd(a, b) = gcd(b, a mod b).
+
+Proof We will show that gcd(a, b) and gcd(b, a mod b) divide each
+
+other. Since they are both nonnegative, equation (31.5) then implies that
+they must be equal.
+
+We first show that gcd(a, b) | gcd(b, a mod b). If we let d = gcd(a, b),
+then d | a and d | b. By equation (3.11) on page 64, a mod b = a qb,
+where q = a/b. Since a mod b is thus a linear combination of a and b,
+equation (31.4) implies that d | (a mod b). Therefore, since d | b and d | (a
+mod b), Corollary 31.3 implies that d | gcd(b, a mod b), that is,
+
+Showing that gcd(b, a mod b) | gcd(a, b) is almost the same. If we
+now let d = gcd(b, a mod b), then d | b and d | (a mod b). Since a = qb +
+(a mod b), where q = a/b, we have that a is a linear combination of b
+and (a mod b). By equation (31.4), we conclude that d | a. Since d | b and
+d | a, we have that d | gcd(a, b) by Corollary 31.3, so that
+
+Using equation (31.5) to combine equations (31.14) and (31.15)
+completes the proof.
+
+Euclid's algorithm
+
+Euclid's Elements (circa 300 B.C.E.) describes the following gcd
+
+algorithm, although its origin might be even earlier. The recursive
+procedure EUCLID implements Euclid's algorithm, based directly on
+
+Theorem 31.9. The inputs a and b are arbitrary nonnegative integers.
+
+EUCLID(a, b)
+1 if b == 0
+2 return a
+3 else return EUCLID(b, a mod b)
+
+For example, here is how the procedure computes gcd(30, 21):
+
+EUCLID(30, 21) = EUCLID(21, 9)
+= EUCLID(9, 3)
+= EUCLID(3, 0)
+= 3.
+
+This computation calls EUCLID recursively three times.
+The correctness of EUCLID follows from Theorem 31.9 and the
+
+property that if the algorithm returns a in line 2, then b = 0, so that by
+equation (31.9), gcd(a, b) = gcd(a, 0) = a. The algorithm cannot recurse
+
+indefinitely, since the second argument strictly decreases in each
+recursive call and is always nonnegative. Therefore, EUCLID always
+terminates with the correct answer.
+
+The running time of Euclid's algorithm
+
+Let's analyze the worst-case running time of EUCLID as a function of
+
+the size of a and b. The overall running time of EUCLID is
+
+proportional to the number of recursive calls it makes. The analysis
+
+assumes that a > b 0, that is, the first argument is greater than the
+second argument. Why? If b = a > 0, then a mod b = 0 and the
+procedure terminates after one recursive call. If b > a 0, then the
+procedure makes just one more recursive call than when a > b, because
+in this case EUCLID(a, b) immediately makes the recursive call
+EUCLID(b, a), and now the first argument is greater than the second.
+
+Our analysis relies on the Fibonacci numbers Fk, defined by the
+
+recurrence equation (3.31) on page 69.
+
+Lemma 31.10
+If a > b 1 and the call EUCLID(a, b) performs k 1 recursive calls,
+then a Fk+2 and b Fk+1.
+
+Proof The proof proceeds by induction on k. For the base case of the
+induction, let k = 1. Then, b 1 = F2, and since a > b, we must have a
+2 = F3. Since b > (a mod b), in each recursive call the first argument is
+strictly larger than the second. The assumption that a > b therefore
+
+holds for each recursive call.
+
+Assuming inductively that the lemma holds if the procedure makes k
+1 recursive calls, we shall prove that the lemma holds for k recursive
+calls. Since k > 0, we have b > 0, and EUCLID(a, b) calls EUCLID(b, a
+mod b) recursively, which in turn makes k 1 recursive calls. The
+inductive hypothesis then implies that b Fk+1 (thus proving part of
+the lemma), and a mod b Fk. We have
+
+b + (a mod b) = b + (a b a/b) (by equation (3.11))
+a,
+
+since a > b > 0 implies a/b 1. Thus,
+
+a b + (a mod b)
+Fk+1 + Fk
+= Fk+2.
+
+The following theorem is an immediate corollary of this lemma.
+
+Theorem 31.11 (Lamé's theorem)
+For any integer k 1, if a > b 1 and b < Fk+1, then the call
+EUCLID(a, b) makes fewer than k recursive calls.
+
+To show that the upper bound of Theorem 31.11 is the best possible,
+
+we'll show that the call EUCLID(Fk+1, Fk) makes exactly k 1
+
+recursive calls when k 2. We use induction on k. For the base case, k =
+
+2, and the call EUCLID(F3, F2) makes exactly one recursive call, to
+
+EUCLID(1, 0). (We have to start at k = 2, because when k = 1 we do
+
+not have F2 > F1.) For the inductive step, assume that EUCLID(Fk,
+
+Fk-1) makes exactly k 2 recursive calls. For k > 2, we have Fk > Fk-1
+
+> 0 and Fk+1 = Fk + Fk-1, and so by Exercise 31.1-1, we have Fk+1
+
+mod Fk = Fk-1. Because EUCLID(a, b) calls EUCLID(b, a mod b)
+
+when b > 0, the call EUCLID(Fk+1, Fk) recurses one time more than
+
+the call EUCLID(Fk, Fk-1), or exactly k 1 times, which meets the
+
+upper bound given by Theorem 31.11.
+
+Since Fk is approximately , where is the golden ratio
+
+defined by equation (3.32) on page 69, the number of
+
+recursive calls in EUCLID is O(1g b). (See Exercise 31.2-5 for a tighter
+
+bound.) Therefore, a call of EUCLID on two -bit numbers performs
+
+O() arithmetic operations and O(3) bit operations (assuming that
+
+multiplication and division of -bit numbers take O(2) bit operations).
+
+Problem 31-2 asks you to prove an O(2) bound on the number of bit
+
+operations.
+
+The extended form of Euclid's algorithm
+
+By rewriting Euclid's algorithm, we can gain additional useful
+information. Specifically, let's extend the algorithm to compute the
+
+integer coefficients x and y such that
+
+where either or both of x and y may be zero or negative. These
+
+coefficients will prove useful later for computing modular multiplicative
+inverses. The procedure EXTENDED-EUCLID takes as input a pair of
+
+nonnegative integers and returns a triple of the form (d, x, y) that
+
+satisfies equation (31.16). As an example, Figure 31.1 traces out the call
+EXTENDED-EUCLID(99, 78).
+
+EXTENDED-EUCLID(a, b)
+1 if b == 0
+2 return (a, 1, 0)
+3 else (d, x, y) = EXTENDED-EUCLID(b, a mod b)
+4 (d, x, y) = (d, y, x a/b y)
+5 return (d, x, y)
+
+The EXTENDED-EUCLID procedure is a variation of the
+
+EUCLID procedure. Line 1 is equivalent to the test "b == 0" in line 1 of
+EUCLID. If b = 0, then EXTENDED-EUCLID returns not only d = a
+in line 2, but also the coefficients x = 1 and y = 0, so that a = ax + by. If
+b 0, EXTENDED-EUCLID first computes (d, x, y) such that d =
+gcd(b, a mod b) and
+
+As in the EUCLID procedure, we have d = gcd(a, b) = d = gcd(b, a mod
+b). To obtain x and y such that d = ax + by, let's rewrite equation
+(31.17), setting d = d and using equation (3.11):
+
+Figure 31.1 How EXTENDED-EUCLID computes gcd(99, 78). Each line shows one level of
+
+the recursion: the values of the inputs a and b, the computed value a/b, and the values d, x,
+and y returned. The triple (d, x, y) returned becomes the triple (d, x, y) used at the next
+
+higher level of recursion. The call EXTENDED-EUCLID(99, 78) returns (3, 11, 14), so that
+gcd(99, 78) = 3 = 99 · (11) + 78 · 14.
+
+d = bx + (a b a/b)y
+= ay + b(x a/b y).
+
+Thus, choosing x = y and y = x a/b y satisfies the equation d = ax +
+by, thereby proving the correctness of EXTENDED-EUCLID.
+
+Since the number of recursive calls made in EUCLID is equal to the
+number of recursive calls made in EXTENDED-EUCLID, the running
+times of EUCLID and EXTENDED-EUCLID are the same, to within a
+
+constant factor. That is, for a > b > 0, the number of recursive calls is
+O(1g b).
+
+Exercises
+
+31.2-1
+
+Prove that equations (31.11) and (31.12) imply equation (31.13).
+
+31.2-2
+Compute the values (d, x, y) that the call EXTENDED-EUCLID(899,
+
+493) returns.
+
+31.2-3
+Prove that for all integers a, k, and n,
+
+Use equation (31.18) to show that a = 1 (mod n) implies gcd(a, n) = 1.
+
+31.2-4
+
+Rewrite EUCLID in an iterative form that uses only a constant amount
+of memory (that is, stores only a constant number of integer values).
+
+31.2-5
+If a > b 0, show that the call EUCLID (a, b) makes at most 1 + log b
+recursive calls. Improve this bound to 1 + log(b/gcd(a, b)).
+
+31.2-6
+What does EXTENDED-EUCLID(Fk+1, Fk) return? Prove your
+
+answer correct.
+
+31.2-7
+
+Define the gcd function for more than two arguments by the recursive
+
+equation gcd(a0, a1, ..., an) = gcd(a0, gcd(a1, a2, ..., an)). Show that
+
+the gcd function returns the same answer independent of the order in
+
+which its arguments are specified. Also show how to find integers x0,
+x1, ..., xn such that gcd(a0, a1, ..., an) = a0x0 + a1x1 + + anxn.
+Show that the number of divisions performed by your algorithm is O(n
++ 1g(max {a0, a1, ..., an})).
+
+31.2-8
+The least common multiple 1cm(a1, a2, ..., an) of integers a1, a2, ..., an
+is the smallest nonnegative integer that is a multiple of each ai. Show
+how to compute 1cm(a1, a2, ..., an) efficiently using the (two-argument)
+
+gcd operation as a subroutine.
+
+31.2-9
+Prove that n1, n2, n3, and n4 are pairwise relatively prime if and only if
+
+gcd(n1n2, n3n4) = gcd(n1n3, n2n4) = 1.
+
+More generally, show that n1, n2, ..., nk are pairwise relatively prime if
+and only if a set of 1g k pairs of numbers derived from the ni are
+
+relatively prime.

@@ -1,0 +1,402 @@
+33.1 Clustering
+
+Suppose that you have a large number of data points (examples), and
+you wish to group them into classes based on how similar they are to
+each other. For example, each data point might represent a celestial
+star, giving its temperature, size, and spectral characteristics. Or, each
+data point might represent a fragment of recorded speech. Grouping
+these speech fragments appropriately might reveal the set of accents of
+the fragments. Once a grouping of the training data points is found,
+new data can be placed into an appropriate group, facilitating star-type
+recognition or speech recognition.
+
+These situations, along with many others, fall under the umbrella of
+
+clustering. The input to a clustering problem is a set of n examples
+(objects) and an integer k, with the goal of dividing the examples into at
+most k disjoint clusters such that the examples in each cluster are
+
+similar to each other. The clustering problem has several variations. For
+
+example, the integer k might not be given, but instead arises out of the
+clustering procedure. In this section we presume that k is given.
+
+Feature vectors and similarity
+
+Let's formally define the clustering problem. The input is a set of
+
+n examples. Each example has a set of attributes in common with all
+
+other examples, though the attribute values may vary among examples.
+
+For example, the clustering problem shown in Figure 33.1 clusters n =
+49 examples--48 state capitals plus the District of Columbia--into k =
+
+4 clusters. Each example has two attributes: the latitude and longitude
+
+of the capital. In a given clustering problem, each example has d
+attributes, with an example x specified by a d-dimensional feature vector
+
+x = (x1, x2, ..., xd).
+
+Here, xa for a = 1, 2, ..., d is a real number giving the value of attribute
+a for example x. We call x the point in d representing the example. For
+the example in Figure 33.1, each capital x has its latitude in x1 and its
+longitude in x2.
+
+In order to cluster similar points together, we need to define
+
+similarity. Instead, let's define the opposite: the dissimilarity (x, y) of
+
+points x and y is the squared Euclidean distance between them:
+
+Of course, for (x, y) to be well defined, all attribute values must be
+present. If any are missing, then you might just ignore that example, or
+you could fill in a missing attribute value with the median value for that
+attribute.
+
+The attribute values are often "messy" in other ways, so that some
+"data cleaning" is necessary before the clustering algorithm is run. For
+example, the scale of attribute values can vary widely across attributes.
+In the example of Figure 33.1, the scales of the two attributes vary by a
+factor of 2, since latitude ranges from -90 to +90 degrees but longitude
+ranges from -180 to +180 degrees. You can imagine other scenarios
+where the differences in scales are even greater. If the examples contain
+information about students, one attribute might be grade-point average
+
+but another might be family income. Therefore, the attribute values are
+usually scaled or normalized, so that no single attribute can dominate
+the others when computing dissimilarities. One way to do so is by
+scaling attribute values with a linear transform so that the minimum
+value becomes 0 and the maximum value becomes 1. If the attribute
+values are binary values, then no scaling may be needed. Another
+option is scaling so that the values for each attribute have mean 0 and
+unit variance. Sometimes it makes sense to choose the same scaling rule
+for several related attributes (for example, if they are lengths measured
+to the same scale).
+
+Figure 33.1 The iterations of Lloyd's procedure when clustering the capitals of the lower 48
+
+states and the District of Columbia into k = 4 clusters. Each capital has two attributes:
+latitude and longitude. Each iteration reduces the value f, measuring the sum of squares of
+distances of all capitals to their cluster centers, until the value of f does not change. (a) The
+
+initial four clusters, with the capitals of Arkansas, Kansas, Louisiana, and Tennessee chosen as
+centers. (b)(k) Iterations of Lloyd's procedure. (l) The 11th iteration results in the same value
+
+of f as the 10th iteration in part (k), and so the procedure terminates.
+
+Also, the choice of dissimilarity measure is somewhat arbitrary. The
+use of the sum of squared differences as in equation (33.1) is not
+
+required, but it is a conventional choice and mathematically convenient.
+For the example of Figure 33.1, you might use the actual distance
+between capitals rather than equation (33.1).
+
+Clusterings
+
+With the notion of similarity (actually, dissimilarity) defined, let's see
+how to define clusters of similar points. Let S denote the given set of n
+points in d. In some applications the points are not necessarily
+distinct, so that S is a multiset rather than a set.
+
+Because the goal is to create k clusters, we define a k-clustering of S
+as a decomposition of S into a sequence S(1), S(2), ..., S(k) of k
+disjoint subsets, or clusters, so that
+
+S = S(1) S(2) S(k).
+
+A cluster may be empty, for example if k > 1 but all of the points in S
+
+have the same attribute values.
+
+There are many ways to define a k-clustering of S and many ways to
+evaluate the quality of a given k-clustering. We consider here only kclusterings of S that are defined by a sequence C of k centers
+
+C = c(1), c(2), ..., c(k),
+
+where each center is a point in d, and the nearest-center rule says that
+a point x may belong to cluster S() if the center of no other cluster is
+closer to x than the center c() of S():
+
+x S() only if (x, c()) = min {(x, c(j)): 1 j k}.
+
+A center can be anywhere, and not necessarily a point in S.
+
+Ties are possible and must be broken so that each point lies in
+exactly one cluster. In general, ties may be broken arbitrarily, although
+we'll need the property that we never change which cluster a point x is
+
+assigned to unless the distance from x to its new cluster center is strictly
+smaller than the distance from x to its old cluster center. That is, if the
+
+current cluster has a center that is one of the closest cluster centers to
+x, then don't change which cluster x is assigned to.
+
+The k-means problem is then the following: given a set S of n points
+and a positive integer k, find a sequence C = c(1), c(2), ..., c(k) of k
+center points minimizing the sum f(S, C) of the squared distance from
+
+each point to its nearest center, where
+
+In the second line, the k-clustering S(1),S(2),...,S(k) is defined by the
+centers C and the nearest-center rule. See Exercise 33.1-1 for an
+
+alternative formulation based on pairwise interpoint distances.
+
+Is there a polynomial-time algorithm for the k-means problem?
+
+Probably not, because it is NP-hard [310]. As we'll see in Chapter 34,
+NP-hard problems have no known polynomial-time algorithm, but
+nobody has ever proven that polynomial-time algorithms for NP-hard
+problems cannot exist. Although we know of no polynomial-time
+algorithm that finds the global minimum over all clusterings (according
+
+to equation (33.2)), we can find a local minimum.
+Lloyd [304] proposed a simple procedure that finds a sequence C of k
+
+centers that yields a local minimum of f(S, C). A local minimum in the
+k-means problem satisfies two simple properties: each cluster has an
+
+optimal center (defined below), and each point is assigned to the cluster
+(or one of the clusters) with the closest center. Lloyd's procedure finds a
+good clustering--possibly optimal--that satisfies these two properties.
+These properties are necessary, but not sufficient, for optimality.
+
+Optimal center for a given cluster
+
+In an optimal solution to the k-means problem, each center point must
+be the centroid, or mean, of the points in its cluster. The centroid is a d-
+
+dimensional point, where the value in each dimension is the mean of the
+values of all the points in the cluster in that dimension (that is, the mean
+
+of the corresponding attribute values in the cluster). That is, if c( ) is
+
+the centroid for cluster S(), then for attributes a = 1, 2, ..., d, we have
+
+Over all attributes, we write
+
+Theorem 33.1
+Given a nonempty cluster S( ), its centroid (or mean) is the unique
+choice for the cluster center c() d that minimizes
+
+Proof We wish to minimize, by choosing c() d, the sum
+
+For each attribute a, the term summed is a convex quadratic function in
+
+. To minimize this function, take its derivative with respect to and
+set it to 0:
+
+or, equivalently,
+
+Since the minimum is obtained uniquely when each coordinate of is
+
+the average of the corresponding coordinate for x S( ), the overall
+
+minimum is obtained when c( ) is the centroid of the points x, as in
+equation (33.3).
+
+Optimal clusters for given centers
+
+The following theorem shows that the nearest-center rule--assigning
+each point x to one of the clusters whose center is nearest to x--yields
+
+an optimal solution to the k-means problem.
+
+Theorem 33.2
+Given a set S of n points and a sequence c(1), c(2), ..., c(k) of k
+centers, a clustering S(1), S(2), ..., S(k) minimizes
+
+if and only if it assigns each point x S to a cluster S() that minimizes
+
+(x, c()).
+
+Proof The proof is straightforward: each point x S contributes
+
+exactly once to the sum (33.4), and choosing to put x in a cluster whose
+center is nearest minimizes the contribution from x.
+
+Lloyd's procedure
+Lloyd's procedure just iterates two operations--assigning points to
+clusters based on the nearest-center rule, followed by recomputing the
+centers of clusters to be their centroids--until the results converge.
+Here is Lloyd's procedure:
+
+Input: A set S of points in d, and a positive integer k.
+Output: A k-clustering S(1), S(2), ..., S(k) of S with a sequence of
+
+centers c(1), c(2), ..., c(k).
+
+1. Initialize centers: Generate an initial sequence c(1), c(2), ...,
+
+c(k) of k centers by picking k points independently from S at
+
+random. (If the points are not necessarily distinct, see Exercise
+
+33.1-3.) Assign all points to cluster S(1) to begin.
+
+2. Assign points to clusters: Use the nearest-center rule to define
+
+the clustering S(1), S(2), ..., S(k). That is, assign each point x
+S to a cluster S( ) having a nearest center (breaking ties
+
+arbitrarily, but not changing the assignment for a point x unless
+the new cluster center is strictly closer to x than the old one).
+
+3. Stop if no change: If step 2 did not change the assignments of
+
+any points to clusters, then stop and return the clustering S(1),
+S(2), ..., S(k) and the associated centers c(1), c(2), ..., c(k).
+
+Otherwise, go to step 4.
+
+4. Recompute centers as centroids: For = 1, 2, ..., k, compute the
+center c() of cluster S() as the centroid of the points in S(). (If
+S() is empty, let c() be the zero vector.) Then go to step 2.
+
+It is possible for some of the clusters returned to be empty, particularly
+if many of the input points are identical.
+
+Lloyd's procedure always terminates. By Theorem 33.1, recomputing
+
+the centers of each cluster as the cluster centroid cannot increase f(S,
+C). Lloyd's procedure ensures that a point is reassigned to a different
+cluster only when such an operation strictly decreases f(S, C). Thus
+
+each iteration of Lloyd's procedure, except the last iteration, must
+
+strictly decrease f(S, C). Since there are only a finite number of possible
+k-clusterings of S (at most kn), the procedure must terminate.
+
+Furthermore, once one iteration of Lloyd's procedure yields no decrease
+
+in f, further iterations would not change anything, and the procedure
+
+can stop at this locally optimum assignment of points to clusters.
+
+If Lloyd's procedure really required kn iterations, it would be
+
+impractical. In practice, it sometimes suffices to terminate the
+
+procedure when the percentage decrease in f(S, C) in the latest iteration
+
+falls below a predetermined threshold. Because Lloyd's procedure is
+guaranteed to find only a locally optimal clustering, one approach to
+finding a good clustering is to run Lloyd's procedure many times with
+different randomly chosen initial centers, taking the best result.
+
+The running time of Lloyd's procedure is proportional to the number
+
+T of iterations. In one iteration, assigning points to clusters based on
+the nearest-center rule requires O(dkn) time, and recomputing new
+centers for each cluster requires O(dn) time (because each point is in
+one cluster). The overall running time of the k-means procedure is thus
+O(Tdkn).
+
+Lloyd's algorithm illustrates an approach common to many machinelearning algorithms:
+
+First, define a hypothesis space in terms an appropriate sequence
+of parameters, so that each is associated with a specific
+
+hypothesis h. (For the k-means problem, is a dk-dimensional
+vector, equivalent to C, containing the d-dimensional center of
+each of the k clusters, and h is the hypothesis that each data
+
+point x should be grouped with a cluster having a center closest
+to x.)
+
+Second, define a measure f(E, ) describing how poorly
+hypothesis h fits the given training data E. Smaller values of f(E,
+
+) are better, and a (locally) optimal solution (locally) minimizes
+
+f(E, ). (For the k-means problem, f(E, ) is just f(S, C).)
+
+Third, given a set of training data E, use a suitable optimization
+procedure to find a value of * that minimizes f(E, *), at least
+locally. (For the k-means problem, this value of * is the sequence
+C of k center points returned by Lloyd's algorithm.)
+
+Return * as the answer.
+
+In this framework, we see that optimization becomes a powerful tool for
+machine learning. Using optimization in this way is flexible. For
+
+example, regularization terms can be incorporated in the function to be
+
+minimized, in order to penalize hypotheses that are "too complicated"
+
+and that "overfit" the training data. (Regularization is a complex topic
+that isn't pursued further here.)
+
+Examples
+
+Figure 33.1 demonstrates Lloyd's procedure on a set of n = 49 cities: 48
+U.S. state capitals and the District of Columbia. Each city has d = 2
+
+dimensions: latitude and longitude. The initial clustering in part (a) of
+the figure has the initial cluster centers arbitrarily chosen as the capitals
+of Arkansas, Kansas, Louisiana, and Tennessee. As the procedure
+
+iterates, the value of the function f decreases, until the 11th iteration in
+
+part (l), where it remains the same as in the 10th iteration in part (k).
+Lloyd's procedure then terminates with the clusters shown in part (l).
+
+As Figure 33.2 shows, Lloyd's procedure can also apply to "vector
+quantization." Here, the goal is to reduce the number of distinct colors
+required to represent a photograph, thereby allowing the photograph
+to be greatly compressed (albeit in a lossy manner). In part (a) of the
+figure, an original photograph 700 pixels wide and 500 pixels high uses
+24 bits (three bytes) per pixel to encode a triple of red, green, and blue
+(RGB) primary color intensities. Parts (b)(e) of the figure show the
+results of using Lloyd's procedure to compress the picture from a initial
+
+space of 224 possible values per pixel to a space of only k = 4, k = 16, k
+= 64, or k = 256 possible values per pixel; these k values are the cluster
+
+centers. The photograph can then be represented with only 2, 4, 6, or 8
+bits per pixel, respectively, instead of the 24-bits per pixel needed by the
+initial photograph. An auxiliary table, the "palette," accompanies the
+
+compressed image; it holds the k 24-bit cluster centers and is used to
+
+map each pixel value to its 24-bit cluster center when the photo is
+decompressed.
+
+Exercises
+
+33.1-1
+Show that the objective function f(S, C) of equation (33.2) may be
+
+alternatively written as
+
+33.1-2
+Give an example in the plane with n = 4 points and k = 2 clusters where
+an iteration of Lloyd's procedure does not improve f(S, C), yet the k-
+
+clustering is not optimal.
+
+33.1-3
+
+When the input to Lloyd's procedure contains many repeated points, a
+different initialization procedure might be used. Describe a way to pick
+a number of centers at random that maximizes the number of distinct
+
+centers picked. (Hint: See Exercise 5.3-5.)
+
+33.1-4
+Show how to find an optimal k-clustering in polynomial time when
+there is just one attribute (d = 1).
+
+Figure 33.2 Using Lloyd's procedure for vector quantization to compress a photo by using
+fewer colors. (a) The original photo has 350,000 pixels (700 × 500), each a 24-bit RGB
+(red/blue/green) triple of 8-bit values; these pixels (colors) are the "points" to be clustered.
+Points repeat, so there are only 79,083 distinct colors (less than 224). After compression, only
+
+k distinct colors are used, so each pixel is represented by only 1g k bits instead of 24. A
+
+"palette" maps these values back to 24-bit RGB values (the cluster centers). (b)(e) The same
+
+photo with k = 4, 16, 64, and 256 colors. (Photo from standuppaddle, pixabay.com.)

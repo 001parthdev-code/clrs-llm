@@ -1,0 +1,293 @@
+26.2 Parallel matrix multiplication
+
+In this section, we'll explore how to parallelize the three matrixmultiplication algorithms from Sections 4.1 and 4.2. We'll see that each
+algorithm can be parallelized in a straightforward fashion using either
+parallel loops or recursive spawning. We'll analyze them using
+work/span analysis, and we'll see that each parallel algorithm attains the
+same performance on one processor as its corresponding serial
+algorithm, while scaling up to large numbers of processors.
+
+A parallel algorithm for matrix multiplication using parallel loops
+
+The first algorithm we'll study is P-MATRIX-MULTIPLY, which
+simply parallelizes the two outer loops in the procedure MATRIXMULTIPLY on page 81.
+
+P-MATRIX-MULTIPLY (A, B, C, n)
+
+1 parallel for i = 1 to n // compute entries in each of n rows
+
+2 parallel for j = 1 to n // compute n entries in row i
+
+3 for k = 1 to n
+
+4 cij = cij + aik · bkj // add in another term of equation
+
+(4.1)
+
+Let's analyze P-MATRIX-MULTIPLY. Since the serial projection of
+the algorithm is just MATRIX-MULTIPLY, the work is the same as the
+
+running time of MATRIX-MULTIPLY: T1(n) = (n3). The span is
+T(n) = (n), because it follows a path down the tree of recursion for
+
+the parallel for loop starting in line 1, then down the tree of recursion
+
+for the parallel for loop starting in line 2, and then executes all n
+
+iterations of the ordinary for loop starting in line 3, resulting in a total
+
+span of (lg n) + (lg n) + (n) = (n). Thus the parallelism is (n3)/
+(n) = (n2). (Exercise 26.2-3 asks you to parallelize the inner loop to
+obtain a parallelism of (n3/lg n), which you cannot do
+
+straightforwardly using parallel for, because you would create races.)
+
+A parallel divide-and-conquer algorithm for matrix multiplication
+
+Section 4.1 shows how to multiply n × n matrices serially in (n3) time
+
+using a divide-and-conquer strategy. Let's see how to parallelize that
+algorithm using recursive spawning instead of calls.
+
+The serial MATRIX-MULTIPLY-RECURSIVE procedure on page
+
+83 takes as input three n × n matrices A, B, and C and performs the
+matrix calculation C = C + A · B by recursively performing eight
+multiplications of n/2 × n/2 submatrices of A and B. The P-MATRIX-
+
+MULTIPLY-RECURSIVE procedure on the following page implements
+the same divide-and-conquer strategy, but it uses spawning to perform
+the eight multiplications in parallel. To avoid determinacy races in
+
+updating the elements of C, it creates a temporary matrix D to store
+four of the submatrix products. At the end, it adds C and D together to
+
+produce the final result. (Problem 26-2 asks you to eliminate the
+
+temporary matrix D at the expense of some parallelism.)
+
+Lines 23 of P-MATRIX-MULTIPLY-RECURSIVE handle the
+base case of multiplying 1 × 1 matrices. The remainder of the procedure
+
+deals with the recursive case. Line 4 allocates a temporary matrix D,
+and lines 57 zero it. Line 8 partitions each of the four matrices A, B, C,
+and D into n/2 × n/2 submatrices. (As with MATRIX-MULTIPLY-
+
+RECURSIVE on page 83, we're glossing over the subtle issue of how to
+use index calculations to represent submatrix sections of a matrix.) The
+
+spawned recursive call in line 9 sets C11 = C11 + A11 · B11, so that C11
+
+accumulates the first of the two terms in equation (4.5) on page 82.
+
+Similarly, lines 1012 cause each of C12, C21, and C22 in parallel to
+
+accumulate the first of the two terms in equations (4.6)(4.8),
+
+respectively. Line 13 sets the submatrix D11 to the submatrix product
+A12 · B21, so that D11 equals the second of the two terms in equation
+(4.5). Lines 1416 set each of D12, D21, and D22 in parallel to the
+
+second of the two terms in equations (4.6)(4.8), respectively. The sync
+
+statement in line 17 ensures that all the spawned submatrix products in
+
+lines 916 have been computed, after which the doubly nested parallel
+
+for loops in lines 1820 add the elements of D to the corresponding
+elements of C.
+
+P-MATRIX-MULTIPLY-RECURSIVE (A, B, C, n)
+
+1 if n == 1 // just one element in each matrix?
+
+2 c11 = c11 + a11 · b11
+
+3 return
+
+4 let D be a new n × n matrix// temporary matrix
+
+5 parallel for i = 1 to n // set D = 0
+
+6 parallel for j = 1 to n
+
+7 dij = 0
+
+8 partition A, B, C, and D into n/2 × n/2 submatrices A11, A12, A21,
+
+A22; B11, B12, B21, B22; C11, C12, C21, C22; and D11, D12, D21,
+
+D22; respectively
+
+9 spawn P-MATRIX-MULTIPLY-RECURSIVE (A11, B11, C11,
+
+n/2)
+
+10 spawn P-MATRIX-MULTIPLY-RECURSIVE (A11, B12, C12,
+
+n/2)
+
+11 spawn P-MATRIX-MULTIPLY-RECURSIVE (A21, B11, C21,
+
+n/2)
+
+12 spawn P-MATRIX-MULTIPLY-RECURSIVE (A21, B12, C22,
+
+n/2)
+
+13 spawn P-MATRIX-MULTIPLY-RECURSIVE (A12, B21, D11,
+
+n/2)
+
+14 spawn P-MATRIX-MULTIPLY-RECURSIVE (A12, B22, D12,
+
+n/2)
+
+15 spawn P-MATRIX-MULTIPLY-RECURSIVE (A22, B21, D21,
+n/2)
+
+16 spawn P-MATRIX-MULTIPLY-RECURSIVE (A22, B22, D22,
+n/2)
+
+17 sync // wait for spawned submatrix products
+
+18 parallel for i = 1 to n // update C = C + D
+
+19 parallel for j = 1 to n
+
+20 cij = cij + dij
+
+Let's analyze the P-MATRIX-MULTIPLY-RECURSIVE procedure.
+
+We start by analyzing the work M1(n), echoing the serial running-time
+
+analysis of its progenitor MATRIX-MULTIPLY-RECURSIVE. The
+
+recursive case allocates and zeros the temporary matrix D in (n2) time,
+partitions in (1) time, performs eight recursive multiplications of n/2 ×
+n/2 matrices, and finishes up with the (n2) work from adding two n×n
+matrices. Thus the work outside the spawned recursive calls is (n2),
+and the recurrence for the work M1(n) becomes
+
+M1(n) = 8M1(n/2) + (n2)
+
+= (n3)
+
+by case 1 of the master theorem (Theorem 4.1). Not surprisingly, the
+work of this parallel algorithm is asymptotically the same as the
+running time of the procedure MATRIX-MULTIPLY on page 81, with
+its triply nested loops.
+
+Let's determine the span M(n) of P-MATRIX-MULTIPLY-
+
+RECURSIVE. Because the eight parallel recursive spawns all execute
+on matrices of the same size, the maximum span for any recursive
+
+spawn is just the span of a single one of them, or M(n/2). The span for
+the doubly nested parallel for loops in lines 57 is (lg n) because each
+loop control adds (lg n) to the constant span of line 7. Similarly, the
+doubly nested parallel for loops in lines 1820 add another (lg n).
+
+Matrix partitioning by index calculation has (1) span, which is
+
+dominated by the (lg n) span of the nested loops. We obtain the
+
+recurrence
+
+Since this recurrence falls under case 2 of the master theorem with k =
+1, the solution is M(n) = (lg2 n).
+
+The parallelism of P-MATRIX-MULTIPLY-RECURSIVE is
+
+M1(n)/M(n) = (n3/lg2n), which is huge. (Problem 26-2 asks you to
+
+simplify this parallel algorithm at the expense of just a little less
+parallelism.)
+
+Parallelizing Strassen's method
+
+To parallelize Strassen's algorithm, we can follow the same general
+outline as on pages 8687, but use spawning. You may find it helpful to
+compare each step below with the corresponding step there. We'll
+
+analyze costs as we go along to develop recurrences T1(n) and T(n)
+
+for the overall work and span, respectively.
+
+1. If n = 1, the matrices each contain a single element. Perform a
+
+single scalar multiplication and a single scalar addition, and
+
+return. Otherwise, partition the input matrices A and B and
+output matrix C into n/2 × n/2 submatrices, as in equation (4.2)
+
+on page 82. This step takes (1) work and (1) span by index
+calculation.
+
+2. Create n/2 × n/2 matrices S1, S2, ... , S10, each of which is the
+
+sum or difference of two submatrices from step 1. Create and
+
+zero the entries of seven n/2×n/2 matrices P1, P2, ... , P7 to hold
+seven n/2×n/2 matrix products. All 17 matrices can be created,
+and the Pi initialized, with doubly nested parallel for loops using
+(n2) work and (lg n) span.
+3. Using the submatrices from step 1 and the matrices S1, S2, ... ,
+S10 created in step 2, recursively spawn computations of each of
+
+the seven n/2 × n/2 matrix products P1, P2, ... , P7, taking
+7T1(n/2) work and T(n/2) span.
+
+4. Update the four submatrices C11, C12, C21, C22 of the result
+matrix C by adding or subtracting various Pi matrices. Using
+
+doubly nested parallel for loops, computing all four submatrices
+
+takes (n2) work and (lg n) span.
+
+Let's analyze this algorithm. Since the serial projection is the same as
+the original serial algorithm, the work is just the running time of the
+
+serial projection, namely, (nlg 7). As we did with P-MATRIX-
+
+MULTIPLY-RECURSIVE, we can devise a recurrence for the span. In
+this case, seven recursive calls execute in parallel, but since they all
+operate on matrices of the same size, we obtain the same recurrence
+(26.6) as we did for P-MATRIX-MULTIPLY-RECURSIVE, with
+
+solution (lg2 n). Thus the parallel version of Strassen's method has
+parallelism (nlg 7/lg2 n), which is large. Although the parallelism is
+
+slightly less than that of P-MATRIX-MULTIPLY-RECURSIVE, that's
+just because the work is also less.
+
+Exercises
+
+26.2-1
+
+Draw the trace for computing P-MATRIX-MULTIPLY on 2 × 2
+matrices, labeling how the vertices in your diagram correspond to
+strands in the execution of the algorithm. Assuming that each strand
+executes in unit time, analyze the work, span, and parallelism of this
+computation.
+
+26.2-2
+
+Repeat Exercise 26.2-1 for P-MATRIX-MULTIPLY-RECURSIVE.
+
+26.2-3
+Give pseudocode for a parallel algorithm that multiplies two n × n
+matrices with work (n3) but span only (lg n). Analyze your
+
+algorithm.
+
+26.2-4
+Give pseudocode for an efficient parallel algorithm that multiplies a p ×
+q matrix by a q × r matrix. Your algorithm should be highly parallel
+even if any of p, q, and r equal 1. Analyze your algorithm.
+
+26.2-5
+
+Give pseudocode for an efficient parallel version of the Floyd-Warshall
+algorithm (see Section 23.2), which computes shortest paths between all
+pairs of vertices in an edge-weighted graph. Analyze your algorithm.

@@ -1,0 +1,161 @@
+16.2 The accounting method
+
+In the accounting method of amortized analysis, you assign differing
+
+charges to different operations, with some operations charged more or
+less than they actually cost. The amount that you charge an operation is
+
+its amortized cost. When an operation's amortized cost exceeds its
+
+actual cost, you assign the difference to specific objects in the data
+
+structure as credit. Credit can help pay for later operations whose
+
+amortized cost is less than their actual cost. Thus, you can view the
+
+amortized cost of an operation as being split between its actual cost
+and credit that is either deposited or used up. Different operations may
+have different amortized costs. This method differs from aggregate
+analysis, in which all operations have the same amortized cost.
+
+You must choose the amortized costs of operations carefully. If you
+want to use amortized costs to show that in the worst case the average
+cost per operation is small, you must ensure that the total amortized
+cost of a sequence of operations provides an upper bound on the total
+actual cost of the sequence. Moreover, as in aggregate analysis, the
+upper bound must apply to all sequences of operations. Let's denote the
+
+actual cost of the ith operation by ci and the amortized cost of the ith
+operation by i. Then you need to have
+
+for all sequences of n operations. The total credit stored in the data
+
+structure is the difference between the total amortized cost and the
+
+total actual cost, or . By inequality (16.1), the total
+
+credit associated with the data structure must be nonnegative at all
+
+times. If you ever allowed the total credit to become negative (the result
+
+of undercharging early operations with the promise of repaying the
+
+account later on), then the total amortized costs incurred at that time
+
+would be below the total actual costs incurred. In that case, for the
+
+sequence of operations up to that time, the total amortized cost would
+
+not be an upper bound on the total actual cost. Thus, you must take
+
+care that the total credit in the data structure never becomes negative.
+
+Stack operations
+
+To illustrate the accounting method of amortized analysis, we return to
+the stack example. Recall that the actual costs of the operations were
+
+PUSH 1,
+
+POP 1,
+
+MULTIPOPmin {s,
+
+k},
+
+where k is the argument supplied to MULTIPOP and s is the stack size
+
+when it is called. Let us assign the following amortized costs:
+
+PUSH 2,
+
+POP 0,
+
+MULTIPOP0.
+
+The amortized cost of MULTIPOP is a constant (0), whereas the actual
+cost is variable, and thus all three amortized costs are constant. In
+general, the amortized costs of the operations under consideration may
+differ from each other, and they may even differ asymptotically.
+
+Now let's see how to pay for any sequence of stack operations by
+charging the amortized costs. Let $1 represent each unit of cost. At
+first, the stack is empty. Recall the analogy of Section 10.1.3 between
+the stack data structure and a stack of plates in a cafeteria. Upon
+pushing a plate onto the stack, use $1 to pay the actual cost of the
+push, leaving a credit of $1 (out of the $2 charged). Place that $1 of
+credit on top of the plate. At any point in time, every plate on the stack
+has $1 of credit on it.
+
+The $1 stored on the plate serves to prepay the cost of popping the
+plate from the stack. A POP operation incurs no charge: pay the actual
+cost of popping a plate by taking the $1 of credit off the plate. Thus, by
+charging the PUSH operation a little bit more, we can view the POP
+operation as free.
+
+Moreover, the MULTIPOP operation also incurs no charge, since it's
+just repeated POP operations, each of which is free. If a MULTIPOP
+
+operation pops k plates, then the actual cost is paid by the k dollars
+stored on the k plates. Because each plate on the stack has $1 of credit
+
+on it, and the stack always has a nonnegative number of plates, the
+
+amount of credit is always nonnegative. Thus, for any sequence of n
+
+PUSH, POP, and MULTIPOP operations, the total amortized cost is an
+upper bound on the total actual cost. Since the total amortized cost is
+
+O(n), so is the total actual cost.
+
+Incrementing a binary counter
+
+As another illustration of the accounting method, let's analyze the
+INCREMENT operation on a binary counter that starts at 0. Recall
+that the running time of this operation is proportional to the number of
+bits flipped, which serves as the cost for this example. Again, we'll use
+$1 to represent each unit of cost (the flipping of a bit in this example).
+
+For the amortized analysis, the amortized cost to set a 0-bit to 1 is
+$2. When a bit is set to 1, $1 of the $2 pays to actually set the bit. The
+second $1 resides on the bit as credit to be used later if and when the bit
+is reset to 0. At any point in time, every 1-bit in the counter has $1 of
+credit on it, and thus resetting a bit to 0 can be viewed as costing
+nothing, and the $1 on the bit prepays for the reset.
+
+Here is how to determine the amortized cost of INCREMENT. The
+cost of resetting the bits to 0 within the while loop is paid for by the
+dollars on the bits that are reset. The INCREMENT procedure sets at
+most one bit to 1, in line 6, and therefore the amortized cost of an
+INCREMENT operation is at most $2. The number of 1-bits in the
+counter never becomes negative, and thus the amount of credit stays
+
+nonnegative at all times. Thus, for n INCREMENT operations, the total
+amortized cost is O(n), which bounds the total actual cost.
+
+Exercises
+
+16.2-1
+
+You perform a sequence of PUSH and POP operations on a stack
+
+whose size never exceeds k. After every k operations, a copy of the
+
+entire stack is made automatically, for backup purposes. Show that the
+
+cost of n stack operations, including copying the stack, is O(n) by
+
+assigning suitable amortized costs to the various stack operations.
+
+16.2-2
+
+Redo Exercise 16.1-3 using an accounting method of analysis.
+
+16.2-3
+
+You wish not only to increment a counter but also to reset it to 0 (i.e.,
+make all bits in it 0). Counting the time to examine or modify a bit as
+(1), show how to implement a counter as an array of bits so that any
+
+sequence of n INCREMENT and RESET operations takes O(n) time
+on an initially zero counter. (Hint: Keep a pointer to the high-order 1.)

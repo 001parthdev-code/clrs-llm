@@ -1,0 +1,971 @@
+26.3 Parallel merge sort
+
+We first saw serial merge sort in Section 2.3.1, and in Section 2.3.2 we
+
+analyzed its running time and showed it to be (n lg n). Because merge
+
+sort already uses the divide-and-conquer method, it seems like a terrific
+candidate for implementing using fork-join parallelism.
+
+The procedure P-MERGE-SORT modifies merge sort to spawn the
+first recursive call. Like its serial counterpart MERGE-SORT on page
+
+39, the P-MERGE-SORT procedure sorts the subarray A[p : r]. After
+
+the sync statement in line 8 ensures that the two recursive spawns in
+lines 5 and 7 have finished, P-MERGE-SORT calls the P-MERGE
+procedure, a parallel merging algorithm, which is on page 779, but you
+don't need to bother looking at it right now.
+
+P-MERGE-SORT (A, p, r)
+
+1if p r // zero or one element?
+
+2 return
+
+3q = (p + r)/2 // midpoint of A[p : r]
+
+4// Recursively sort A[p : q] in parallel.
+
+5spawn P-MERGE-SORT (A, p, q)
+
+6// Recursively sort A[q + 1 : r] in parallel.
+
+7spawn P-MERGE-SORT (A, q + 1, r)
+
+8 sync // wait for spawns
+
+9// Merge A[p : q] and A[q + 1 : r] into A[p : r].
+10P-MERGE (A, p, q, r)
+
+First, let's use work/span analysis to get some intuition for why we
+need a parallel merge procedure. After all, it may seem as though there
+should be plenty of parallelism just by parallelizing MERGE-SORT
+without worrying about parallelizing the merge. But what would happen
+if the call to P-MERGE in line 10 of P-MERGE-SORT were replaced by
+a call to the serial MERGE procedure on page 36? Let's call the
+pseudocode so modified P-NAIVE-MERGE-SORT.
+
+Let T1(n) be the (worst-case) work of P-NAIVE-MERGE-SORT on
+an n-element subarray, where n = r -p + 1 is the number of elements in
+A[p : r], and let T(n) be the span. Because MERGE is serial with
+running time (n), both its work and span are (n). Since the serial
+
+projection of P-NAIVE-MERGE-SORT is exactly MERGE-SORT, its
+
+work is T1(n) = (n lg n). The two recursive calls in lines 5 and 7 run in
+
+parallel, and so its span is given by the recurrence
+
+T(n) = T(n/2) + (n)
+= (n),
+
+by case 1 of the master theorem. Thus the parallelism of P-NAIVE-
+
+MERGE-SORT is T1(n)/T(n) = (lg n), which is an unimpressive
+
+amount of parallelism. To sort a million elements, for example, since lg
+106 20, it might achieve linear speedup on a few processors, but it
+would not scale up to dozens of processors.
+
+The parallelism bottleneck in P-NAIVE-MERGE-SORT is plainly
+the MERGE procedure. If we asymptotically reduce the span of
+merging, the master theorem dictates that the span of parallel merge
+sort will also get smaller. When you look at the pseudocode for
+MERGE, it may seem that merging is inherently serial, but it's not. We
+can fashion a parallel merging algorithm. The goal is to reduce the span
+of parallel merging asymptotically, but if we want an efficient parallel
+
+algorithm, we must ensure that the (n) bound on work doesn't
+
+increase.
+
+Figure 26.6 depicts the divide-and-conquer strategy that we'll use in
+
+P-MERGE. The heart of the algorithm is a recursive auxiliary
+
+procedure P-MERGE-AUX that merges two sorted subarrays of an
+
+array A into a subarray of another array B in parallel. Specifically, PMERGE-AUX merges A[p1 : r1] and A[p2 : r2] into subarray B[p3 : r3],
+where r3 = p3 + (r1 - p1 + 1) + (r2 - p2 + 1) - 1 = p3 + (r1 - p1) + (r2
+- p2) + 1.
+
+The key idea of the recursive merging algorithm in P-MERGE-AUX
+
+is to split each of the two sorted subarrays of A around a pivot x, such
+that all the elements in the lower part of each subarray are at most x
+and all the elements in the upper part of each subarray are at least x.
+
+The procedure can then recurse in parallel on two subtasks: merging the
+
+two lower parts, and merging the two upper parts. The trick is to find a
+
+pivot x so that the recursion is not too lopsided. We don't want a
+
+situation such as that in QUICKSORT on page 183, where bad
+
+partitioning elements lead to a dramatic loss of asymptotic efficiency.
+
+We could opt to partition around a random element, as
+
+RANDOMIZED-QUICKSORT on page 192 does, but because the
+
+input subarrays are sorted, P-MERGE-AUX can quickly determine a
+
+pivot that always works well.
+
+Specifically, the recursive merging algorithm picks the pivot x as the
+
+middle element of the larger of the two input subarrays, which we can
+
+assume without loss of generality is A[p1 : r1], since otherwise, the two
+subarrays can just switch roles. That is, x = A[q1], where q1 = (p1 +
+r1)/2. Because A[p1 : r1] is sorted, x is a median of the subarray
+elements: every element in A[p1 : q1 - 1] is no more than x, and every
+element in A[q1 + 1 : r1] is no less than x. Then the algorithm finds the
+"split point" q2 in the smaller subarray A[p2 : r2] such that all the
+elements in A[p2 : q2-1] (if any) are at most x and all the elements in
+A[q2 : r2] (if any) are at least x. Intuitively, the subarray A[p2 : r2] would
+still be sorted if x were inserted between A[q2-1] and A[q2] (although
+the algorithm doesn't do that). Since A[p2 : r2] is sorted, a minor variant
+of binary search (see Exercise 2.3-6) with x as the search key can find
+
+the split point q2 in (lg n) time in the worst case. As we'll see when we
+get to the analysis, even if x splits A[p2 : r2] badly--x is either smaller
+
+than all the subarray elements or larger--we'll still have at least 1/4 of
+the elements in each of the two recursive merges. Thus the larger of the
+recursive merges operates on at most 3/4 elements, and the recursion is
+
+guaranteed to bottom out after (lg n) recursive calls.
+
+Figure 26.6 The idea behind P-MERGE-AUX, which merges two sorted subarrays A[p1 : r1]
+and A[p2 : r2] into the subarray B[p3 : r3] in parallel. Letting x = A[q1] (shown in yellow) be a
+median of A[p1 : r1] and q2 be a place in A[p2 : r2] such that x would fall between A[q2 - 1]
+and A[q2], every element in the subarrays A[p1 : q1 - 1] and A[p2 : q2 - 1] (shown in orange)
+is at most x, and every element in the subarrays A[q1 + 1 : r1] and A[q2 + 1 : r2] (shown in
+blue) is at least x. To merge, compute the index q3 where x belongs in B[p3 : r3], copy x into
+B[q3], and then recursively merge A[p1 : q1 - 1] with A[p2 : q2 - 1] into B[p3 : q3 - 1] and
+A[q1 + 1 : r1] with A[q2 : r2] into B[q3 + 1 : r3].
+
+Now let's put these ideas into pseudocode. We start with the serial
+
+procedure FIND-SPLIT-POINT (A, p, r, x) on the next page, which
+takes as input a sorted subarray A[p : r] and a key x. The procedure
+returns a split point of A[p : r]: an index q in the range p q r + 1 such
+that all the elements in A[p : q - 1] (if any) are at most x and all the
+elements in A[q : r] (if any) are at least x.
+
+The FIND-SPLIT-POINT procedure uses binary search to find the
+split point. Lines 1 and 2 establish the range of indices for the search.
+Each time through the while loop, line 5 compares the middle element of
+
+the range with the search key x, and lines 6 and 7 narrow the search
+
+range to either the lower half or the upper half of the subarray,
+
+depending on the result of the test. In the end, after the range has been
+narrowed to a single index, line 8 returns that index as the split point.
+
+FIND-SPLIT-POINT (A, p, r, x)
+
+1 low = p // low end of search range
+2 high = r + 1 // high end of search range
+// more than one element?
+3 while low < high // midpoint of range
+4 mid = (low + high)/2
+
+5 if x A[mid] // is answer q mid?
+// narrow search to A[low : mid]
+6 high = mid // narrow search to A[mid + 1 : high]
+
+7 else low = mid + 1
+
+8 return low
+
+Because FIND-SPLIT-POINT contains no parallelism, its span is
+
+just its serial running time, which is also its work. On a subarray A[p : r]
+of size n = r - p + 1, each iteration of the while loop halves the search
+range, which means that the loop terminates after (lg n) iterations.
+Since each iteration takes constant time, the algorithm runs in (lg n)
+(worst-case) time. Thus the procedure has work and span (lg n).
+
+Let's now look at the pseudocode for the parallel merging procedure
+
+P-MERGE on the next page. Most of the pseudocode is devoted to the
+
+recursive procedure P-MERGE-AUX. The procedure P-MERGE itself
+
+is just a "wrapper" that sets up for P-MERGE-AUX. It allocates a new
+
+array B[p : r] to hold the output of P-MERGE-AUX in line 1. It then
+
+calls P-MERGE-AUX in line 2, passing the indices of the two subarrays
+
+to be merged and providing B as the output destination of the merged
+result, starting at index p. After P-MERGE-AUX returns, lines 34
+perform a parallel copy of the output B[p : r] into the subarray A[p : r],
+
+which is where P-MERGE-SORT expects it.
+
+The P-MERGE-AUX procedure is the interesting part of the
+
+algorithm. Let's start by understanding the parameters of this recursive
+
+parallel procedure. The input array A and the four indices p1, r1, p2, r2
+specify the subarrays A[p1 : r1] and A[p2 : r2] to be merged. The array B
+and the index p3 indicate that the merged result should be stored into
+
+B[p3 : r3], where r3 = p3 + (r1 - p1)+ (r2 - p2)+ 1, as we saw earlier.
+The end index r3 of the output subarray is not needed by the
+
+pseudocode, but it helps conceptually to name the end index, as in the
+comment in line 13.
+
+The procedure begins by checking the base case of the recursion and
+doing some bookkeeping to simplify the rest of the pseudocode. Lines 1
+and 2 test whether the two subarrays are both empty, in which case the
+procedure returns. Line 3 checks whether the first subarray contains
+fewer elements than the second subarray. Since the number of elements
+
+in the first subarray is r1 - p1 + 1 and the number in the second
+subarray is r2 - p2 + 1, the test omits the two "+1's." If the first
+
+subarray is the smaller of the two, lines 4 and 5 switch the roles of the
+
+subarrays so that A[p1, r1] refers to the larger subarray for the balance
+
+of the procedure.
+
+P-MERGE (A, p, q, r)
+
+1 let B[p : r] be a new array // allocate scratch array
+
+2 P-MERGE-AUX (A, p, q, q + 1, r, B,// merge from A into B
+
+p)
+
+3 parallel for i = p to r // copy B back to A in
+
+parallel
+
+4 A[i] = B[i]
+
+P-MERGE-AUX (A, p1, r1, p2, r2, B, p3)
+
+1 if p1 > r1 and p2 > r2 // are both subarrays empty?
+
+2 return // second subarray bigger?
+// swap subarray roles
+3 if r1 - p1 < r2 - p2
+4 exchange p1 with p2 // midpoint of A[p1 : r1]
+5 exchange r1 with r2 // median of A[p1 : r1] is
+6 q1 = (p1 + r1)/2 pivot x
+7 x = A[q1]
+
+8
+
+q2 = FIND-SPLIT-POINT (A, p2,// split A[p2 : r2] around x
+r2, x)
+
+9 q3 = p3 + (q1 - p1) + (q2 - p2) // where x belongs in B ...
+
+10 B[q3] = x // ... put it there
+
+11 // Recursively merge A[p1 : q1 - 1] and A[p2 : q2 - 1] into B[p3 : q3
+
+- 1].
+
+12 spawn P-MERGE-AUX (A, p1, q1 - 1, p2, q2 - 1, B, p3)
+
+13 // Recursively merge A[q1 + 1 : r1] and A[q2 : r2] into B[q3 + 1 : r3].
+
+14 spawn P-MERGE-AUX (A, q1 + 1, r1, q2, r2, B, q3 + 1)
+
+15 sync // wait for spawns
+
+We're now at the crux of P-MERGE-AUX: implementing the parallel
+divide-and-conquer strategy. As we continue our pseudocode walk, you
+may find it helpful to refer again to Figure 26.6.
+
+First the divide step. Line 6 computes the midpoint q1 of A[p1 : r1],
+which indexes a median x = A[q1] of this subarray to be used as the
+pivot, and line 7 determines x itself. Next, line 8 uses the FIND-SPLITPOINT procedure to find the index q2 in A[p2 : r2] such that all
+elements in A[p2 : q2 - 1] are at most x and all the elements in A[q2 : r2]
+are at least x. Line 9 computes the index q3 of the element that divides
+the output subarray B[p3 : r3] into B[p3 : q3 - 1] and B[q3 + 1 : r3], and
+then line 10 puts x directly into B[q3], which is where it belongs in the
+
+output.
+Next is the conquer step, which is where the parallel recursion
+
+occurs. Lines 12 and 14 each spawn P-MERGE-AUX to recursively
+
+merge from A into B, the first to merge the smaller elements and the
+
+second to merge the larger elements. The sync statement in line 15
+ensures that the subproblems finish before the procedure returns.
+
+There is no combine step, as B[p : r] already contains the correct
+
+sorted output.
+
+Work/span analysis of parallel merging
+
+Let's first analyze the worst-case span T(n) of P-MERGE-AUX on
+input subarrays that together contain a total of n elements. The call to
+FIND-SPLIT-POINT in line 8 contributes (lg n) to the span in the
+
+worst case, and the procedure performs at most a constant amount of
+additional serial work outside of the two recursive spawns in lines 12
+and 14.
+
+Because the two recursive spawns operate logically in parallel, only
+one of them contributes to the overall worst-case span. We claimed
+earlier that neither recursive invocation ever operates on more than
+
+3n/4 elements. Let's see why. Let n1 = r1 - p1 + 1 and n2 = r2 - p2 + 1,
+where n = n1 + n2, be the sizes of the two subarrays when line 6 starts
+executing, that is, after we have established that n2 n1 by swapping the
+roles of the two subarrays, if necessary. Since the pivot x is a median of
+of A[p1 : r1], in the worst case, a recursive merge involves at most n1/2
+elements of A[p1 : r1], but it might involve all n2 of the elements of A[p2
+: r2]. Thus we can bound the number of elements involved in a recursive
+
+invocation of P-MERGE-AUX by
+
+n1/2 + n2 = (2n1 + 4n2)/4
+(3n1 + 3n2)/4 (since n2 n1)
+= 3n/4,
+
+proving the claim.
+The worst-case span of P-MERGE-AUX can therefore be described
+
+by the following recurrence:
+
+Because this recurrence falls under case 2 of the master theorem with k
+= 1, its solution is T(n) = (lg 2 n).
+
+Now let's verify that the work T1(n) of P-MERGE-AUX on n
+elements is linear. A lower bound of (n) is straightforward, since each
+of the n elements is copied from array A to array B. We'll show that
+T1(n) = O(n) by deriving a recurrence for the worst-case work. The
+
+binary search in line 8 costs (lg n) in the worst case, which dominates
+
+the other work outside of the recursive spawns. For the recursive
+spawns, observe that although lines 12 and 14 might merge different
+numbers of elements, the two recursive spawns together merge at most
+
+n - 1 elements (since x = A[q] is not merged). Moreover, as we saw when
+analyzing the span, a recursive spawn operates on at most 3n/4
+
+elements. We therefore obtain the recurrence
+
+where lies in the range 1/4 3/4. The value of can vary from one
+recursive invocation to another.
+
+We'll use the substitution method (see Section 4.3) to prove that the
+
+above recurrence (26.8) has solution T1(n) = O(n). (You could also use
+the Akra-Bazzi method from Section 4.7.) Assume that T1(n) c1n - c2
+lg n for some positive constants c1 and c2. Using the properties of
+
+logarithms on pages 6667--in particular, to deduce that lg + lg(1 -
+) = -(1)--substitution yields
+
+T1(n) (c1n - c2 lg(n)) + (c1(1 - )n - c2 lg((1 - )n)) + (lg n)
+= c1( + (1 - ))n - c2(lg(n) + lg((1 - )n)) + (lg n)
+= c1n - c2(lg + lg n + lg(1 - ) + lg n) + (lg n)
+= c1n - c2 lg n - c2(lg n + lg + lg(1 - )) + (lg n)
+= c1n - c2 lg n - c2(lg n - (1)) + (lg n)
+c1n - c2 lg n,
+
+if we choose c2 large enough that the c2(lg n - (1)) term dominates
+the (lg n) term for sufficiently large n. Furthermore, we can choose c1
+
+large enough to satisfy the implied (1) base cases of the recurrence,
+
+completing the induction. The lower and upper bounds of (n) and
+O(n) give T1(n) = (n), asymptotically the same work as for serial
+
+merging.
+The execution of the pseudocode in the P-MERGE procedure itself
+
+does not add asymptotically to the work and span of P-MERGE-AUX.
+
+The parallel for loop in lines 34 has (lg n) span due to the loop
+control, and each iteration runs in constant time. Thus the (lg2n) span
+of P-MERGE-AUX dominates, yielding (lg2n) span overall for PMERGE. The parallel for loop contains (n) work, matching the
+asymptotic work of P-MERGE-AUX and yielding (n) work overall for
+
+P-MERGE.
+
+Analysis of parallel merge sort
+
+The "heavy lifting" is done. Now that we have determined the work and
+
+span of P-MERGE, we can analyze P-MERGE-SORT. Let T1(n) and
+T(n) be the work and span, respectively, of P-MERGE-SORT on an
+array of n elements. The call to P-MERGE in line 10 of P-MERGE-
+
+SORT dominates the costs of lines 13, for both work and span. Thus
+we obtain the recurrence
+
+T1(n) = 2T1(n/2) + (n)
+
+for the work of P-MERGE-SORT, and we obtain the recurrence
+
+T(n) = T(n/2) + (lg2 n)
+
+for its span. The work recurrence has solution T1(n) = (n lg n) by case
+2 of the master theorem with k = 0. The span recurrence has solution
+T (n) = (lg3 n), also by case 2 of the master theorem, but with k = 2.
+
+Parallel merging gives P-MERGE-SORT a parallelism advantage
+over P-NAIVE-MERGE-SORT. The parallelism of P-NAIVE-MERGE-
+
+SORT, which calls the serial MERGE procedure, is only (lg n). For P-
+
+MERGE-SORT, the parallelism is
+
+T1(n)/T(n) = (n lg n)/(lg3 n)
+= (n/lg2 n),
+
+which is much better, both in theory and in practice. A good
+implementation in practice would sacrifice some parallelism by
+coarsening the base case in order to reduce the constants hidden by the
+
+asymptotic notation. For example, you could switch to an efficient serial
+sort, perhaps quicksort, when the number of elements to be sorted is
+sufficiently small.
+
+Exercises
+
+26.3-1
+
+Explain how to coarsen the base case of P-MERGE.
+
+26.3-2
+
+Instead of finding a median element in the larger subarray, as PMERGE does, suppose that the merge procedure finds a median of all
+the elements in the two sorted subarrays using the result of Exercise
+9.3-10. Give pseudocode for an efficient parallel merging procedure that
+uses this median-finding procedure. Analyze your algorithm.
+
+26.3-3
+
+Give an efficient parallel algorithm for partitioning an array around a
+pivot, as is done by the PARTITION procedure on page 184. You need
+not partition the array in place. Make your algorithm as parallel as
+
+possible. Analyze your algorithm. (Hint: You might need an auxiliary
+
+array and might need to make more than one pass over the input
+elements.)
+
+26.3-4
+
+Give a parallel version of FFT on page 890. Make your implementation
+as parallel as possible. Analyze your algorithm.
+
+26.3-5
+
+Show how to parallelize SELECT from Section 9.3. Make your
+implementation as parallel as possible. Analyze your algorithm.
+
+Problems
+
+26-1 Implementing parallel loops using recursive spawning
+
+Consider the parallel procedure SUM-ARRAYS for performing
+
+pairwise addition on n-element arrays A[1 : n] and B[1 : n], storing the
+sums in C [1 : n].
+
+SUM-ARRAYS (A, B, C, n)
+
+1 parallel for i = 1 to n
+2 C [i] = A[i] + B[i]
+
+a. Rewrite the parallel loop in SUM-ARRAYS using recursive spawning
+
+in the manner of P-MAT-VEC-RECURSIVE. Analyze the
+parallelism.
+
+Consider another implementation of the parallel loop in SUMARRAYS given by the procedure SUM-ARRAYS, where the value
+
+grain-size must be specified.
+
+SUM-ARRAYS(A, B, C, n)
+
+1 grain-size = ? // to be determined
+
+2 r = n/grain-size
+
+3 for k = 0 to r - 1
+
+4 spawn ADD-SUBARRAY (A, B, C, k · grain-size + 1,
+min {(k + 1) · grain-size, n})
+
+5 sync
+
+ADD-SUBARRAY (A, B, C, i, j)
+
+1 for k = i to j
+2 C [k] = A[k] + B[k]
+
+b. Suppose that you set grain-size = 1. What is the resulting parallelism?
+c. Give a formula for the span of SUM-ARRAYS in terms of n and
+
+grain-size. Derive the best value for grain-size to maximize parallelism.
+
+26-2 Avoiding a temporary matrix in recursive matrix multiplication
+
+The P-MATRIX-MULTIPLY-RECURSIVE procedure on page 772
+
+must allocate a temporary matrix D of size n × n, which can adversely
+
+affect the constants hidden by the -notation. The procedure has high
+
+parallelism, however: (n3/log2 n). For example, ignoring the constants
+
+in the -notation, the parallelism for multiplying 1000 × 1000 matrices
+comes to approximately 10003/102 = 107, since lg 1000 10. Most
+parallel computers have far fewer than 10 million processors.
+
+a. Parallelize MATRIX-MULTIPLY-RECURSIVE without using
+temporary matrices so that it retains its (n3) work. (Hint: Spawn the
+
+recursive calls, but insert a sync in a judicious location to avoid races.)
+
+b. Give and solve recurrences for the work and span of your
+
+implementation.
+
+c. Analyze the parallelism of your implementation. Ignoring the
+
+constants in the -notation, estimate the parallelism on 1000 × 1000
+matrices. Compare with the parallelism of P-MATRIX-MULTIPLY-
+RECURSIVE, and discuss whether the trade-off would be
+worthwhile.
+
+26-3 Parallel matrix algorithms
+
+Before attempting this problem, it may be helpful to read Chapter 28.
+
+a. Parallelize the LU-DECOMPOSITION procedure on page 827 by
+
+giving pseudocode for a parallel version of this algorithm. Make your
+implementation as parallel as possible, and analyze its work, span, and
+parallelism.
+
+b. Do the same for LUP-DECOMPOSITION on page 830.
+
+c. Do the same for LUP-SOLVE on page 824.
+
+d. Using equation (28.14) on page 835, write pseudocode for a parallel
+
+algorithm to invert a symmetric positive-definite matrix. Make your
+implementation as parallel as possible, and analyze its work, span, and
+parallelism.
+
+26-4 Parallel reductions and scan (prefix) computations
+
+A -reduction of an array x[1 : n], where is an associative operator,
+
+is the value y = x[1] x[2] x[n]. The REDUCE procedure
+computes the -reduction of a subarray x[i : j] serially.
+
+REDUCE (x, i, j)
+1y = x[i]
+2for k = i + 1 to j
+3 y = y x[k]
+4return y
+
+a. Design and analyze a parallel algorithm P-REDUCE that uses
+recursive spawning to perform the same function with (n) work and
+(lg n) span.
+
+A related problem is that of computing a -scan, sometimes called a
+-prefix computation, on an array x[1 : n], where is once again an
+
+associative operator. The -scan, implemented by the serial procedure
+
+SCAN, produces the array y[1 : n] given by
+
+y[1] = x[1],
+y[2] = x[1] x[2],
+y[3] = x[1] x[2] x[3],
+
+y[n] = x[1] x[2] x[3] x[n],
+
+that is, all prefixes of the array x "summed" using the operator.
+
+SCAN (x, n)
+1 let y[1 : n] be a new array
+2 y[1] = x[1]
+3 for i = 2 to n
+4 y[i] = y[i - 1] 1 x[i]
+5 return y
+
+Parallelizing SCAN is not straightforward. For example, simply
+changing the for loop to a parallel for loop would create races, since
+each iteration of the loop body depends on the previous iteration. The
+procedures P-SCAN-1 and P-SCAN-1-AUX perform the -scan in
+parallel, albeit inefficiently.
+
+P-SCAN-1(x, n)
+1 let y[1] : n be a new array
+2 P-SCAN-1-AUX (x, y, 1, n)
+3 return y
+
+P-SCAN-1-AUX (x, y, i, j)
+1 parallel for l = i to j
+2 y[l] = P-REDUCE (x, 1, l)
+
+b. Analyze the work, span, and parallelism of P-SCAN-1.
+
+The procedures P-SCAN-2 and P-SCAN-2-AUX use recursive
+spawning to perform a more efficient -scan.
+
+P-SCAN-2(x, n)
+
+1 let y[1] : n be a new array
+2 P-SCAN-2-AUX (x, y, 1, n)
+3 return y
+
+P-SCAN-2-AUX (x, y, i, j)
+
+1 if i == j
+2 y[i] = x[i]
+
+3 else k = (i + j)/2
+
+4 spawn P-SCAN-2-AUX (x, y, i, k)
+5 P-SCAN-2-AUX (x, y, k + 1, j)
+
+6 sync
+
+7 parallel for l = k + 1 to j
+
+8 y[l] = y[k] y[l]
+
+c. Argue that P-SCAN-2 is correct, and analyze its work, span, and
+
+parallelism.
+
+To improve on both P-SCAN-1 and P-SCAN-2, perform the -scan
+in two distinct passes over the data. The first pass gathers the terms for
+
+various contiguous subarrays of x into a temporary array t, and the
+second pass uses the terms in t to compute the final result y. The
+
+pseudocode in the procedures P-SCAN-3, P-SCAN-UP, and P-SCANDOWN on the facing page implements this strategy, but certain
+expressions have been omitted.
+
+d. Fill in the three missing expressions in line 8 of P-SCAN-UP and lines
+
+5 and 6 of P-SCAN-DOWN. Argue that with the expressions you
+
+supplied, P-SCAN-3 is correct. (Hint: Prove that the value v passed to
+P-SCAN-DOWN (v, x, t, y, i, j) satisfies v = x[1] x[2] x[i -
+
+1].)
+
+e. Analyze the work, span, and parallelism of P-SCAN-3.
+
+f. Describe how to rewrite P-SCAN-3 so that it doesn't require the use
+of the temporary array t.
+
+g. Give an algorithm P-SCAN-4(x, n) for a scan that operates in
+place. It should place its output in x and require only constant
+
+auxiliary storage.
+
+h. Describe an efficient parallel algorithm that uses a +-scan to
+
+determine whether a string of parentheses is well formed. For
+example, the string ( ( ) ( ) ) ( ) is well formed, but the string ( ( ) ) ) ( (
+
+) is not. (Hint: Interpret ( as a 1 and ) as a -1, and then perform a +-
+
+scan.)
+
+P-SCAN-3(x, n)
+1 let y[1] : n and t[1 : n] be new arrays
+2 y[1] = x[1]
+3 if n > 1
+4 P-SCAN-UP (x, t, 2, n)
+5 P-SCAN-DOWN (x[1], x, t, y, 2, n)
+
+6 return y
+
+P-SCAN-UP (x, t, i, j)
+
+1 if i == j
+2 return x[i]
+
+3 else
+
+4 k = (i + j)/2
+5 t[k] = spawn P-SCAN-UP (x, t, i, k)
+6 right = P-SCAN-UP (x, t, k + 1, j)
+
+7 sync
+
+8 return ____ // fill in the blank
+
+P-SCAN-DOWN (v, x, t, y, i, j)
+
+1 if i == j
+2 y[i] = v x[i]
+
+3 else
+
+4 k = (i + j)/2
+
+5 spawn P-SCAN-DOWN (____, x, t, y, i,// fill in the
+
+k) blank
+
+6 P-SCAN-DOWN (____, x, t, y, k + 1, j) // fill in the
+
+blank
+
+7 sync
+
+26-5 Parallelizing a simple stencil calculation
+
+Computational science is replete with algorithms that require the
+entries of an array to be filled in with values that depend on the values
+of certain already computed neighboring entries, along with other
+information that does not change over the course of the computation.
+The pattern of neighboring entries does not change during the
+
+computation and is called a stencil. For example, Section 14.4 presents a
+
+stencil algorithm to compute a longest common subsequence, where the
+
+value in entry c[i, j] depends only on the values in c[i - 1, j], c[i, j - 1],
+and c[i - 1, j - 1], as well as the elements xi and yj within the two
+
+sequences given as inputs. The input sequences are fixed, but the
+
+algorithm fills in the two-dimensional array c so that it computes entry
+c[i, j] after computing all three entries c[i - 1, j], c[i, j - 1], and c[i - 1, j -
+
+1].
+This problem examines how to use recursive spawning to parallelize
+
+a simple stencil calculation on an n × n array A in which the value
+placed into entry A[i, j] depends only on values in A[i, j], where i i and
+j j (and of course, i i or j j). In other words, the value in an entry
+
+depends only on values in entries that are above it and/or to its left,
+along with static information outside of the array. Furthermore, we
+
+assume throughout this problem that once the entries upon which A[i, j]
+depends have been filled in, the entry A[i, j] can be computed in (1)
+
+time (as in the LCS-LENGTH procedure of Section 14.4).
+
+Partition the n × n array A into four n/2 × n/2 subarrays as follows:
+
+You can immediately fill in subarray A11 recursively, since it does not
+
+depend on the entries in the other three subarrays. Once the
+
+computation of A11 finishes, you can fill in A12 and A21 recursively in
+parallel, because although they both depend on A11, they do not
+depend on each other. Finally, you can fill in A22 recursively.
+
+a. Give parallel pseudocode that performs this simple stencil calculation
+
+using a divide-and-conquer algorithm SIMPLE-STENCIL based on
+the decomposition (26.9) and the discussion above. (Don't worry
+about the details of the base case, which depends on the specific
+stencil.) Give and solve recurrences for the work and span of this
+
+algorithm in terms of n. What is the parallelism?
+
+b. Modify your solution to part (a) to divide an n × n array into nine n/3
+× n/3 subarrays, again recursing with as much parallelism as possible.
+
+Analyze this algorithm. How much more or less parallelism does this
+algorithm have compared with the algorithm from part (a)?
+
+c. Generalize your solutions to parts (a) and (b) as follows. Choose an
+integer b 2. Divide an n × n array into b2 subarrays, each of size n/b
+
+× n/b, recursing with as much parallelism as possible. In terms of n
+and b, what are the work, span, and parallelism of your algorithm?
+Argue that, using this approach, the parallelism must be o(n) for any
+choice of b 2. (Hint: For this argument, show that the exponent of n
+in the parallelism is strictly less than 1 for any choice of b 2.)
+
+d. Give pseudocode for a parallel algorithm for this simple stencil
+calculation that achieves (n/lg n) parallelism. Argue using notions of
+work and span that the problem has (n) inherent parallelism.
+
+Unfortunately, simple fork-join parallelism does not let you achieve
+this maximal parallelism.
+
+26-6 Randomized parallel algorithms
+
+Like serial algorithms, parallel algorithms can employ random-number
+generators. This problem explores how to adapt the measures of work,
+span, and parallelism to handle the expected behavior of randomized
+task-parallel algorithms. It also asks you to design and analyze a
+parallel algorithm for randomized quicksort.
+
+a. Explain how to modify the work law (26.2), span law (26.3), and
+greedy scheduler bound (26.4) to work with expectations when TP,
+T1, and Tare all random variables.
+
+b. Consider a randomized parallel algorithm for which 1% of the time,
+T1 = 104 and T10,000 = 1, but for the remaining 99% of the time, T1
+= T10,000 = 109. Argue that the speedup of a randomized parallel
+algorithm should be defined as E[T1]/E[TP], rather than E[T1/TP].
+
+c. Argue that the parallelism of a randomized task-parallel algorithm
+should be defined as the ratio E[T1]/E[T].
+
+d. Parallelize the RANDOMIZED-QUICKSORT algorithm on page
+
+192 by using recursive spawning to produce P-RANDOMIZED-
+QUICKSORT. (Do not parallelize RANDOMIZED-PARTITION.)
+
+e. Analyze your parallel algorithm for randomized quicksort. (Hint:
+
+Review the analysis of RANDOMIZED-SELECT on page 230.)
+
+f. Parallelize RANDOMIZED-SELECT on page 230. Make your
+implementation as parallel as possible. Analyze your algorithm. (Hint:
+
+Use the partitioning algorithm from Exercise 26.3-3.)
+
+Chapter notes
+
+Parallel computers and algorithmic models for parallel programming
+have been around in various forms for years. Prior editions of this book
+included material on sorting networks and the PRAM (Parallel
+Random-Access Machine) model. The data-parallel model [58, 217] is
+another popular algorithmic programming model, which features
+operations on vectors and matrices as primitives. The notion of
+sequential consistency is due to Lamport [275].
+
+Graham [197] and Brent [71] showed that there exist schedulers
+achieving the bound of Theorem 26.1. Eager, Zahorjan, and Lazowska
+[129] showed that any greedy scheduler achieves this bound and
+proposed the methodology of using work and span (although not by
+those names) to analyze parallel algorithms. Blelloch [57] developed an
+algorithmic programming model based on work and span (which he
+called "depth") for data-parallel programming. Blumofe and Leiserson
+[63] gave a distributed scheduling algorithm for task-parallel
+computations based on randomized "work-stealing" and showed that it
+
+achieves the bound E[TP] T1/P + O(T). Arora, Blumofe, and
+
+Plaxton [20] and Blelloch, Gibbons, and Matias [61] also provided
+provably good algorithms for scheduling task-parallel computations.
+The recent literature contains many algorithms and strategies for
+scheduling parallel programs.
+
+The parallel pseudocode and programming model were influenced by
+Cilk [290, 291, 383, 396]. The open-source project OpenCilk
+(www.opencilk.org) provides Cilk programming as an extension to the C
+and C++ programming languages. All of the parallel algorithms in this
+chapter can be coded straightforwardly in Cilk.
+
+Concerns about nondeterministic parallel programs were expressed
+by Lee [281] and Bocchino, Adve, Adve, and Snir [64]. The algorithms
+literature contains many algorithmic strategies (see, for example, [60, 85,
+
+118, 140, 160, 282, 283, 412, 461]) for detecting races and extending the
+fork-join model to avoid or safely embrace various kinds of
+nondeterminism. Blelloch, Fineman, Gibbons, and Shun [59] showed
+that deterministic parallel algorithms can often be as fast as, or even
+faster than, their nondeterministic counterparts.
+
+Several of the parallel algorithms in this chapter appeared in
+unpublished lecture notes by C. E. Leiserson and H. Prokop and were
+originally implemented in Cilk. The parallel merge-sorting algorithm
+was inspired by an algorithm due to Akl [12].
+
+1 In mathematics, a projection is an idempotent function, that is, a function f such that f f =
+f. In this case, the function f maps the set P of fork-join programs to the set PS P of serial
+
+programs, which are themselves fork-join programs with no parallelism. For a fork-join
+
+program x P, since we have f (f (x)) = f (x), the serial projection, as we have defined it, is
+
+indeed a mathematical projection.
+
+2 Also called a computation dag in the literature.
+
+27 Online Algorithms
+
+Most problems described in this book have assumed that the entire
+input was available before the algorithm executes. In many situations,
+however, the input becomes available not in advance, but only as the
+algorithm executes. This idea was implicit in much of the discussion of
+data structures in Part III. The reason that you want to design, for
+
+example, a data structure that can handle n INSERT, DELETE, and
+SEARCH operations in O(lg n) time per operation is most likely because
+you are going to receive n such operation requests without knowing in
+
+advance what operations will be coming. This idea was also implicit in
+amortized analysis in Chapter 16, where we saw how to maintain a table
+that can grow or shrink in response to a sequence of insertion and
+deletion operations, yet with a constant amortized cost per operation.
+
+An online algorithm receives its input progressively over time, rather
+than having the entire input available at the start, as in an offline
+algorithm. Online algorithms pertain to many situations in which
+
+information arrives gradually. A stock trader must make decisions
+today, without knowing what the prices will be tomorrow, yet wants to
+achieve good returns. A computer system must schedule arriving jobs
+without knowing what work will need to be done in the future. A store
+must decide when to order more inventory without knowing what the
+future demand will be. A driver for a ride-hailing service must decide
+whether to pick up a fare without knowing who will request rides in the
+future. In each of these situations, and many more, algorithmic
+decisions must be made without knowledge of the future.
+
+There are several approaches for dealing with unknown future
+inputs. One approach is to form a probabilistic model of future inputs
+and design an algorithm that assumes future inputs conform to the
+model. This technique is common, for example, in the field of queuing
+theory, and it is also related to machine learning. Of course, you might
+not be able to develop a workable probabilistic model, or even if you
+can, some inputs might not conform to it. This chapter takes a different
+approach. Instead of assuming anything about the future input, we
+employ a conservative strategy of limiting how poor a solution any
+input can entail.
+
+This chapter, therefore, adopts a worst-case approach, designing
+online algorithms that guarantee the quality of the solution for all
+possible future inputs. We'll analyze online algorithms by comparing
+the solution produced by the online algorithm with a solution produced
+by an optimal algorithm that knows the future inputs, and taking a
+worst-case ratio over all possible instances. We call this methodology
+
+competitive analysis. We'll use a similar approach when we study
+
+approximation algorithms in Chapter 35, where we'll compare the
+solution returned by an algorithm that might be suboptimal with the
+value of the optimal solution, and determine a worst-case ratio over all
+possible instances.
+
+We start with a "toy" problem: deciding between whether to take the
+elevator or the stairs. This problem will introduce the basic
+methodology of thinking about online algorithms and how to analyze
+them via competitive analysis. We will then look at two problems that
+use competitive analysis. The first is how to maintain a search list so
+that the access time is not too large, and the second is about strategies
+for deciding which cache blocks to evict from a cache or other kind of
+fast computer memory.

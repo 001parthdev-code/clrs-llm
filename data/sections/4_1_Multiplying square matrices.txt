@@ -1,0 +1,267 @@
+4.1 Multiplying square matrices
+
+We can use the divide-and-conquer method to multiply square matrices.
+If you've seen matrices before, then you probably know how to multiply
+
+them. (Otherwise, you should read Section D.1.) Let A = (aik) and B =
+(bjk) be square n × n matrices. The matrix product C = A · B is also an n
+× n matrix, where for i, j = 1, 2, ... , n, the (i, j) entry of C is given by
+
+Generally, we'll assume that the matrices are dense, meaning that most
+of the n2 entries are not 0, as opposed to sparse, where most of the n2
+
+entries are 0 and the nonzero entries can be stored more compactly
+
+than in an n × n array.
+
+Computing the matrix C requires computing n2 matrix entries, each
+of which is the sum of n pairwise products of input elements from A and
+B. The MATRIX-MULTIPLY procedure implements this strategy in a
+
+straightforward manner, and it generalizes the problem slightly. It takes
+
+as input three n × n matrices A, B, and C, and it adds the matrix
+product A · B to C, storing the result in C. Thus, it computes C = C + A
+· B, instead of just C = A · B. If only the product A · B is needed, just
+
+initialize all n2 entries of C to 0 before calling the procedure, which
+
+takes an additional (n2) time. We'll see that the cost of matrix
+
+multiplication asymptotically dominates this initialization cost.
+
+MATRIX-MULTIPLY(A, B, C, n)
+
+1 for i = 1 to n // compute entries in each of n rows
+
+2 for j = 1 to n // compute n entries in row i
+
+3 for k = 1 to n
+
+4 cij = cij + aik · bkj // add in another term of equation
+
+(4.1)
+
+The pseudocode for MATRIX-MULTIPLY works as follows. The
+
+for loop of lines 14 computes the entries of each row i, and within a
+given row i, the for loop of lines 24 computes each of the entries cij for
+each column j. Each iteration of the for loop of lines 34 adds in one
+
+more term of equation (4.1).
+
+Because each of the triply nested for loops runs for exactly n
+
+iterations, and each execution of line 4 takes constant time, the
+
+MATRIX-MULTIPLY procedure operates in (n3) time. Even if we
+add in the (n2) time for initializing C to 0, the running time is still
+(n3).
+
+A simple divide-and-conquer algorithm
+
+Let's see how to compute the matrix product A · B using divide-andconquer. For n > 1, the divide step partitions the n × n matrices into
+
+four n/2 × n/2 submatrices. We'll assume that n is an exact power of 2,
+
+so that as the algorithm recurses, we are guaranteed that the submatrix
+dimensions are integer. (Exercise 4.1-1 asks you to relax this
+
+assumption.) As with MATRIX-MULTIPLY, we'll actually compute C
+= C + A · B. But to simplify the math behind the algorithm, let's assume
+that C has been initialized to the zero matrix, so that we are indeed
+computing C = A · B.
+
+The divide step views each of the n × n matrices A, B, and C as four
+n/2 × n/2 submatrices:
+
+Then we can write the matrix product as
+
+which corresponds to the equations
+
+Equations (4.5)(4.8) involve eight n/2 × n/2 multiplications and four
+additions of n/2 × n/2 submatrices.
+
+As we look to transform these equations to an algorithm that can be
+described with pseudocode, or even implemented for real, there are two
+common approaches for implementing the matrix partitioning.
+
+One strategy is to allocate temporary storage to hold A's four
+submatrices A11, A12, A21, and A22 and B's four submatrices B11, B12,
+B21, and B22. Then copy each element in A and B to its corresponding
+
+location in the appropriate submatrix. After the recursive conquer step,
+
+copy the elements in each of C's four submatrices C11, C12, C21, and
+
+C22 to their corresponding locations in C. This approach takes (n2)
+time, since 3n2 elements are copied.
+
+The second approach uses index calculations and is faster and more
+practical. A submatrix can be specified within a matrix by indicating
+where within the matrix the submatrix lies without touching any matrix
+elements. Partitioning a matrix (or recursively, a submatrix) only
+involves arithmetic on this location information, which has constant size
+independent of the size of the matrix. Changes to the submatrix
+elements update the original matrix, since they occupy the same
+storage.
+
+Going forward, we'll assume that index calculations are used and
+that partitioning can be performed in (1) time. Exercise 4.1-3 asks you
+to show that it makes no difference to the overall asymptotic running
+time of matrix multiplication, however, whether the partitioning of
+matrices uses the first method of copying or the second method of
+index calculation. But for other divide-and-conquer matrix calculations,
+such as matrix addition, it can make a difference, as Exercise 4.1-4 asks
+you to show.
+
+The procedure MATRIX-MULTIPLY-RECURSIVE uses equations
+(4.5)(4.8) to implement a divide-and-conquer strategy for squarematrix multiplication. Like MATRIX-MULTIPLY, the procedure
+
+MATRIX-MULTIPLY-RECURSIVE computes C = C + A · B since, if
+necessary, C can be initialized to 0 before the procedure is called in
+order to compute only C = A · B.
+
+MATRIX-MULTIPLY-RECURSIVE(A, B, C, n)
+
+1if n == 1
+
+2// Base case.
+
+3 c11 = c11 + a11 · b11
+
+4 return
+5// Divide.
+
+6partition A, B, and C into n/2 × n/2 submatrices
+A11, A12, A21, A22; B11, B12, B21, B22;
+and C11, C12, C21, C22; respectively
+
+7// Conquer.
+
+8MATRIX-MULTIPLY-RECURSIVE(A11, B11, C11, n/2)
+9MATRIX-MULTIPLY-RECURSIVE(A11, B12, C12, n/2)
+10MATRIX-MULTIPLY-RECURSIVE(A21, B11, C21, n/2)
+11MATRIX-MULTIPLY-RECURSIVE(A21, B12, C22, n/2)
+12MATRIX-MULTIPLY-RECURSIVE(A12, B21, C11, n/2)
+13MATRIX-MULTIPLY-RECURSIVE(A12, B22, C12, n/2)
+14MATRIX-MULTIPLY-RECURSIVE(A22, B21, C21, n/2)
+15MATRIX-MULTIPLY-RECURSIVE(A22, B22, C22, n/2)
+
+As we walk through the pseudocode, we'll derive a recurrence to
+
+characterize its running time. Let T (n) be the worst-case time to
+multiply two n × n matrices using this procedure.
+
+In the base case, when n = 1, line 3 performs just the one scalar
+multiplication and one addition, which means that T (1) = (1). As is
+
+our convention for constant base cases, we can omit this base case in
+
+the statement of the recurrence.
+
+The recursive case occurs when n > 1. As discussed, we'll use index
+
+calculations to partition the matrices in line 6, taking (1) time. Lines
+
+815 recursively call MATRIX-MULTIPLY-RECURSIVE a total of
+
+eight times. The first four recursive calls compute the first terms of
+
+equations (4.5)(4.8), and the subsequent four recursive calls compute
+
+and add in the second terms. Each recursive call adds the product of a
+
+submatrix of A and a submatrix of B to the appropriate submatrix of C
+
+in place, thanks to index calculations. Because each recursive call
+
+multiplies two n/2 × n/2 matrices, thereby contributing T (n/2) to the
+overall running time, the time taken by all eight recursive calls is 8T
+(n/2). There is no combine step, because the matrix C is updated in
+
+place. The total time for the recursive case, therefore, is the sum of the
+
+partitioning time and the time for all the recursive calls, or (1) + 8T
+(n/2).
+
+Thus, omitting the statement of the base case, our recurrence for the
+
+running time of MATRIX-MULTIPLY-RECURSIVE is
+
+As we'll see from the master method in Section 4.5, recurrence (4.9) has
+
+the solution T (n) = (n3), which means that it has the same asymptotic
+
+running time as the straightforward MATRIX-MULTIPLY procedure.
+
+Why is the (n3) solution to this recurrence so much larger than the
+(n lg n) solution to the merge-sort recurrence (2.3) on page 41? After
+all, the recurrence for merge sort contains a (n) term, whereas the
+
+recurrence for recursive matrix multiplication contains only a (1)
+term.
+
+Let's think about what the recursion tree for recurrence (4.9) would
+look like as compared with the recursion tree for merge sort, illustrated
+in Figure 2.5 on page 43. The factor of 2 in the merge-sort recurrence
+determines how many children each tree node has, which in turn
+determines how many terms contribute to the sum at each level of the
+tree. In comparison, for the recurrence (4.9) for MATRIXMULTIPLY-RECURSIVE, each internal node in the recursion tree has
+eight children, not two, leading to a "bushier" recursion tree with many
+more leaves, despite the fact that the internal nodes are each much
+smaller. Consequently, the solution to recurrence (4.9) grows much
+more quickly than the solution to recurrence (2.3), which is borne out
+
+in the actual solutions: (n3) versus (n lg n).
+
+Exercises
+
+Note: You may wish to read Section 4.5 before attempting some of
+
+these exercises.
+
+4.1-1
+Generalize MATRIX-MULTIPLY-RECURSIVE to multiply n × n
+matrices for which n is not necessarily an exact power of 2. Give a
+recurrence describing its running time. Argue that it runs in (n3) time
+
+in the worst case.
+
+4.1-2
+
+How quickly can you multiply a k n × n matrix (k n rows and n columns)
+by an n × k n matrix, where k 1, using MATRIX-MULTIPLY-
+
+RECURSIVE as a subroutine? Answer the same question for
+
+multiplying an n × k n matrix by a k n × n matrix. Which is
+
+asymptotically faster, and by how much?
+
+4.1-3
+
+Suppose that instead of partitioning matrices by index calculation in
+MATRIX-MULTIPLY-RECURSIVE, you copy the appropriate
+
+elements of A, B, and C into separate n/2 × n/2 submatrices A11, A12,
+A21, A22; B11, B12, B21, B22; and C11, C12, C21, C22, respectively.
+After the recursive calls, you copy the results from C11, C12, C21, and
+C22 back into the appropriate places in C. How does recurrence (4.9)
+
+change, and what is its solution?
+
+4.1-4
+
+Write pseudocode for a divide-and-conquer algorithm MATRIX-ADD-
+
+RECURSIVE that sums two n × n matrices A and B by partitioning
+each of them into four n/2 × n/2 submatrices and then recursively
+
+summing corresponding pairs of submatrices. Assume that matrix
+partitioning uses (1)-time index calculations. Write a recurrence for
+the worst-case running time of MATRIX-ADD-RECURSIVE, and
+
+solve your recurrence. What happens if you use (n2)-time copying to
+
+implement the partitioning instead of index calculations?

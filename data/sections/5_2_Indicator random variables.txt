@@ -1,0 +1,210 @@
+5.2 Indicator random variables
+
+In order to analyze many algorithms, including the hiring problem, we
+use indicator random variables. Indicator random variables provide a
+convenient method for converting between probabilities and
+
+expectations. Given a sample space S and an event A, the indicator
+random variable I {A} associated with event A is defined as
+
+As a simple example, let us determine the expected number of heads
+obtained when flipping a fair coin. The sample space for a single coin
+
+flip is S = {H, T}, with Pr {H} = Pr {T} = 1/2. We can then define an
+indicator random variable XH, associated with the coin coming up
+heads, which is the event H. This variable counts the number of heads
+
+obtained in this flip, and it is 1 if the coin comes up heads and 0
+otherwise. We write
+
+The expected number of heads obtained in one flip of the coin is simply
+
+the expected value of our indicator variable XH:
+E [XH] = E [I {H}]
+
+= 1 · Pr {H} + 0 · Pr {T}
+
+= 1 · (1/2) + 0 · (1/2)
+= 1/2.
+Thus the expected number of heads obtained by one flip of a fair coin is
+1/2. As the following lemma shows, the expected value of an indicator
+
+random variable associated with an event A is equal to the probability
+that A occurs.
+
+Lemma 5.1
+Given a sample space S and an event A in the sample space S, let XA =
+I {A}. Then E [XA] = Pr {A}.
+
+Proof By the definition of an indicator random variable from equation
+
+(5.1) and the definition of expected value, we have
+
+E [XA] = E [I {A}]
+= 1 · Pr {A} + 0 · Pr {A}
+= Pr {A},
+
+where A denotes S A, the complement of A.
+
+Although indicator random variables may seem cumbersome for an
+application such as counting the expected number of heads on a flip of
+a single coin, they are useful for analyzing situations that perform
+repeated random trials. In Appendix C, for example, indicator random
+variables provide a simple way to determine the expected number of
+
+heads in n coin flips. One option is to consider separately the probability
+
+of obtaining 0 heads, 1 head, 2 heads, etc. to arrive at the result of
+equation (C.41) on page 1199. Alternatively, we can employ the simpler
+method proposed in equation (C.42), which uses indicator random
+
+variables implicitly. Making this argument more explicit, let Xi be the
+indicator random variable associated with the event in which the ith flip
+comes up heads: Xi = I {the ith flip results in the event H}. Let X be the
+random variable denoting the total number of heads in the n coin flips,
+
+so that
+
+In order to compute the expected number of heads, take the
+expectation of both sides of the above equation to obtain
+
+By Lemma 5.1, the expectation of each of the random variables is E [Xi]
+
+= 1/2 for i = 1, 2, ... , n. Then we can compute the sum of the
+
+expectations: . But equation (5.2) calls for the
+
+expectation of the sum, not the sum of the expectations. How can we
+
+resolve this conundrum? Linearity of expectation, equation (C.24) on
+
+page 1192, to the rescue: the expectation of the sum always equals the
+
+sum of the expectations. Linearity of expectation applies even when
+
+there is dependence among the random variables. Combining indicator
+
+random variables with linearity of expectation gives us a powerful
+
+technique to compute expected values when multiple events occur. We
+
+now can compute the expected number of heads:
+
+Thus, compared with the method used in equation (C.41), indicator
+random variables greatly simplify the calculation. We use indicator
+random variables throughout this book.
+
+Analysis of the hiring problem using indicator random variables
+
+Returning to the hiring problem, we now wish to compute the expected
+number of times that you hire a new office assistant. In order to use a
+probabilistic analysis, let's assume that the candidates arrive in a
+random order, as discussed in Section 5.1. (We'll see in Section 5.3 how
+
+to remove this assumption.) Let X be the random variable whose value
+
+equals the number of times you hire a new office assistant. We could
+
+then apply the definition of expected value from equation (C.23) on
+page 1192 to obtain
+
+but this calculation would be cumbersome. Instead, let's simplify the
+calculation by using indicator random variables.
+
+To use indicator random variables, instead of computing E [X] by
+
+defining just one variable denoting the number of times you hire a new
+office assistant, think of the process of hiring as repeated random trials
+
+and define n variables indicating whether each particular candidate is
+hired. In particular, let Xi be the indicator random variable associated
+with the event in which the ith candidate is hired. Thus,
+
+and
+
+Lemma 5.1 gives
+
+E [Xi] = Pr {candidate i is hired},
+
+and we must therefore compute the probability that lines 56 of HIREASSISTANT are executed.
+
+Candidate i is hired, in line 6, exactly when candidate i is better than
+each of candidates 1 through i 1. Because we have assumed that the
+candidates arrive in a random order, the first i candidates have
+appeared in a random order. Any one of these first i candidates is
+equally likely to be the best qualified so far. Candidate i has a
+probability of 1/i of being better qualified than candidates 1 through i
+1 and thus a probability of 1/i of being hired. By Lemma 5.1, we
+
+conclude that
+
+Now we can compute E [X]:
+
+Even though you interview n people, you actually hire only
+approximately ln n of them, on average. We summarize this result in the
+
+following lemma.
+
+Lemma 5.2
+
+Assuming that the candidates are presented in a random order,
+algorithm HIRE-ASSISTANT has an average-case total hiring cost of
+
+O(ch ln n).
+Proof The bound follows immediately from our definition of the hiring
+
+cost and equation (5.6), which shows that the expected number of hires
+
+is approximately ln n.
+
+The average-case hiring cost is a significant improvement over the
+
+worst-case hiring cost of O(chn).
+
+Exercises
+
+5.2-1
+
+In HIRE-ASSISTANT, assuming that the candidates are presented in a
+random order, what is the probability that you hire exactly one time?
+
+What is the probability that you hire exactly n times?
+5.2-2
+
+In HIRE-ASSISTANT, assuming that the candidates are presented in a
+random order, what is the probability that you hire exactly twice?
+
+5.2-3
+
+Use indicator random variables to compute the expected value of the
+
+sum of n dice.
+
+5.2-4
+
+This exercise asks you to (partly) verify that linearity of expectation
+holds even if the random variables are not independent. Consider two
+6-sided dice that are rolled independently. What is the expected value of
+the sum? Now consider the case where the first die is rolled normally
+and then the second die is set equal to the value shown on the first die.
+What is the expected value of the sum? Now consider the case where
+the first die is rolled normally and the second die is set equal to 7 minus
+the value of the first die. What is the expected value of the sum?
+
+5.2-5
+
+Use indicator random variables to solve the following problem, which is
+
+known as the hat-check problem. Each of n customers gives a hat to a
+
+hat-check person at a restaurant. The hat-check person gives the hats
+back to the customers in a random order. What is the expected number
+of customers who get back their own hat?
+
+5.2-6
+Let A[1 : n] be an array of n distinct numbers. If i < j and A[i] > A[j],
+then the pair (i, j) is called an inversion of A. (See Problem 2-4 on page
+47 for more on inversions.) Suppose that the elements of A form a
+uniform random permutation of 1, 2, ... , n. Use indicator random
+
+variables to compute the expected number of inversions.

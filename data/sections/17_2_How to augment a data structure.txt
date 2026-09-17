@@ -1,0 +1,182 @@
+17.2 How to augment a data structure
+
+The process of augmenting a basic data structure to support additional
+functionality occurs quite frequently in algorithm design. We'll use it
+again in the next section to design a data structure that supports
+operations on intervals. This section examines the steps involved in such
+augmentation. It includes a useful theorem that allows you to augment
+red-black trees easily in many cases.
+
+You can break the process of augmenting a data structure into four
+steps:
+
+1. Choose an underlying data structure.
+
+2. Determine additional information to maintain in the underlying
+data structure.
+
+3. Verify that you can maintain the additional information for the
+basic modifying operations on the underlying data structure.
+
+4. Develop new operations.
+
+As with any prescriptive design method, you'll rarely be able to follow
+the steps precisely in the order given. Most design work contains an
+element of trial and error, and progress on all steps usually proceeds in
+parallel. There is no point, for example, in determining additional
+information and developing new operations (steps 2 and 4) if you
+cannot maintain the additional information efficiently. Nevertheless,
+this four-step method provides a good focus for your efforts in
+augmenting a data structure, and it is also a good framework for
+documenting an augmented data structure.
+
+We followed these four steps in Section 17.1 to design order-statistic
+trees. For step 1, we chose red-black trees as the underlying data
+structure. Red-black trees seemed like a good starting point because
+they efficiently support other dynamic-set operations on a total order,
+
+such as MINIMUM, MAXIMUM, SUCCESSOR, and
+PREDECESSOR.
+
+In Step 2, we added the size attribute, so that each node x stores the
+size of the subtree rooted at x. Generally, the additional information
+
+makes operations more efficient. For example, it is possible to
+implement OS-SELECT and OS-RANK using just the keys stored in
+
+the tree, but then they would not run in O(lg n) time. Sometimes, the
+
+additional information is pointer information rather than data, as in
+Exercise 17.2-1.
+
+For step 3, we ensured that insertion and deletion can maintain the
+
+size attributes while still running in O(lg n) time. Ideally, you would like
+
+to update only a few elements of the data structure in order to maintain
+the additional information. For example, if each node simply stores its
+rank in the tree, the OS-SELECT and OS-RANK procedures run
+quickly, but inserting a new minimum element might cause a change to
+this information in every node of the tree. Because we chose to store
+subtree sizes instead, inserting a new element causes information to
+
+change in only O(lg n) nodes.
+
+In Step 4, we developed the operations OS-SELECT and OSRANK. After all, the need for new operations is why anyone bothers to
+augment a data structure in the first place. Occasionally, rather than
+developing new operations, you can use the additional information to
+expedite existing ones, as in Exercise 17.2-1.
+
+Augmenting red-black trees
+
+When red-black trees underlie an augmented data structure, we can
+prove that insertion and deletion can always efficiently maintain certain
+kinds of additional information, thereby simplifying step 3. The proof
+of the following theorem is similar to the argument from Section 17.1
+
+that we can maintain the size attribute for order-statistic trees.
+
+Theorem 17.1 (Augmenting a red-black tree)
+Let f be an attribute that augments a red-black tree T of n nodes, and
+suppose that the value of f for each node x depends only the
+information in nodes x, x.left, and x.right (possibly including x.left.f
+
+and x.right.f), and that the value of x.f can be computed from this
+information in O(1) time. Then, the insertion and deletion operations
+can maintain the values of f in all nodes of T without asymptotically
+affecting the O(lg n) running times of these operations.
+
+Proof The main idea of the proof is that a change to an f attribute in a
+node x propagates only to ancestors of x in the tree. That is, changing
+x.f may require x.p.f to be updated, but nothing else; updating x.p.f may
+require x.p.p.f to be updated, but nothing else; and so on up the tree.
+After updating T.root.f, no other node depends on the new value, and
+so the process terminates. Since the height of a red-black tree is O(lg n),
+changing an f attribute in a node costs O(lg n) time in updating all
+
+nodes that depend on the change.
+
+As we saw in Section 13.3, insertion of a node x into red-black tree T
+consists of two phases. If the tree T is empty, then the first phase simply
+makes x be the root of T. If T is not empty, then the first phase inserts x
+as a child of an existing node. Because we assume that the value of x.f
+depends only on information in the other attributes of x itself and the
+information in x's children, and because x's children are both the
+sentinel T.nil, it takes only O(1) time to compute the value of x.f.
+Having computed x.f, the change propagates up the tree. Thus, the total
+time for the first phase of insertion is O(lg n). During the second phase,
+
+the only structural changes to the tree come from rotations. Since only
+
+two nodes change in a rotation, but a change to an attribute might need
+
+to propagate up to the root, the total time for updating the f attributes
+is O(lg n) per rotation. Since the number of rotations during insertion is
+at most two, the total time for insertion is O(lg n).
+
+Like insertion, deletion has two phases, as Section 13.4 discusses. In
+
+the first phase, changes to the tree occur when a node is deleted, and at
+
+most two other nodes could move within the tree. Propagating the
+
+updates to f caused by these changes costs at most O(lg n), since the
+
+changes modify the tree locally along a simple path from the lowest
+
+changed node to the root. Fixing up the red-black tree during the
+
+second phase requires at most three rotations, and each rotation
+
+requires at most O(lg n) time to propagate the updates to f. Thus, like
+insertion, the total time for deletion is O(lg n).
+
+In many cases, such as maintaining the size attributes in orderstatistic trees, the cost of updating after a rotation is O(1), rather than
+the O(lg n) derived in the proof of Theorem 17.1. Exercise 17.2-3 gives
+
+an example.
+On the other hand, when an update after a rotation requires a
+
+traversal all the way up to the root, it is important that insertion into
+and deletion from a red-black tree require a constant number of
+rotations. The chapter notes for Chapter 13 list other schemes for
+balancing search trees that do not bound the number of rotations per
+insertion or deletion by a constant. If each operation might require (lg
+
+n) rotations and each rotation traverses a path up to the root, then a
+single operation could require (lg2n) time, rather than the O(lg n) time
+
+bound given by Theorem 17.1.
+
+Exercises
+
+17.2-1
+
+Show, by adding pointers to the nodes, how to support each of the
+dynamic-set queries MINIMUM, MAXIMUM, SUCCESSOR, and
+
+PREDECESSOR in O(1) worst-case time on an augmented order-
+
+statistic tree. The asymptotic performance of other operations on
+order-statistic trees should not be affected.
+
+17.2-2
+
+Can you maintain the black-heights of nodes in a red-black tree as
+attributes in the nodes of the tree without affecting the asymptotic
+performance of any of the red-black tree operations? Show how, or
+argue why not. How about maintaining the depths of nodes?
+
+17.2-3
+Let be an associative binary operator, and let a be an attribute
+
+maintained in each node of a red-black tree. Suppose that you want to
+
+include in each node x an additional attribute f such that x.f = x1.a
+x2.a ... xm.a, where x1, x2, ... , xm is the inorder listing of nodes
+
+in the subtree rooted at x. Show how to update the f attributes in O(1)
+
+time after a rotation. Modify your argument slightly to apply it to the
+
+size attributes in order-statistic trees.

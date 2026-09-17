@@ -1,0 +1,626 @@
+29.3 Duality
+
+We will now introduce a powerful concept called linear-programming
+duality. In general, given a maximization problem, duality allows you to
+
+formulate a related minimization problem that has the same objective
+value. The idea of duality is actually more general than linear
+programming, but we restrict our attention to linear programming in
+this section.
+
+Duality enables us to prove that a solution is indeed optimal. We saw
+an example of duality in Chapter 24 with Theorem 24.6, the max-flow
+min-cut theorem. Suppose that, given an instance of a maximum-flow
+
+problem, you find a flow f with value |f|. How do you know whether f is a
+
+maximum flow? By the max-flow min-cut theorem, if you can find a cut
+
+whose value is also |f|, then you have verified that f is indeed a maximum
+
+flow. This relationship provides an example of duality: given a
+maximization problem, define a related minimization problem such that
+the two problems have the same optimal objective values.
+
+Given a linear program in standard form in which the objective is to
+
+maximize, let's see how to formulate a dual linear program in which the
+
+objective is to minimize and whose optimal value is identical to that of
+the original linear program. When referring to dual linear programs, we
+
+call the original linear program the primal.
+
+Given the primal linear program
+
+subject to
+
+its dual is
+
+subject to
+
+Mechanically, to form the dual, change the maximization to a
+minimization, exchange the roles of coefficients on the right-hand sides
+
+and in the objective function, and replace each by . Each of the m
+constraints in the primal corresponds to a variable yi in the dual.
+Likewise, each of the n constraints in the dual corresponds to a variable
+xj in the primal. For example, consider the following primal linear
+
+program:
+
+subject to
+
+Its dual is
+
+subject to
+
+Although forming the dual can be considered a mechanical
+operation, there is an intuitive explanation. Consider the primal
+maximization problem (29.37)(29.41). Each constraint gives an upper
+bound on the objective function. In addition, if you take one or more
+constraints and add together nonnegative multiples of them, you get a
+valid constraint. For example, you can add constraints (29.38) and
+
+(29.39) to obtain the constraint 3x1 + 3x2 + 8x3 54. Any feasible
+
+solution to the primal must satisfy this new constraint, but there is
+something else interesting about it. Comparing this new constraint to
+the objective function (29.37), you can see that for each variable, the
+corresponding coefficient is at least as large as the coefficient in the
+
+objective function. Thus, since the variables x1, x2 and x3 are
+
+nonnegative, we have that
+
+3x1 + x2 + 4x3 3x1 + 3x2 + 8x3 54,
+
+and so the solution value to the primal is at most 54. In other words,
+adding these two constraints together has generated an upper bound on
+the objective value.
+
+In general, for any nonnegative multipliers y1, y2, and y3, you can
+
+generate a constraint
+
+y1(x1+x2+3x3)+y2(2x1+2x2+5x3)+y3(4x1+x2+2x3)
+
+30y1+24y2+36y3
+
+from the primal constraints or, by distributing and regrouping,
+
+(y1+2y2+4y3)x1+(y1+2y2+y3)x2+(3y1+5y2+2y3)x3
+
+30y1+24y2+36y3.
+
+Now, as long as this constraint has coefficients of x1, x2, and x3 that
+
+are at least their objective-function coefficients, it is a valid upper
+bound. That is, as long as
+
+y1 + 2y2 + 4y3 3,
+y1 + 2y2 + y3 1,
+3y1 + 5y2 + 2y3 4,
+you have a valid upper bound of 30y1+24y2+36y3. The multipliers y1,
+y2, and y3 must be nonnegative, because otherwise you cannot combine
+
+the inequalities. Of course, you would like the upper bound to be as
+
+small as possible, and so you want to choose y to minimize 30y1 + 24y2
++ 36y3. Observe that we have just described the dual linear program as
+
+the problem of finding the smallest possible upper bound on the primal.
+We'll formalize this idea and show in Theorem 29.4 that, if the linear
+
+program and its dual are feasible and bounded, then the optimal value
+of the dual linear program is always equal to the optimal value of the
+
+primal linear program. We begin by demonstrating weak duality, which
+
+states that any feasible solution to the primal linear program has a value
+no greater than that of any feasible solution to the dual linear program.
+
+Lemma 29.1 (Weak linear-programming duality)
+Let x be any feasible solution to the primal linear program in (29.31)
+
+(29.33), and let be any feasible solution to its dual linear program in
+(29.34)(29.36). Then
+
+Proof We have
+
+Corollary 29.2
+
+Let x be a feasible solution to the primal linear program in (29.31)
+
+(29.33), and let be a feasible solution to its dual linear program in
+(29.34)(29.36). If
+
+then x and are optimal solutions to the primal and dual linear
+
+programs, respectively.
+
+Proof By Lemma 29.1, the objective value of a feasible solution to the
+
+primal cannot exceed that of a feasible solution to the dual. The primal
+linear program is a maximization problem and the dual is a
+
+minimization problem. Thus, if feasible solutions x and have the same
+
+objective value, neither can be improved.
+
+We now show that, at optimality, the primal and dual objective
+values are indeed equal. To prove linear programming duality, we will
+require one lemma from linear algebra, known as Farkas's lemma, the
+proof of which Problem 29-4 asks you to provide. Farkas's lemma can
+take several forms, each of which is about when a set of linear equalities
+
+has a solution. In stating the lemma, we use m + 1 as a dimension
+
+because it matches our use below.
+
+Lemma 29.3 (Farkas's lemma)
+Given M (m+1)×n and g m+1, exactly one of the following
+
+statements is true:
+
+1. There exists v n such that Mv g,
+2. There exists w m+1 such that w 0, wTM = 0 (an n-vector of
+
+all zeros), and wTg < 0.
+
+Theorem 29.4 (Linear-programming duality)
+
+Given the primal linear program in (29.31)(29.33) and its
+corresponding dual in (29.34)(29.36), if both are feasible and bounded,
+
+then for optimal solutions x* and y*, we have cTx* = bTy*.
+
+Proof Let = bTy* be the optimal value of the dual linear program
+
+given in (29.34)(29.36). Consider an augmented set of primal
+constraints in which we add a constraint to (29.31)(29.33) that the
+
+objective value is at least . We write out this augmented primal as
+
+We can multiply (29.48) through by -1 and rewrite (29.47)(29.48) as
+
+Here, denotes an (m+1)×n matrix, x is an n-vector, and
+
+denotes an (m + 1)-vector.
+
+We claim that if there is a feasible solution x to the augmented
+
+primal, then the theorem is proved. To establish this claim, observe that
+
+x is also a feasible solution to the original primal and that it has
+
+objective value at least . We can then apply Lemma 29.1, which states
+
+that the objective value of the primal is at most , to complete the proof
+
+of the theorem.
+
+It therefore remains to show that the augmented primal has a
+
+feasible solution. Suppose, for the purpose of contradiction, that the
+
+augmented primal is infeasible, which means that there is no v n
+
+such that . We can apply Farkas's lemma, Lemma 29.3, to
+
+inequalty (29.49) with
+
+Because the augmented primal is infeasible, condition 1 of Farkas's
+
+lemma does not hold. Therefore, condition 2 must apply, so that there
+
+must exist a w m+1 such that w 0, wTM = 0, and wTg < 0. Let's
+
+write w as for some m and , where 0 and 0.
+
+Substituting for w, M, and g in condition 2 gives
+
+Unpacking the matrix notation gives
+
+We now show that the requirements in (29.50) contradict the
+
+assumption that is the optimal solution value for the dual linear
+
+program. We consider two cases.
+
+The first case is when = 0. In this case, (29.50) simplifies to
+
+We'll now construct a dual feasible solution y with an objective value
+smaller than bTy*. Set y = y* + , for any > 0. Since
+
+yTA = (y* + )TA
+
+= y*TA + TA
+
+= y*TA (by (29.51))
+
+cT (because y* is feasible),
+
+y is feasible. Now consider the objective value
+
+bTy = bT(y* + )
+= bTy* + bT
+< bTy*,
+
+where the last inequality follows because > 0 and, by (29.51), Tb =
+bT < 0 (since both Tb and bT are the inner product of b and ), and
+
+so their product is negative. Thus we have a feasible dual solution of
+
+value less than , which contradicts being the optimal objective value.
+
+We now consider the second case, where > 0. In this case, we can
+take (29.50) and divide through by to obtain
+
+Now set y = / in (29.52), giving
+yTA = cT and yTb < .
+Thus, y is a feasible dual solution with objective value strictly less than
+, a contradiction. We conclude that the augmented primal has a
+
+feasible solution, and the theorem is proved.
+
+Fundamental theorem of linear programming
+
+We conclude this chapter by stating the fundamental theorem of linear
+programming, which extends Theorem 29.4 to the cases when the linear
+program may be either feasible or unbounded. Exercise 29.3-8 asks you
+to provide the proof.
+
+Theorem 29.5 (Fundamental theorem of linear programming)
+
+Any linear program, given in standard form, either
+
+1. has an optimal solution with a finite objective value,
+2. is infeasible, or
+3. is unbounded.
+
+Exercises
+
+29.3-1
+
+Formulate the dual of the linear program given in lines (29.6)(29.10)
+on page 852.
+
+29.3-2
+
+You have a linear program that is not in standard form. You could
+produce the dual by first converting it to standard form, and then
+
+taking the dual. It would be more convenient, however, to produce the
+dual directly. Explain how to directly take the dual of an arbitrary linear
+program.
+
+29.3-3
+
+Write down the dual of the maximum-flow linear program, as given in
+lines (29.25)(29.28) on page 862. Explain how to interpret this
+formulation as a minimum-cut problem.
+
+29.3-4
+
+Write down the dual of the minimum-cost-flow linear program, as given
+in lines (29.29)(29.30) on page 864. Explain how to interpret this
+problem in terms of graphs and flows.
+
+29.3-5
+
+Show that the dual of the dual of a linear program is the primal linear
+program.
+
+29.3-6
+
+Which result from Chapter 24 can be interpreted as weak duality for
+the maximum-flow problem?
+
+29.3-7
+
+Consider the following 1-variable primal linear program:
+
+maximize tx
+
+subject to
+
+rx s
+x 0,
+
+where r, s, and t are arbitrary real numbers. State for which values of r,
+s, and t you can assert that
+
+1. Both the primal linear program and its dual have optimal
+solutions with finite objective values.
+
+2. The primal is feasible, but the dual is infeasible.
+
+3. The dual is feasible, but the primal is infeasible.
+
+4. Neither the primal nor the dual is feasible.
+
+29.3-8
+
+Prove the fundamental theorem of linear programming, Theorem 29.5.
+
+Problems
+
+29-1 Linear-inequality feasibility
+Given a set of m linear inequalities on n variables x1, x2, ... , xn, the
+linear-inequality feasibility problem asks whether there is a setting of the
+
+variables that simultaneously satisfies each of the inequalities.
+
+a. Given an algorithm for the linear-programming problem, show how
+
+to use it to solve a linear-inequality feasibility problem. The number
+of variables and constraints that you use in the linear-programming
+
+problem should be polynomial in n and m.
+b. Given an algorithm for the linear-inequality feasibility problem, show
+
+how to use it to solve a linear-programming problem. The number of
+variables and linear inequalities that you use in the linear-inequality
+
+feasibility problem should be polynomial in n and m, the number of
+
+variables and constraints in the linear program.
+
+29-2 Complementary slackness
+Complementary slackness describes a relationship between the values of
+
+primal variables and dual constraints and between the values of dual
+
+variables and primal constraints. Let x be a feasible solution to the
+
+primal linear program given in (29.31)(29.33), and let be a feasible
+solution to the dual linear program given in (29.34)(29.36).
+Complementary slackness states that the following conditions are
+
+necessary and sufficient for x and to be optimal:
+
+and
+
+a. Verify that complementary slackness holds for the linear program in
+
+lines (29.37)(29.41).
+
+b. Prove that complementary slackness holds for any primal linear
+
+program and its corresponding dual.
+
+c. Prove that a feasible solution x to a primal linear program given in
+
+lines (29.31)(29.33) is optimal if and only if there exist values =
+
+(1, 2, ... , m) such that
+
+1. is a feasible solution to the dual linear program given in
+(29.34)(29.36),
+
+2. for all j such that xj > 0, and
+
+3. i = 0 for all i such that .
+
+29-3 Integer linear programming
+An integer linear-programming problem is a linear-programming
+problem with the additional constraint that the variables x must take on
+
+integer values. Exercise 34.5-3 on page 1098 shows that just determining
+whether an integer linear program has a feasible solution is NP-hard,
+which means that there is no known polynomial-time algorithm for this
+problem.
+
+a. Show that weak duality (Lemma 29.1) holds for an integer linear
+
+program.
+
+b. Show that duality (Theorem 29.4) does not always hold for an integer
+
+linear program.
+
+c. Given a primal linear program in standard form, let P be the optimal
+objective value for the primal linear program, D be the optimal
+objective value for its dual, IP be the optimal objective value for the
+
+integer version of the primal (that is, the primal with the added
+
+constraint that the variables take on integer values), and ID be the
+
+optimal objective value for the integer version of the dual. Assuming
+that both the primal integer program and the dual integer program
+are feasible and bounded, show that
+
+IP P = D ID.
+
+29-4 Farkas's lemma
+
+Prove Farkas's lemma, Lemma 29.3.
+
+29-5 Minimum-cost circulation
+
+This problem considers a variant of the minimum-cost-flow problem
+from Section 29.2 in which there is no demand, source, or sink. Instead,
+
+the input, as before, contains a flow network, capacity constraints c(u,
+v), and edge costs a(u, v). A flow is feasible if it satisfies the capacity
+constraint on every edge and flow conservation at every vertex. The
+
+goal is to find, among all feasible flows, the one of minimum cost. We
+
+call this problem the minimum-cost-circulation problem.
+
+a. Formulate the minimum-cost-circulation problem as a linear
+
+program.
+
+b. Suppose that for all edges (u, v) E, we have a(u, v) > 0. What does
+
+an optimal solution to the minimum-cost-circulation problem look
+like?
+
+c. Formulate the maximum-flow problem as a minimum-cost-circulation
+
+problem linear program. That is, given a maximum-flow problem
+
+instance G = (V, E) with source s, sink t and edge capacities c, create
+
+a minimum-cost-circulation problem by giving a (possibly different)
+
+network G = (V, E) with edge capacities c and edge costs a such
+
+that you can derive a solution to the maximum-flow problem from a
+solution to the minimum-cost-circulation problem.
+
+d. Formulate the single-source shortest-path problem as a minimum-
+
+cost-circulation problem linear program.
+
+Chapter notes
+
+This chapter only begins to study the wide field of linear programming.
+A number of books are devoted exclusively to linear programming,
+including those by Chvátal [94], Gass [178], Karloff [246], Schrijver
+[398], and Vanderbei [444]. Many other books give a good coverage of
+linear programming, including those by Papadimitriou and Steiglitz
+[353] and Ahuja, Magnanti, and Orlin [7]. The coverage in this chapter
+draws on the approach taken by Chvátal.
+
+The simplex algorithm for linear programming was invented by G.
+Dantzig in 1947. Shortly after, researchers discovered how to formulate
+a number of problems in a variety of fields as linear programs and solve
+them with the simplex algorithm. As a result, applications of linear
+programming flourished, along with several algorithms. Variants of the
+simplex algorithm remain the most popular methods for solving linearprogramming problems. This history appears in a number of places,
+including the notes in [94] and [246].
+
+The ellipsoid algorithm was the first polynomial-time algorithm for
+linear programming and is due to L. G. Khachian in 1979. It was based
+on earlier work by N. Z. Shor, D. B. Judin, and A. S. Nemirovskii.
+Grötschel, Lovász, and Schrijver [201] describe how to use the ellipsoid
+algorithm to solve a variety of problems in combinatorial optimization.
+To date, the ellipsoid algorithm does not appear to be competitive with
+the simplex algorithm in practice.
+
+Karmarkar's paper [247] includes a description of the first interiorpoint algorithm. Many subsequent researchers designed interior-point
+algorithms. Good surveys appear in the article of Goldfarb and Todd
+[189] and the book by Ye [463].
+
+Analysis of the simplex algorithm remains an active area of research.
+V. Klee and G. J. Minty constructed an example on which the simplex
+
+algorithm runs through 2n - 1 iterations. The simplex algorithm usually
+
+performs well in practice, and many researchers have tried to give
+theoretical justification for this empirical observation. A line of research
+begun by K. H. Borgwardt, and carried on by many others, shows that
+under certain probabilistic assumptions on the input, the simplex
+algorithm converges in expected polynomial time. Spielman and Teng
+
+[421] made progress in this area, introducing the "smoothed analysis of
+algorithms" and applying it to the simplex algorithm.
+
+The simplex algorithm is known to run efficiently in certain special
+cases. Particularly noteworthy is the network-simplex algorithm, which
+is the simplex algorithm, specialized to network-flow problems. For
+certain network problems, including the shortest-paths, maximum-flow,
+and minimum-cost-flow problems, variants of the network-simplex
+algorithm run in polynomial time. See, for example, the article by Orlin
+[349] and the citations therein.
+
+1 An intuitive definition of a convex region is that it fulfills the requirement that for any two
+points in the region, all points on a line segment between them are also in the region.
+
+30 Polynomials and the FFT
+
+The straightforward method of adding two polynomials of degree n
+takes (n) time, but the straightforward method of multiplying them
+takes (n2) time. This chapter will show how the fast Fourier transform,
+or FFT, can reduce the time to multiply polynomials to (n lg n).
+
+The most common use for Fourier transforms, and hence the FFT, is
+
+in signal processing. A signal is given in the time domain: as a function
+
+mapping time to amplitude. Fourier analysis expresses the signal as a
+weighted sum of phase-shifted sinusoids of varying frequencies. The
+weights and phases associated with the frequencies characterize the
+
+signal in the frequency domain. Among the many everyday applications
+
+of FFT's are compression techniques used to encode digital video and
+audio information, including MP3 files. Many fine books delve into the
+rich area of signal processing, and the chapter notes reference a few of
+them.
+
+Polynomials
+
+A polynomial in the variable x over an algebraic field F represents a
+function A(x) as a formal sum:
+
+The values a0, a1, ... , an-1 are the coefficients of the polynomial. The
+coefficients and x are drawn from a field F, typically the set of
+complex numbers. A polynomial A(x) has degree k if its highest nonzero
+
+coefficient is ak, in which case we say that degree(A) = k. Any integer
+strictly greater than the degree of a polynomial is a degree-bound of
+
+that polynomial. Therefore, the degree of a polynomial of degree-bound
+
+n may be any integer between 0 and n - 1, inclusive.
+A variety of operations extend to polynomials. For polynomial
+
+addition, if A(x) and B(x) are polynomials of degree-bound n, their sum
+is a polynomial C(x), also of degree-bound n, such that C(x) =
+A(x)+B(x) for all x in the underlying field. That is, if
+
+then
+
+where cj = aj + bj for j = 0, 1, ... , n - 1. For example, given the
+polynomials A(x) = 6x3 + 7x2 - 10x + 9 and B(x) = -2x3 + 4x - 5,
+their sum is C(x) = 4x3 + 7x2 - 6x + 4.
+
+For polynomial multiplication, if A(x) and B(x) are polynomials of
+degree-bound n, their product C(x) is a polynomial of degree-bound 2n
+- 1 such that C(x) = A(x)B(x) for all x in the underlying field. You
+
+probably have multiplied polynomials before, by multiplying each term
+
+in A(x) by each term in B(x) and then combining terms with equal
+powers. For example, you can multiply A(x) = 6x3 + 7x2 - 10x + 9 and
+B(x) = -2x3 + 4x - 5 as follows:
+
+Another way to express the product C(x) is
+
+where
+
+(By the definition of degree, ak = 0 for all k > degree(A) and bk = 0 for
+all k > degree(B).) If A is a polynomial of degree-bound na and B is a
+polynomial of degree-bound nb, then C must be a polynomial of
+degree-bound na + nb - 1, because degree(C) = degree(A) + degree(B).
+Since a polynomial of degree-bound k is also a polynomial of degreebound k + 1, we normally make the somewhat simpler statement that
+the product polynomial C is a polynomial of degree-bound na + nb.
+
+Chapter outline
+
+Section 30.1 presents two ways to represent polynomials: the coefficient
+representation and the point-value representation. The straightforward
+
+method for multiplying polynomials of degree n--equations (30.1) and
+(30.2)--takes (n2) time with polynomials represented in coefficient
+form, but only (n) time with point-value form. Converting between the
+
+two representations, however, reduces the time to multiply polynomials
+
+to just (n lg n). To see why this approach works, you must first
+
+understand complex roots of unity, which Section 30.2 covers. Section
+30.2 then uses the FFT and its inverse to perform the conversions.
+Because the FFT is used so often in signal processing, it is often
+implemented as a circuit in hardware, and Section 30.3 illustrates the
+structure of such circuits.
+
+This chapter relies on complex numbers, and within this chapter the
+
+symbol i denotes exclusively.

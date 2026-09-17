@@ -1,0 +1,847 @@
+22.5 Proofs of shortest-paths properties
+
+Throughout this chapter, our correctness arguments have relied on the
+triangle inequality, upper-bound property, no-path property,
+convergence property, path-relaxation property, and predecessorsubgraph property. We stated these properties without proof on page
+611. In this section, we prove them.
+
+The triangle inequality
+
+In studying breadth-first search (Section 20.2), we proved as Lemma
+20.1 a simple property of shortest distances in unweighted graphs. The
+
+triangle inequality generalizes the property to weighted graphs.
+
+Lemma 22.10 (Triangle inequality)
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+and source vertex s. Then, for all edges (u, v) E,
+
+(s, v) (s, u) + w(u, v).
+
+Proof Suppose that p is a shortest path from source s to vertex v. Then
+p has no more weight than any other path from s to v. Specifically, path
+p has no more weight than the particular path that takes a shortest path
+from source s to vertex u and then takes edge (u, v).
+
+Exercise 22.5-3 asks you to handle the case in which there is no
+
+shortest path from s to v.
+
+Effects of relaxation on shortest-path estimates
+
+The next group of lemmas describes how shortest-path estimates are
+affected by executing a sequence of relaxation steps on the edges of a
+weighted, directed graph that has been initialized by INITIALIZESINGLE-SOURCE.
+
+Lemma 22.11 (Upper-bound property)
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+. Let s V be the source vertex, and let the graph be initialized by
+INITIALIZE-SINGLE-SOURCE(G, s). Then, v.d (s, v) for all v V,
+
+and this invariant is maintained over any sequence of relaxation steps
+
+on the edges of G. Moreover, once v.d achieves its lower bound (s, v), it
+
+never changes.
+
+Proof We prove the invariant v.d (s, v) for all vertices v V by
+
+induction over the number of relaxation steps.
+
+For the base case, v.d (s, v) holds after initialization, since if v.d =
+, then v.d (s, v) for all v V - {s}, and since s.d = 0 (s, s). (Note
+that (s, s) = - if s is on a negative-weight cycle and that (s, s) = 0
+
+otherwise.)
+
+For the inductive step, consider the relaxation of an edge (u, v). By
+the inductive hypothesis, x.d (s, x) for all x V prior to the
+relaxation. The only d value that may change is v.d. If it changes, we
+
+have
+
+v.d = u.d + w(u, v)
+
+(s, u) + w(u, v) (by the inductive hypothesis)
+
+(s, v) (by the triangle inequality),
+
+and so the invariant is maintained.
+
+The value of v.d never changes once v.d = (s, v) because, having
+achieved its lower bound, v.d cannot decrease since we have just shown
+that v.d (s, v), and it cannot increase because relaxation steps do not
+increase d values.
+
+Corollary 22.12 (No-path property)
+Suppose that in a weighted, directed graph G = (V, E) with weight
+function w : E , no path connects a source vertex s V to a given
+vertex v V. Then, after the graph is initialized by INITIALIZESINGLE-SOURCE(G, s), we have v.d = (s, v) = , and this equation is
+
+maintained as an invariant over any sequence of relaxation steps on the
+
+edges of G.
+
+Proof By the upper-bound property, we always have = (s, v) v.d,
+and thus v.d = = (s, v).
+
+Lemma 22.13
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+, and let (u, v) E. Then, immediately after edge (u, v) is relaxed by
+a call of RELAX(u, v, w), we have v.d u.d + w(u, v).
+
+Proof If, just prior to relaxing edge (u, v), we have v.d > u.d + w(u, v),
+then v.d = u.d + w(u, v) afterward. If, instead, v.d u.d + w(u, v) just
+before the relaxation, then neither u.d nor v.d changes, and so v.d u.d
++ w(u, v) afterward.
+
+Lemma 22.14 (Convergence property)
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+
+, let s V be a source vertex, and let s u v be a shortest path
+in G for some vertices u, v V. Suppose that G is initialized by
+INITIALIZE-SINGLE-SOURCE(G, s) and then a sequence of
+relaxation steps that includes the call RELAX(u, v, w) is executed on
+the edges of G. If u.d = (s, u) at any time prior to the call, then v.d =
+(s, v) at all times after the call.
+
+Proof By the upper-bound property, if u.d = (s, u) at some point prior
+to relaxing edge (u, v), then this equation holds thereafter. In particular,
+after edge (u, v) is relaxed, we have
+
+v.d u.d + w(u, v) (by Lemma 22.13)
+
+= (s, u) + w(u, v)
+
+= (s, u) (by Lemma 22.1 on page 606).
+
+The upper-bound property gives v.d (s, v), from which we conclude
+that v.d = (s, v), and this equation is maintained thereafter.
+
+Lemma 22.15 (Path-relaxation property)
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+, and let s V be a source vertex. Consider any shortest path p =
+v0, v1, ... , vk from s = v0 to vk. If G is initialized by INITIALIZESINGLE-SOURCE(G, s) and then a sequence of relaxation steps
+occurs that includes, in order, relaxing the edges (v0, v1), (v1, v2), ... ,
+(vk-1, vk), then vk.d = (s, vk) after these relaxations and at all times
+
+afterward. This property holds no matter what other edge relaxations
+
+occur, including relaxations that are intermixed with relaxations of the
+
+edges of p.
+
+Proof We show by induction that after the ith edge of path p is relaxed,
+we have vi.d = (s, vi). For the base case, i = 0, and before any edges of p
+
+have been relaxed, we have from the initialization that v0.d = s.d = 0 =
+(s, s). By the upper-bound property, the value of s.d never changes
+
+after initialization.
+
+For the inductive step, assume that vi-1.d = (s, vi-1). What
+happens when edge (vi-1, vi) is relaxed? By the convergence property,
+after this relaxation, we have vi.d = (s, vi), and this equation is
+
+maintained at all times thereafter.
+
+Relaxation and shortest-paths trees
+
+We now show that once a sequence of relaxations has caused the
+shortest-path estimates to converge to shortest-path weights, the
+
+predecessor subgraph G induced by the resulting values is a
+shortest-paths tree for G. We start with the following lemma, which
+
+shows that the predecessor subgraph always forms a rooted tree whose
+root is the source.
+
+Lemma 22.16
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+let s V be a source vertex, and assume that G contains no
+negative-weight cycles that are reachable from s. Then, after the graph
+is initialized by INITIALIZE-SINGLE-SOURCE(G, s), the predecessor
+subgraph G forms a rooted tree with root s, and any sequence of
+relaxation steps on edges of G maintains this property as an invariant.
+
+Proof Initially, the only vertex in G is the source vertex, and the
+lemma is trivially true. Consider a predecessor subgraph G that arises
+after a sequence of relaxation steps. We first prove that G is acyclic.
+
+Suppose for the sake of contradiction that some relaxation step creates
+
+a cycle in the graph G. Let the cycle be c = v0, v1, ... , vk, where vk =
+v0. Then, vi. = vi-1 for i = 1, 2, ... , k and, without loss of generality,
+assume that relaxing edge (vk-1, vk) created the cycle in G.
+
+We claim that all vertices on cycle c are reachable from the source
+vertex s. Why? Each vertex on c has a non-NIL predecessor, and so
+each vertex on c was assigned a finite shortest-path estimate when it
+was assigned its non-NIL value. By the upper-bound property, each
+vertex on cycle c has a finite shortest-path weight, which means that it
+is reachable from s.
+
+We'll examine the shortest-path estimates on cycle c immediately
+before the call RELAX(vk-1, vk, w) and show that c is a negativeweight cycle, thereby contradicting the assumption that G contains no
+
+negative-weight cycles that are reachable from the source. Just before
+
+the call, we have vi. = vi-1 for i = 1, 2, ... , k - 1. Thus, for i = 1, 2, ... ,
+k - 1, the last update to vi.d was by the assignment vi.d =
+vi-1.d+w(vi-1, vi). If vi-1.d changed since then, it decreased. Therefore,
+just before the call RELAX(vk-1, vk, w), we have
+
+Because vk. is changed by the call RELAX(vk-1, vk, w), immediately
+
+beforehand we also have the strict inequality
+
+vk.d > vk-1.d + wvk-1, vk):
+Summing this strict inequality with the k - 1 inequalities (22.11), we
+
+obtain the sum of the shortest-path estimates around cycle c:
+
+But
+
+Figure 22.9 Showing that a simple path in G from source vertex s to vertex v is unique. If G
+contains two paths p1 (s u x z v) and p2 (s u y z v), where x y, then z.
+= x and z. = y, a contradiction.
+
+since each vertex in the cycle c appears exactly once in each summation.
+
+This equation implies
+
+Thus, the sum of weights around the cycle c is negative, which provides
+the desired contradiction.
+
+We have now proven that G is a directed, acyclic graph. To show
+that it forms a rooted tree with root s, it suffices (see Exercise B.5-2 on
+page 1175) to prove that for each vertex v V, there is a unique simple
+path from s to v in G.
+
+The vertices in V are those with non-NIL values, plus s. Exercise
+22.5-6 asks you to prove that a path from s exists to each vertex in V.
+
+To complete the proof of the lemma, we now show that for any
+
+vertex v V, the graph G contains at most one simple path from s to
+v. Suppose otherwise. That is, suppose that, as Figure 22.9 illustrates,
+G contains two simple paths from s to some vertex v: p1, which we
+decompose into s u x z v, and p2, which we decompose into s
+u y z v, where x y (though u could be s and z could be v).
+But then, z. = x and z. = y, which implies the contradiction that x = y.
+We conclude that G contains a unique simple path from s to v, and
+thus G forms a rooted tree with root s.
+
+We can now show that if all vertices have been assigned their true
+shortest-path weights after a sequence of relaxation steps, then the
+
+predecessor subgraph G is a shortest-paths tree.
+
+Lemma 22.17 (Predecessor-subgraph property)
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+
+, let s V be a source vertex, and assume that G contains no
+negative-weight cycles that are reachable from s. Then, after a call to
+INITIALIZE-SINGLE-SOURCE(G, s) followed by any sequence of
+relaxation steps on edges of G that produces v.d = (s, v) for all v V,
+the predecessor subgraph G is a shortest-paths tree rooted at s.
+
+Proof We must prove that the three properties of shortest-paths trees
+
+given on page 608 hold for G. To show the first property, we must show
+
+that V is the set of vertices reachable from s. By definition, a shortest-
+
+path weight (s, v) is finite if and only if v is reachable from s, and thus
+
+the vertices that are reachable from s are exactly those with finite d
+
+values. But a vertex v V - {s} has been assigned a finite value for v.d
+
+if and only if v. NIL, since both assignments occur in RELAX. Thus,
+
+the vertices in V are exactly those reachable from s.
+
+The second property, that G forms a rooted tree with root s, follows
+
+directly from Lemma 22.16.
+
+It remains, therefore, to prove the last property of shortest-paths
+
+trees: for each vertex v V, the unique simple path in G is a
+
+shortest path from s to v in G. Let p = v0, v1, ... , vk, where v0 = s and
+
+vk = v. Consider an edge (vi-1, vi) in path p. Because this edge belongs
+
+to G, the last relaxation that changed vi.d must have been of this edge.
+
+After that relaxation, we had vi.d = vi-1.d + (vi-1, vi). Subsequently, an
+
+edge entering vi-1 could have been relaxed, causing vi-1.d to decrease
+
+further, but without changing vi.d. Therefore, we have vi.d vi-1.d +
+
+w(vi-1, vi). Thus, for i = 1, 2, ... , k, we have both vi.d = (s, vi) and vi.d
+
+vi-1.d + w(vi-1, vi), which together imply w(vi-1, vi) (s, vi) - (s,
+
+vi-1). Summing the weights along path p yields
+
+Thus, we have w(p) (s, vk). Since (s, vk) is a lower bound on the
+weight of any path from s to vk, we conclude that w(p) = (s, vk), and p
+is a shortest path from s to v = vk.
+
+Exercises
+
+22.5-1
+
+Give two shortest-paths trees for the directed graph of Figure 22.2 on
+page 609 other than the two shown.
+
+22.5-2
+Give an example of a weighted, directed graph G = (V, E) with weight
+function w : E and source vertex s such that G satisfies the
+following property: For every edge (u, v) E, there is a shortest-paths
+tree rooted at s that contains (u, v) and another shortest-paths tree
+rooted at s that does not contain (u, v).
+
+22.5-3
+
+Modify the proof of Lemma 22.10 to handle cases in which shortestpath weights are or -.
+
+22.5-4
+Let G = (V, E) be a weighted, directed graph with source vertex s, and
+let G be initialized by INITIALIZE-SINGLE-SOURCE(G, s). Prove
+that if a sequence of relaxation steps sets s. to a non-NIL value, then G
+
+contains a negative-weight cycle.
+
+22.5-5
+
+Let G = (V, E) be a weighted, directed graph with no negative-weight
+edges. Let s V be the source vertex, and suppose that v. is allowed to
+be the predecessor of v on any shortest path to v from source s if v V
+- {s} is reachable from s, and NIL otherwise. Give an example of such
+a graph G and an assignment of values that produces a cycle in G.
+
+(By Lemma 22.16, such an assignment cannot be produced by a
+sequence of relaxation steps.)
+
+22.5-6
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+and no negative-weight cycles. Let s V be the source vertex, and
+let G be initialized by INITIALIZE-SINGLE-SOURCE(G, s). Use
+induction to prove that for every vertex v V, there exists a path from
+s to v in G and that this property is maintained as an invariant over
+
+any sequence of relaxations.
+
+22.5-7
+Let G = (V, E) be a weighted, directed graph that contains no negativeweight cycles. Let s V be the source vertex, and let G be initialized by
+INITIALIZESINGLE-SOURCE(G, s). Prove that there exists a
+sequence of |V| - 1 relaxation steps that produces v.d = (s, v) for all v
+V.
+
+22.5-8
+Let G be an arbitrary weighted, directed graph with a negative-weight
+
+cycle reachable from the source vertex s. Show how to construct an
+
+infinite sequence of relaxations of the edges of G such that every
+
+relaxation causes a shortest-path estimate to change.
+
+Problems
+
+22-1 Yen's improvement to Bellman-Ford
+
+The Bellman-Ford algorithm does not specify the order in which to
+relax edges in each pass. Consider the following method for deciding
+
+upon the order. Before the first pass, assign an arbitrary linear order v1,
+
+v2, ... , v|V| to the vertices of the input graph G = (V, E). Then partition
+the edge set E into Ef Eb, where Ef = {(vi, vj) E : i < j} and Eb =
+{(vi, vj) E : i > j}. (Assume that G contains no self-loops, so that every
+edge belongs to either Ef or Eb.) Define Gf = (V, Ef) and Gb = (V, Eb).
+
+a. Prove that Gf is acyclic with topological sort v1, v2, ... , v|V| and
+that Gb is acyclic with topological sort v|V|, v|V|-1, ... , v1.
+
+Suppose that each pass of the Bellman-Ford algorithm relaxes edges in
+
+the following way. First, visit each vertex in the order v1, v2, ... , v|V|,
+relaxing edges of Ef that leave the vertex. Then visit each vertex in the
+order v|V|, v|V|-1, ..., v1, relaxing edges of Eb that leave the vertex.
+
+b. Prove that with this scheme, if G contains no negative-weight cycles
+that are reachable from the source vertex s, then after only |V| / 2
+passes over the edges, v.d = (s, v) for all vertices v V.
+
+c. Does this scheme improve the asymptotic running time of the
+
+Bellman-Ford algorithm?
+
+22-2 Nesting boxes
+
+A d-dimensional box with dimensions (x1, x2, ... , xd) nests within
+another box with dimensions (y1, y2, ... , yd) if there exists a
+permutation on {1, 2, ... , d} such that x(1) < y1, x(2) < y2, ... ,
+x(d) < yd.
+
+a. Argue that the nesting relation is transitive.
+
+b. Describe an efficient method to determine whether one d-dimensional
+
+box nests inside another.
+
+c. You are given a set of n d-dimensional boxes {B1, B2, ... , Bn}. Give
+
+an efficient algorithm to find the longest sequence of
+
+boxes such that nests within for j = 1, 2, ... , k - 1. Express the
+
+running time of your algorithm in terms of n and d.
+
+22-3 Arbitrage
+
+Arbitrage is the use of discrepancies in currency exchange rates to
+
+transform one unit of a currency into more than one unit of the same
+
+currency. For example, suppose that one U.S. dollar buys 64 Indian
+
+rupees, one Indian rupee buys 1:8 Japanese yen, and one Japanese yen
+
+buys 0:009 U.S. dollars. Then, by converting currencies, a trader can
+
+start with 1 U.S. dollar and buy 64 × 1.8 × 0.009 = 1.0368 U.S. dollars,
+
+thus turning a profit of 3.68%.
+
+Suppose that you are given n currencies c1, c2, ... , cn and an n × n
+table R of exchange rates, such that 1 unit of currency ci buys R[i, j]
+units of currency cj.
+
+a. Give an efficient algorithm to determine whether there exists a
+
+sequence of currencies such that
+
+R[i1, i2] · R[i2, i3] ... R[ik-1, ik] · R[ik, i1] > 1.
+
+Analyze the running time of your algorithm.
+
+b. Give an efficient algorithm to print out such a sequence if one exists.
+
+Analyze the running time of your algorithm.
+
+22-4 Gabow's scaling algorithm for single-source shortest paths
+
+A scaling algorithm solves a problem by initially considering only the
+
+highest-order bit of each relevant input value, such as an edge weight,
+assuming that these values are nonnegative integers. The algorithm then
+refines the initial solution by looking at the two highest-order bits. It
+progressively looks at more and more high-order bits, refining the
+solution each time, until it has examined all bits and computed the
+correct solution.
+
+This problem examines an algorithm for computing the shortest
+paths from a single source by scaling edge weights. The input is a
+
+directed graph G = (V, E) with nonnegative integer edge weights w. Let
+W = max {w(u, v) : (u, v) = E} be the maximum weight of any edge. In
+this problem, you will develop an algorithm that runs in O(E lg W) time.
+
+Assume that all vertices are reachable from the source.
+
+The scaling algorithm uncovers the bits in the binary representation
+of the edge weights one at a time, from the most significant bit to the
+
+least significant bit. Specifically, let k = lg(W + 1) be the number of
+bits in the binary representation of W, and for i = 1, 2, ... , k, let wi(u,v)
+= w(u,v)/2ki. That is, wi (u, v) is the "scaled-down" version of w(u, v)
+given by the i most significant bits of w(u, v). (Thus, wk(u, v) = w(u, v)
+for all (u, v) E.) For example, if k = 5 and w(u, v) = 25, which has the
+binary representation 11001, then w3(u, v) = 110 = 6. Also with k =
+5, if w(u, v) = 00100 = 4, then w4(u, v) = 0010 = 2. Define i(u, v) as
+the shortest-path weight from vertex u to vertex v using weight function
+wi, so that k(u, v) = (u, v) for all u, v V. For a given source vertex s,
+the scaling algorithm first computes the shortest-path weights 1(s, v)
+for all v V, then computes 2(s, v) for all v V, and so on, until it
+computes k(s, v) for all v V. Assume throughout that |E| |V| - 1.
+You will show how to compute i from i-1 in O(E) time, so that the
+entire algorithm takes O(kE) = O(E lg W) time.
+
+a. Suppose that for all vertices v V, we have (s, v) |E|. Show how to
+compute (s, v) for all v V in O(E) time.
+
+b. Show how to compute 1(s, v) for all v V in O(E) time.
+
+Now focus on computing i from i-1.
+
+c. Prove that for i = 2, 3, ... , k, either wi(u, v) = 2wi-1(u, v) or wi(u, v) =
+2wi-1(u, v) + 1. Then prove that
+
+2i-1(s, v) i(s, v) 2i-1(s, v) + |V| - 1
+
+for all v V.
+
+d. Define, for i = 2, 3, ... , k and all (u, v) E,
+
+i(u, v) = wi(u, v) + 2i-1(s, u) - 2i-1(s, v).
+
+Prove that for i = 2, 3, ... , k and all u, v V, the "reweighted" value
+i(u, v) of edge (u, v) is a nonnegative integer.
+
+e. Now define as the shortest-path weight from s to v using the
+weight function i. Prove that for i = 2, 3, ... , k and all v V,
+
+and that .
+
+f. Show how to compute i(s, v) from i-1(s, v) for all v V in O(E)
+time. Conclude that you can compute (s, v) for all v V in O(E lg W)
+
+time.
+
+22-5 Karp's minimum mean-weight cycle algorithm
+
+Let G = (V, E) be a directed graph with weight function w : E , and
+let n = |V|. We define the mean weight of a cycle c = e1, e2, ... , ek of
+edges in E to be
+
+Let * = min {(c) : c is a directed cycle in G}. We call a cycle c for
+which (c) = * a minimum mean-weight cycle. This problem investigates
+
+an efficient algorithm for computing *.
+
+Assume without loss of generality that every vertex v V is
+reachable from a source vertex s V. Let (s, v) be the weight of a
+shortest path from s to v, and let k(s, v) be the weight of a shortest
+path from s to v consisting of exactly k edges. If there is no path from s
+to v with exactly k edges, then k(s, v) = .
+
+a. Show that if * = 0, then G contains no negative-weight cycles and
+(s, v) = min {k(s, v) : 0 k n - 1} for all vertices v V.
+
+b. Show that if * = 0, then
+
+for all vertices v V. (Hint: Use both properties from part (a).)
+c. Let c be a 0-weight cycle, and let u and v be any two vertices on c.
+
+Suppose that * = 0 and that the weight of the simple path from u to v
+along the cycle is x. Prove that (s, v) = (s, u) + x. (Hint: The weight
+of the simple path from v to u along the cycle is -x.)
+d. Show that if * = 0, then on each minimum mean-weight cycle there
+exists a vertex v such that
+
+(Hint: Show how to extend a shortest path to any vertex on a
+
+minimum mean-weight cycle along the cycle to make a shortest path
+to the next vertex on the cycle.)
+
+e. Show that if * = 0, then the minimum value of
+
+taken over all vertices v V, equals 0.
+f. Show that if you add a constant t to the weight of each edge of G,
+
+then * increases by t. Use this fact to show that * equals the
+
+minimum value of
+
+taken over all vertices v V.
+g. Give an O(VE)-time algorithm to compute *.
+
+22-6 Bitonic shortest paths
+A sequence is bitonic if it monotonically increases and then
+
+monotonically decreases, or if by a circular shift it monotonically
+increases and then monotonically decreases. For example the sequences
+1, 4, 6, 8, 3, -2, 9, 2, -4, -10, -5, and 1, 2, 3, 4 are bitonic, but 1,
+
+3, 12, 4, 2, 10 is not bitonic. (See Problem 14-3 on page 407 for the
+
+bitonic euclidean traveling-salesperson problem.)
+
+Suppose that you are given a directed graph G = (V, E) with weight
+function w : E , where all edge weights are unique, and you wish to
+find single-source shortest paths from a source vertex s. You are given
+one additional piece of information: for each vertex v V, the weights
+of the edges along any shortest path from s to v form a bitonic
+
+sequence.
+
+Give the most efficient algorithm you can to solve this problem, and
+
+analyze its running time.
+
+Chapter notes
+
+The shortest-path problem has a long history that is nicely desribed in
+
+an article by Schrijver [400]. He credits the general idea of repeatedly
+
+executing edge relaxations to Ford [148]. Dijkstra's algorithm [116]
+
+appeared in 1959, but it contained no mention of a priority queue. The
+
+Bellman-Ford algorithm is based on separate algorithms by Bellman
+
+[45] and Ford [149]. The same algorithm is also attributed to Moore
+
+[334]. Bellman describes the relation of shortest paths to difference
+
+constraints. Lawler [276] describes the linear-time algorithm for
+
+shortest paths in a dag, which he considers part of the folklore.
+
+When edge weights are relatively small nonnegative integers, more
+
+efficient algorithms result from using min-priority queues that require
+
+integer keys and rely on the sequence of values returned by the
+
+EXTRACT-MIN calls in Dijkstra's algorithm monotonically increasing
+
+over time. Ahuja, Mehlhorn, Orlin, and Tarjan [8] give an algorithm that
+
+runs in time on graphs with nonnegative edge weights,
+
+where W is the largest weight of any edge in the graph. The best bounds
+
+are by Thorup [436], who gives an algorithm that runs in O(E lg lg V)
+
+time, and by Raman [375], who gives an algorithm that runs in O(E + V
+
+min {(lg V)1/3+, (lg W)1/4+}) time. These two algorithms use an
+
+amount of space that depends on the word size of the underlying
+
+machine. Although the amount of space used can be unbounded in the
+
+size of the input, it can be reduced to be linear in the size of the input
+
+using randomized hashing.
+
+For undirected graphs with integer weights, Thorup [435] gives an
+
+algorithm that runs in O(V + E) time for single-source shortest paths.
+
+In contrast to the algorithms mentioned in the previous paragraph, the
+
+sequence of values returned by EXTRACT-MIN calls does not
+
+monotonically increase over time, and so this algorithm is not an
+
+implementation of Dijkstra's algorithm. Pettie and Ramachandran [357]
+
+remove the restriction of integer weights on undirected graphs. Their
+
+algorithm entails a preprocessing phase, followed by queries for specific
+
+source vertices. Preprocessing takes O(MST(V, E) + min {V lg V, V lg
+
+lg r}) time, where MST(V, E) is the time to compute a minimum
+
+spanning tree and r is the ratio of the maximum edge weight to the
+
+minimum edge weight. After preprocessing, each query takes
+
+time, where is the inverse of Ackermann's function.
+
+(See the chapter notes for Chapter 19 for a brief discussion of
+
+Ackermann's function and its inverse.)
+
+For graphs with negative edge weights, an algorithm due to Gabow
+
+and Tarjan [167] runs in time, and one by Goldberg [186]
+
+runs in time, where W = max {|w(u, v)| : (u, v) E}. There
+
+has also been some progress based on methods that use continuous
+
+optimization and electrical flows. Cohen et al. [98] give such an
+
+algorithm, which is randomized and runs in Õ(E10/7 lg W) expected
+
+time (see Problem 3-6 on page 73 for the defintion of Õ-notation).
+
+There is also a pseudopolyomial-time algorithm based on fast matrix
+
+multiplication. Sankowski [394] and Yuster and Zwick [465] designed an
+
+algorithm for shortest paths that runs in Õ(W V) time, where two n ×
+
+n matrices can be multiplied in O(n) time, giving a faster algorithm
+
+than the previously mentioned algorithms for small values of W on
+
+dense graphs.
+
+Cherkassky, Goldberg, and Radzik [89] conducted extensive
+
+experiments comparing various shortest-path algorithms. Shortest-path
+
+algorithms are widely used in real-time navigation and route-planning
+
+applications. Typically based on Dijkstra's algorithm, these algorithms
+
+use many clever ideas to be able to compute shortest paths on networks
+
+with many millions of vertices and edges in fractions of a second. Bast
+et al. [36] survey many of these developments.
+
+1 It may seem strange that the term "relaxation" is used for an operation that tightens an
+upper bound. The use of the term is historical. The outcome of a relaxation step can be viewed
+
+as a relaxation of the constraint v.d u.d + w(u, v), which, by the triangle inequality (Lemma
+22.10 on page 633), must be satisfied if u.d = (s, u) and v.d = (s, v). That is, if v.d u.d + w(u,
+v), there is no "pressure" to satisfy this constraint, so the constraint is "relaxed."
+
+2 "PERT" is an acronym for "program evaluation and review technique."
+
+23 All-Pairs Shortest Paths
+
+In this chapter, we turn to the problem of finding shortest paths
+between all pairs of vertices in a graph. A classic application of this
+problem occurs in computing a table of distances between all pairs of
+cities for a road atlas. Classic perhaps, but not a true application of
+
+finding shortest paths between all pairs of vertices. After all, a road map
+modeled as a graph has one vertex for every road intersection and one
+
+edge wherever a road connects intersections. A table of intercity
+distances in an atlas might include distances for 100 cities, but the
+United States has approximately 300,000 signal-controlled
+intersections1 and many more uncontrolled intersections.
+
+A legitimate application of all-pairs shortest paths is to determine
+
+the diameter of a network: the longest of all shortest paths. If a directed
+
+graph models a communication network, with the weight of an edge
+indicating the time required for a message to traverse a communication
+link, then the diameter gives the longest possible transit time for a
+message in the network.
+
+As in Chapter 22, the input is a weighted, directed graph G = (V, E)
+with a weight function w : E that maps edges to real-valued
+weights. Now the goal is to find, for every pair of vertices u, v V, a
+shortest (least-weight) path from u to v, where the weight of a path is
+
+the sum of the weights of its constituent edges. For the all-pairs
+problem, the output typically takes a tabular form in which the entry in
+
+u's row and v's column is the weight of a shortest path from u to v.
+
+You can solve an all-pairs shortest-paths problem by running a
+
+single-source shortest-paths algorithm |V| times, once with each vertex
+
+as the source. If all edge weights are nonnegative, you can use Dijkstra's
+algorithm. If you implement the min-priority queue with a linear array,
+
+the running time is O(V3 + VE) which is O(V3). The binary min-heap
+
+implementation of the min-priority queue yields a running time of
+
+O(V(V + E) lg V). If |E| = (V), the running time becomes O(VE lg V),
+which is faster than O(V3) if the graph is sparse. Alternatively, you can
+
+implement the min-priority queue with a Fibonacci heap, yielding a
+
+running time of O(V2 lg V + VE).
+
+If the graph contains negative-weight edges, Dijkstra's algorithm
+doesn't work, but you can run the slower Bellman-Ford algorithm once
+
+from each vertex. The resulting running time is O(V2E), which on a
+dense graph is O(V4). This chapter shows how to guarantee a much
+
+better asymptotic running time. It also investigates the relation of the
+all-pairs shortest-paths problem to matrix multiplication.
+
+Unlike the single-source algorithms, which assume an adjacency-list
+representation of the graph, most of the algorithms in this chapter
+represent the graph by an adjacency matrix. (Johnson's algorithm for
+sparse graphs, in Section 23.3, uses adjacency lists.) For convenience, we
+
+assume that the vertices are numbered 1, 2, ... , |V|, so that the input is
+an n × n matrix W = (wij) representing the edge weights of an n-vertex
+directed graph G = (V, E), where
+
+The graph may contain negative-weight edges, but we assume for the
+time being that the input graph contains no negative-weight cycles.
+
+The tabular output of each of the all-pairs shortest-paths algorithms
+
+presented in this chapter is an n × n matrix. The (i, j) entry of the
+output matrix contains (i, j), the shortest-path weight from vertex i to
+vertex j, as in Chapter 22.
+
+A full solution to the all-pairs shortest-paths problem includes not
+
+only the shortest-path weights but also a predecessor matrix = (ij),
+where ij is NIL if either i = j or there is no path from i to j, and
+otherwise ij is the predecessor of j on some shortest path from i. Just
+as the predecessor subgraph G from Chapter 22 is a shortest-paths
+tree for a given source vertex, the subgraph induced by the ith row of
+the matrix should be a shortest-paths tree with root i. For each vertex
+i V, the predecessor subgraph of G for i is G,i = (V,i, E,i), where
+
+V,i = {j V : ij NIL} {i},
+E,i = {(ij, j) : j V,i - {i}}.
+
+If G,i is a shortest-paths tree, then PRINT-ALL-PAIRS-SHORTEST-
+
+PATH on the following page, which is a modified version of the PRINT-
+
+PATH procedure from Chapter 20, prints a shortest path from vertex i
+to vertex j.
+
+In order to highlight the essential features of the all-pairs algorithms
+in this chapter, we won't cover how to compute predecessor matrices
+and their properties as extensively as we dealt with predecessor
+subgraphs in Chapter 22. Some of the exercises cover the basics.
+
+PRINT-ALL-PAIRS-SHORTEST-PATH(, i, j)
+1 if i == j
+2 print i
+3 elseif ij == NIL
+4 print "no path from" i "to" j "exists"
+5 else PRINT-ALL-PAIRS-SHORTEST-PATH(, i, ij)
+6 print j
+
+Chapter outline
+
+Section 23.1 presents a dynamic-programming algorithm based on
+matrix multiplication to solve the all-pairs shortest-paths problem. The
+
+technique of "repeated squaring" yields a running time of (V3 lg V).
+
+Section 23.2 gives another dynamic-programming algorithm, the Floyd-
+
+Warshall algorithm, which runs in (V3) time. Section 23.2 also covers
+
+the problem of finding the transitive closure of a directed graph, which
+
+is related to the all-pairs shortest-paths problem. Finally, Section 23.3
+
+presents Johnson's algorithm, which solves the all-pairs shortest-paths
+
+problem in O(V2 lg V + VE) time and is a good choice for large, sparse
+
+graphs.
+
+Before proceeding, we need to establish some conventions for
+
+adjacency-matrix representations. First, we generally assume that the
+
+input graph G = (V, E) has n vertices, so that n = |V|. Second, we use the
+convention of denoting matrices by uppercase letters, such as W, L, or
+D, and their individual elements by subscripted lowercase letters, such
+as wij, lij, or dij. Finally, some matrices have parenthesized superscripts,
+
+as in or , to indicate iterates.

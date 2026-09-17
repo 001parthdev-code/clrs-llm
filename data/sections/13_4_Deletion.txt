@@ -1,0 +1,826 @@
+13.4 Deletion
+
+Like the other basic operations on an n-node red-black tree, deletion of
+a node takes O(lg n) time. Deleting a node from a red-black tree is more
+
+complicated than inserting a node.
+The procedure for deleting a node from a red-black tree is based on
+
+the TREE-DELETE procedure on page 325. First, we need to customize
+the TRANSPLANT subroutine on page 324 that TREE-DELETE calls
+so that it applies to a red-black tree. Like TRANSPLANT, the new
+
+procedure RB-TRANSPLANT replaces the subtree rooted at node u by
+the subtree rooted at node v. The RB-TRANSPLANT procedure differs
+
+from TRANSPLANT in two ways. First, line 1 references the sentinel
+
+T.nil instead of NIL. Second, the assignment to v.p in line 6 occurs
+unconditionally: the procedure can assign to v.p even if v points to the
+sentinel. We'll take advantage of the ability to assign to v.p when v =
+T.nil.
+
+RB-TRANSPLANT(T, u, v)
+
+1 if u.p == T.nil
+2 T.root = v
+3 elseif u == u.p.left
+4 u.p.left = v
+5 else u.p.right = v
+6 v.p = u.p
+
+The procedure RB-DELETE on the next page is like the TREEDELETE procedure, but with additional lines of pseudocode. The
+
+additional lines deal with nodes x and y that may be involved in
+violations of the red-black properties. When the node z being deleted
+has at most one child, then y will be z. When z has two children, then, as
+in TREE-DELETE, y will be z's successor, which has no left child and
+moves into z's position in the tree. Additionally, y takes on z's color. In
+either case, node y has at most one child: node x, which takes y's place in
+the tree. (Node x will be the sentinel T.nil if y has no children.) Since
+node y will be either removed from the tree or moved within the tree, the
+
+procedure needs to keep track of y's original color. If the red-black
+properties might be violated after deleting node z, RB-DELETE calls
+
+the auxiliary procedure RB-DELETE-FIXUP, which changes colors
+and performs rotations to restore the red-black properties.
+
+Although RB-DELETE contains almost twice as many lines of
+pseudocode as TREE-DELETE, the two procedures have the same
+basic structure. You can find each line of TREE-DELETE within RB-
+
+DELETE (with the changes of replacing NIL by T.nil and replacing calls
+
+to TRANSPLANT by calls to RB-TRANSPLANT), executed under the
+same conditions.
+
+In detail, here are the other differences between the two procedures:
+
+Lines 1 and 9 set node y as described above: line 1 when node z
+has at most one child and line 9 when z has two children.
+
+Because node y's color might change, the variable y-original-color
+stores y's color before any changes occur. Lines 2 and 10 set this
+variable immediately after assignments to y. When node z has two
+children, then nodes y and z are distinct. In this case, line 17
+moves y into z's original position in the tree (that is, z's location in
+the tree at the time RB-DELETE was called), and line 20 gives y
+the same color as z. When node y was originally black, removing
+
+or moving it could cause violations of the red-black properties,
+which are corrected by the call of RB-DELETE-FIXUP in line 22.
+
+RB-DELETE(T, z)
+
+1y = z
+2y-original-color = y.color
+3if z.left == T.nil
+4 x = z.right
+5 RB-TRANSPLANT(T, z, z.right) // replace z by its right child
+6elseif z.right == T.nil
+7 x = z.left
+8 RB-TRANSPLANT(T, z, z.left) // replace z by its left child
+9else y = TREE-MINIMUM(z.right) // y is z's successor
+10 y-original-color = y.color
+
+11 x = y.right
+
+12 if y z.right // is y farther down the tree?
+
+13 RB-TRANSPLANT(T, y,// replace y by its right child
+
+y.right)
+
+14 y.right = z.right // z's right child becomes
+
+15 y.right.p = y // y's right child
+
+16 else x.p = y // in case x is T.nil
+
+17 RB-TRANSPLANT(T, z, y) // replace z by its successor y
+
+18 y.left = z.left // and give z's left child to y,
+
+19 y.left.p = y // which had no left child
+
+20 y.color = z.color
+
+21if y-original-color == BLACK // if any red-black violations
+
+occurred,
+
+22 RB-DELETE-FIXUP(T, x) // correct them
+
+As discussed, the procedure keeps track of the node x that moves
+into node y's original position at the time of call. The assignments
+in lines 4, 7, and 11 set x to point to either y's only child or, if y has
+no children, the sentinel T.nil.
+
+Since node x moves into node y's original position, the attribute
+x.p must be set correctly. If node z has two children and y is z's
+right child, then y just moves into z's position, with x remaining a
+child of y. Line 12 checks for this case. Although you might think
+that setting x.p to y in line 16 is unnecessary since x is a child of y,
+the call of RB-DELETE-FIXUP relies on x.p being y even if x is
+T.nil. Thus, when z has two children and y is z's right child,
+executing line 16 is necessary if y's right child is T.nil, and
+
+otherwise it does not change anything.
+
+Otherwise, node z is either the same as node y or it is a proper
+ancestor of y's original parent. In these cases, the calls of RB-
+TRANSPLANT in lines 5, 8, and 13 set x.p correctly in line 6 of
+
+RB-TRANSPLANT. (In these calls of RB-TRANSPLANT, the
+
+third parameter passed is the same as x.)
+
+Finally, if node y was black, one or more violations of the red-
+
+black properties might arise. The call of RB-DELETE-FIXUP in
+
+line 22 restores the red-black properties. If y was red, the red-
+black properties still hold when y is removed or moved, for the
+
+following reasons:
+
+1. No black-heights in the tree have changed. (See Exercise
+
+13.4-1.)
+
+2. No red nodes have been made adjacent. If z has at most
+one child, then y and z are the same node. That node is
+
+removed, with a child taking its place. If the removed node
+
+was red, then neither its parent nor its children can also be
+
+red, so moving a child to take its place cannot cause two
+
+red nodes to become adjacent. If, on the other hand, z has
+two children, then y takes z's place in the tree, along with
+z's color, so there cannot be two adjacent red nodes at y's
+new position in the tree. In addition, if y was not z's right
+child, then y's original right child x replaces y in the tree.
+Since y is red, x must be black, and so replacing y by x
+
+cannot cause two red nodes to become adjacent.
+
+3. Because y could not have been the root if it was red, the
+
+root remains black.
+
+If node y was black, three problems may arise, which the call of RBDELETE-FIXUP will remedy. First, if y was the root and a red child of
+y became the new root, property 2 is violated. Second, if both x and its
+
+new parent are red, then a violation of property 4 occurs. Third, moving
+
+y within the tree causes any simple path that previously contained y to
+
+have one less black node. Thus, property 5 is now violated by any
+
+ancestor of y in the tree. We can correct the violation of property 5 by
+saying that when the black node y is removed or moved, its blackness
+transfers to the node x that moves into y's original position, giving x an
+
+"extra" black. That is, if we add 1 to the count of black nodes on any
+
+simple path that contains x, then under this interpretation, property 5
+holds. But now another problem emerges: node x is neither red nor
+black, thereby violating property 1. Instead, node x is either "doubly
+
+black" or "red-and-black," and it contributes either 2 or 1, respectively,
+
+to the count of black nodes on simple paths containing x. The color
+attribute of x will still be either RED (if x is red-and-black) or BLACK
+(if x is doubly black). In other words, the extra black on a node is
+reflected in x's pointing to the node rather than in the color attribute.
+
+The procedure RB-DELETE-FIXUP on the next page restores
+properties 1, 2, and 4. Exercises 13.4-2 and 13.4-3 ask you to show that
+the procedure restores properties 2 and 4, and so in the remainder of
+
+this section, we focus on property 1. The goal of the while loop in lines
+143 is to move the extra black up the tree until
+
+1. x points to a red-and-black node, in which case line 44 colors x
+
+(singly) black;
+
+2. x points to the root, in which case the extra black simply
+
+vanishes; or
+
+3. having performed suitable rotations and recolorings, the loop
+exits.
+
+Like RB-INSERT-FIXUP, the RB-DELETE-FIXUP procedure handles
+
+two symmetric situations: lines 322 for when node x is a left child, and
+lines 2443 for when x is a right child. Our proof focuses on the four
+
+cases shown in lines 322.
+
+Within the while loop, x always points to a nonroot doubly black
+node. Line 2 determines whether x is a left child or a right child of its
+parent x.p so that either lines 322 or 2443 will execute in a given
+iteration. The sibling of x is always denoted by a pointer w. Since node x
+is doubly black, node w cannot be T.nil, because otherwise, the number
+of blacks on the simple path from x.p to the (singly black) leaf w would
+be smaller than the number on the simple path from x.p to x.
+
+Recall that the RB-DELETE procedure always assigns to x.p before
+
+calling RB-DELETE-FIXUP (either within the call of RBTRANSPLANT in line 13 or the assignment in line 16), even when node
+
+x is the sentinel T.nil. That is because RB-DELETE-FIXUP references
+x's parent x.p in several places, and this attribute must point to the node
+that became x's parent in RB-DELETE--even if x is T.nil.
+
+Figure 13.7 demonstrates the four cases in the code when node x is a
+
+left child. (As in RB-INSERT-FIXUP, the cases in RB-DELETEFIXUP are not mutually exclusive.) Before examining each case in
+detail, let's look more generally at how we can verify that the
+transformation in each of the cases preserves property 5. The key idea is
+that in each case, the transformation applied preserves the number of
+
+black nodes (including x's extra black) from (and including) the root of
+
+the subtree shown to the roots of each of the subtrees , , ..., . Thus, if
+property 5 holds prior to the transformation, it continues to hold
+afterward. For example, in Figure 13.7(a), which illustrates case 1, the
+number of black nodes from the root to the root of either subtree or
+is 3, both before and after the transformation. (Again, remember that
+
+node x adds an extra black.) Similarly, the number of black nodes from
+
+the root to the root of any of , , , and is 2, both before and after the
+transformation.2 In Figure 13.7(b), the counting must involve the value
+
+c of the color attribute of the root of the subtree shown, which can be
+
+either RED or BLACK.
+
+RB-DELETE-FIXUP(T, x)
+
+1while x T.root and x.color == BLACK // is x a left
+2 if x == x.p.left
+
+3 w = x.p.right child?
+
+// w is x's
+
+sibling
+
+4 if w.color == RED
+
+5 w.color = BLACK
+
+6 x.p.color = RED
+
+7 LEFT-ROTATE(T, x.p)
+
+8 w = x.p.right
+
+9 if w.left.color == BLACK and w.right.color ==
+
+BLACK
+
+10 w.color = RED
+
+11 x = x.p
+
+12 else
+
+13 if w.right.color == BLACK
+
+14 w.left.color = BLACK
+
+15 w.color = RED
+
+16 RIGHT-ROTATE(T, w)
+
+17 w = x.p.right
+
+18 w.color = x.p.color
+
+19 x.p.color = BLACK
+
+20 w.right.color = BLACK
+
+21 LEFT-ROTATE(T, x.p)
+
+22 x = T.root
+
+23 else // same as lines 322, but with "right" and "left" exchanged
+
+24 w = x.p.left
+
+25 if w.color == RED
+
+26 w.color = BLACK
+
+27 x.p.color = RED
+
+28 RIGHT-ROTATE(T, x.p)
+
+29 w = x.p.left
+
+30 if w.right.color == BLACK and w.left.color == BLACK
+
+31 w.color = RED
+
+32 x = x.p
+
+33 else
+
+34 if w.left.color == BLACK
+
+35 w.right.color = BLACK
+
+36 w.color = RED
+
+37 LEFT-ROTATE(T, w)
+
+38 w = x.p.left
+
+39 w.color = x.p.color
+
+40 x.p.color = BLACK
+
+41 w.left.color = BLACK
+
+42 RIGHT-ROTATE(T, x.p)
+
+43 x = T.root
+
+44x.color = BLACK
+
+Figure 13.7 The cases in lines 322 of the procedure RB-DELETE-FIXUP. Brown nodes have
+
+color attributes represented by c and c, which may be either RED or BLACK. The letters , ,
+
+..., represent arbitrary subtrees. Each case transforms the configuration on the left into the
+
+configuration on the right by changing some colors and/or performing a rotation. Any node
+
+pointed to by x has an extra black and is either doubly black or red-and-black. Only case 2
+
+causes the loop to repeat. (a) Case 1 is transformed into case 2, 3, or 4 by exchanging the
+
+colors of nodes B and D and performing a left rotation. (b) In case 2, the extra black
+represented by the pointer x moves up the tree by coloring node D red and setting x to point to
+node B. If case 2 is entered through case 1, the while loop terminates because the new node x is
+red-and-black, and therefore the value c of its color attribute is RED. (c) Case 3 is transformed
+to case 4 by exchanging the colors of nodes C and D and performing a right rotation. (d) Case
+4 removes the extra black represented by x by changing some colors and performing a left
+
+rotation (without violating the red-black properties), and then the loop terminates.
+
+If we define count(RED) = 0 and count(BLACK) = 1, then the number
+
+of black nodes from the root to is 2 + count(c), both before and after
+
+the transformation. In this case, after the transformation, the new node
+
+x has color attribute c, but this node is really either red-and-black (if c =
+RED) or doubly black (if c = BLACK). You can verify the other cases
+
+similarly (see Exercise 13.4-6).
+
+Case 1. x's sibling w is red
+Case 1 (lines 58 and Figure 13.7(a)) occurs when node w, the sibling of
+node x, is red. Because w is red, it must have black children. This case
+switches the colors of w and x.p and then performs a left-rotation on x.p
+without violating any of the red-black properties. The new sibling of x,
+which is one of w's children prior to the rotation, is now black, and thus
+
+case 1 converts into one of cases 2, 3, or 4.
+
+Cases 2, 3, and 4 occur when node w is black and are distinguished
+by the colors of w's children.
+
+Case 2. x's sibling w is black, and both of w's children are black
+In case 2 (lines 1011 and Figure 13.7(b)), both of w's children are black.
+Since w is also black, this case removes one black from both x and w,
+leaving x with only one black and leaving w red. To compensate for x
+and w each losing one black, x's parent x.p can take on an extra black.
+Line 11 does so by moving x up one level, so that the while loop repeats
+with x.p as the new node x. If case 2 enters through case 1, the new
+node x is red-and-black, since the original x.p was red. Hence, the value
+c of the color attribute of the new node x is RED, and the loop
+
+terminates when it tests the loop condition. Line 44 then colors the new
+
+node x (singly) black.
+
+Case 3. x's sibling w is black, w's left child is red, and w's right child is
+black
+Case 3 (lines 1417 and Figure 13.7(c)) occurs when w is black, its left
+child is red, and its right child is black. This case switches the colors of w
+and its left child w.left and then performs a right rotation on w without
+violating any of the red-black properties. The new sibling w of x is now a
+
+black node with a red right child, and thus case 3 falls through into case
+4.
+
+Case 4. x's sibling w is black, and w's right child is red
+Case 4 (lines 1822 and Figure 13.7(d)) occurs when node x's sibling w is
+black and w's right child is red. Some color changes and a left rotation
+on x.p allow the extra black on x to vanish, making it singly black,
+without violating any of the red-black properties. Line 22 sets x to be
+
+the root, and the while loop terminates when it next tests the loop
+condition.
+
+Analysis
+
+What is the running time of RB-DELETE? Since the height of a red-
+
+black tree of n nodes is O(lg n), the total cost of the procedure without
+the call to RB-DELETE-FIXUP takes O(lg n) time. Within RB-
+
+DELETE-FIXUP, each of cases 1, 3, and 4 lead to termination after
+performing a constant number of color changes and at most three
+rotations. Case 2 is the only case in which the while loop can be
+
+repeated, and then the pointer x moves up the tree at most O(lg n) times,
+
+performing no rotations. Thus, the procedure RB-DELETE-FIXUP
+
+takes O(lg n) time and performs at most three rotations, and the overall
+time for RB-DELETE is therefore also O(lg n).
+
+Exercises
+
+13.4-1
+Show that if node y in RB-DELETE is red, then no black-heights
+
+change.
+
+13.4-2
+
+Argue that after RB-DELETE-FIXUP executes, the root of the tree
+must be black.
+
+13.4-3
+Argue that if in RB-DELETE both x and x.p are red, then property 4 is
+restored by the call to RB-DELETE-FIXUP(T, x).
+
+13.4-4
+
+In Exercise 13.3-2 on page 346, you found the red-black tree that results
+from successively inserting the keys 41, 38, 31, 12, 19, 8 into an initially
+empty tree. Now show the red-black trees that result from the successive
+deletion of the keys in the order 8, 12, 19, 31, 38, 41.
+
+13.4-5
+
+Which lines of the code for RB-DELETE-FIXUP might examine or
+
+modify the sentinel T.nil?
+
+13.4-6
+
+In each of the cases of Figure 13.7, give the count of black nodes from
+the root of the subtree shown to the roots of each of the subtrees , ,
+..., , and verify that each count remains the same after the
+
+transformation. When a node has a color attribute c or c, use the
+notation count(c) or count(c) symbolically in your count.
+
+13.4-7
+
+Professors Skelton and Baron worry that at the start of case 1 of RB-
+
+DELETE-FIXUP, the node x.p might not be black. If x.p is not black,
+then lines 56 are wrong. Show that x.p must be black at the start of
+
+case 1, so that the professors need not be concerned.
+
+13.4-8
+A node x is inserted into a red-black tree with RB-INSERT and then is
+
+immediately deleted with RB-DELETE. Is the resulting red-black tree
+always the same as the initial red-black tree? Justify your answer.
+
+13.4-9
+Consider the operation RB-ENUMERATE(T, r, a, b), which outputs all
+the keys k such that a k b in a subtree rooted at node r in an n-node
+red-black tree T. Describe how to implement RB-ENUMERATE in (m
++ lg n) time, where m is the number of keys that are output. Assume that
+the keys in T are unique and that the values a and b appear as keys in T.
+How does your solution change if a and b might not appear in T?
+
+Problems
+
+13-1 Persistent dynamic sets
+
+During the course of an algorithm, you sometimes find that you need to
+maintain past versions of a dynamic set as it is updated. We call such a
+
+set persistent. One way to implement a persistent set is to copy the
+
+entire set whenever it is modified, but this approach can slow down a
+program and also consume a lot of space. Sometimes, you can do much
+better.
+
+Consider a persistent set S with the operations INSERT, DELETE,
+
+and SEARCH, which you implement using binary search trees as shown
+in Figure 13.8(a). Maintain a separate root for every version of the set.
+In order to insert the key 5 into the set, create a new node with key 5.
+This node becomes the left child of a new node with key 7, since you
+cannot modify the existing node with key 7. Similarly, the new node with
+key 7 becomes the left child of a new node with key 8 whose right child
+is the existing node with key 10. The new node with key 8 becomes, in
+
+turn, the right child of a new root r with key 4 whose left child is the
+
+existing node with key 3. Thus, you copy only part of the tree and share
+some of the nodes with the original tree, as shown in Figure 13.8(b).
+
+Assume that each tree node has the attributes key, left, and right but
+
+no parent. (See also Exercise 13.3-6 on page 346.)
+
+a. For a persistent binary search tree (not a red-black tree, just a binary
+
+search tree), identify the nodes that need to change to insert or delete
+a node.
+
+Figure 13.8 (a) A binary search tree with keys 2, 3, 4, 7, 8, 10. (b) The persistent binary search
+tree that results from the insertion of key 5. The most recent version of the set consists of the
+
+nodes reachable from the root r, and the previous version consists of the nodes reachable from
+r. Blue nodes are added when key 5 is inserted.
+
+b. Write a procedure PERSISTENT-TREE-INSERT(T, z) that, given a
+persistent binary search tree T and a node z to insert, returns a new
+persistent tree T that is the result of inserting z into T. Assume that
+you have a procedure COPY-NODE(x) that makes a copy of node x,
+
+including all of its attributes.
+
+c. If the height of the persistent binary search tree T is h, what are the
+
+time and space requirements of your implementation of
+PERSISTENT-TREE-INSERT? (The space requirement is
+proportional to the number of nodes that are copied.)
+
+d. Suppose that you include the parent attribute in each node. In this
+
+case, the PERSISTENT-TREE-INSERT procedure needs to perform
+additional copying. Prove that PERSISTENT-TREE-INSERT then
+
+requires (n) time and space, where n is the number of nodes in the
+
+tree.
+
+e. Show how to use red-black trees to guarantee that the worst-case
+running time and space are O(lg n) per insertion or deletion. You may
+
+assume that all keys are distinct.
+
+13-2 Join operation on red-black trees
+
+The join operation takes two dynamic sets S1 and S2 and an element x
+such that for any x1 S1 and x2 S2, we have x1.key x.key x2.key.
+It returns a set S = S1 {x} S2. In this problem, we investigate how
+
+to implement the join operation on red-black trees.
+
+a. Suppose that you store the black-height of a red-black tree T as the
+new attribute T.bh. Argue that RB-INSERT and RB-DELETE can
+maintain the bh attribute without requiring extra storage in the nodes
+
+of the tree and without increasing the asymptotic running times. Show
+how to determine the black-height of each node visited while
+
+descending through T, using O(1) time per node visited.
+
+Let T1 and T2 be red-black trees and x be a key value such that for any
+nodes x1 in T1 and x2 in T2, we have x1.key x.key x2.key. You will
+show how to implement the operation RB-JOIN(T1, x, T2), which
+destroys T1 and T2 and returns a red-black tree T = T1 {x} T2.
+Let n be the total number of nodes in T1 and T2.
+
+b. Assume that T1.bh T2.bh. Describe an O(lg n)-time algorithm that
+finds a black node y in T1 with the largest key from among those
+nodes whose black-height is T2.bh.
+
+c. Let Ty be the subtree rooted at y. Describe how Ty {x} T2 can
+replace Ty in O(1) time without destroying the binary-search-tree
+
+property.
+
+d. What color should you make x so that red-black properties 1, 3, and 5
+are maintained? Describe how to enforce properties 2 and 4 in O(lg n)
+
+time.
+
+e. Argue that no generality is lost by making the assumption in part (b).
+Describe the symmetric situation that arises when T1.bh T2.bh.
+
+f. Argue that the running time of RB-JOIN is O(lg n).
+
+13-3 AVL trees
+
+An AVL tree is a binary search tree that is height balanced: for each
+node x, the heights of the left and right subtrees of x differ by at most 1.
+To implement an AVL tree, maintain an extra attribute h in each node
+such that x.h is the height of node x. As for any other binary search tree
+T, assume that T.root points to the root node.
+
+a. Prove that an AVL tree with n nodes has height O(lg n). (Hint: Prove
+that an AVL tree of height h has at least Fh nodes, where Fh is the hth
+
+Fibonacci number.)
+
+b. To insert into an AVL tree, first place a node into the appropriate
+
+place in binary search tree order. Afterward, the tree might no longer
+be height balanced. Specifically, the heights of the left and right
+children of some node might differ by 2. Describe a procedure
+
+BALANCE(x), which takes a subtree rooted at x whose left and right
+
+children are height balanced and have heights that differ by at most 2,
+
+so that |x.right.h - x.left.h| 2, and alters the subtree rooted at x to be
+
+height balanced. The procedure should return a pointer to the node
+
+that is the root of the subtree after alterations occur. (Hint: Use
+
+rotations.)
+
+c. Using part (b), describe a recursive procedure AVL-INSERT(T, z)
+that takes an AVL tree T and a newly created node z (whose key has
+already been filled in), and adds z into T, maintaining the property
+that T is an AVL tree. As in TREE-INSERT from Section 12.3, assume
+that z.key has already been filled in and that z.left = NIL and z.right =
+NIL. Assume as well that z.h = 0.
+
+d. Show that AVL-INSERT, run on an n-node AVL tree, takes O(lg n)
+time and performs O(lg n) rotations.
+
+Chapter notes
+
+The idea of balancing a search tree is due to Adel'son-Vel'ski and
+Landis [2], who introduced a class of balanced search trees called "AVL
+trees" in 1962, described in Problem 13-3. Another class of search trees,
+called "2-3 trees," was introduced by J. E. Hopcroft (unpublished) in
+
+1970. A 2-3 tree maintains balance by manipulating the degrees of nodes
+in the tree, where each node has either two or three children. Chapter 18
+covers a generalization of 2-3 trees introduced by Bayer and McCreight
+[39], called "B-trees."
+
+Red-black trees were invented by Bayer [38] under the name
+"symmetric binary B-trees." Guibas and Sedgewick [202] studied their
+properties at length and introduced the red/black color convention.
+Andersson [16] gives a simpler-to-code variant of red-black trees. Weiss
+[451] calls this variant AA-trees. An AA-tree is similar to a red-black
+tree except that left children can never be red.
+
+Sedgewick and Wayne [402] present red-black trees as a modified
+version of 2-3 trees in which a node with three children is split into two
+nodes with two children each. One of these nodes becomes the left child
+of the other, and only left children can be red. They call this structure a
+"left-leaning red-black binary search tree." Although the code for leftleaning red-black binary search trees is more concise than the red-black
+tree pseudocode in this chapter, operations on left-leaning red-black
+binary search trees do not limit the number of rotations per operation to
+a constant. This distinction will matter in Chapter 17.
+
+Treaps, a hybrid of binary search trees and heaps, were proposed by
+Seidel and Aragon [404]. They are the default implementation of a
+dictionary in LEDA [324], which is a well-implemented collection of data
+structures and algorithms.
+
+There are many other variations on balanced binary trees, including
+
+weight-balanced trees [344], k-neighbor trees [318], and scapegoat trees
+
+[174]. Perhaps the most intriguing are the "splay trees" introduced by
+Sleator and Tarjan [418], which are "self-adjusting." (See Tarjan [429]
+for a good description of splay trees.) Splay trees maintain balance
+without any explicit balance condition such as color. Instead, "splay
+operations" (which involve rotations) are performed within the tree
+every time an access is made. The amortized cost (see Chapter 16) of
+
+each operation on an n-node tree is O(lg n). Splay trees have been
+
+conjectured to perform within a constant factor of the best offline
+rotation-based tree. The best known competitive ratio (see Chapter 27)
+for a rotation-based tree is the Tango Tree of Demaine et al. [109].
+
+Skip lists [369] provide an alternative to balanced binary trees. A skip
+list is a linked list that is augmented with a number of additional
+
+pointers. Each dictionary operation runs in O(lg n) expected time on a
+skip list of n items.
+
+1 Although we try to avoid gendered language in this book, the English language lacks a
+gender-neutral word for a parent's sibling.
+2 If property 5 holds, we can assume that paths from the roots of , , , and down to leaves
+contain one more black than do paths from the roots of and down to leaves.
+
+Part IV Advanced Design and Analysis Techniques
+
+Introduction
+
+This part covers three important techniques used in designing and
+analyzing efficient algorithms: dynamic programming (Chapter 14),
+greedy algorithms (Chapter 15), and amortized analysis (Chapter 16).
+Earlier parts have presented other widely applicable techniques, such as
+divide-and-conquer, randomization, and how to solve recurrences. The
+techniques in this part are somewhat more sophisticated, but you will be
+able to use them solve many computational problems. The themes
+introduced in this part will recur later in this book.
+
+Dynamic programming typically applies to optimization problems in
+which you make a set of choices in order to arrive at an optimal
+solution, each choice generates subproblems of the same form as the
+original problem, and the same subproblems arise repeatedly. The key
+strategy is to store the solution to each such subproblem rather than
+recompute it. Chapter 14 shows how this simple idea can sometimes
+transform exponential-time algorithms into polynomial-time
+algorithms.
+
+Like dynamic-programming algorithms, greedy algorithms typically
+apply to optimization problems in which you make a set of choices in
+order to arrive at an optimal solution. The idea of a greedy algorithm is
+to make each choice in a locally optimal manner, resulting in a faster
+algorithm than you get with dynamic programming. Chapter 15 will
+help you determine when the greedy approach works.
+
+The technique of amortized analysis applies to certain algorithms
+that perform a sequence of similar operations. Instead of bounding the
+
+cost of the sequence of operations by bounding the actual cost of each
+operation separately, an amortized analysis provides a worst-case
+bound on the actual cost of the entire sequence. One advantage of this
+approach is that although some operations might be expensive, many
+others might be cheap. You can use amortized analysis when designing
+algorithms, since the design of an algorithm and the analysis of its
+running time are often closely intertwined. Chapter 16 introduces three
+ways to perform an amortized analysis of an algorithm.
+
+14 Dynamic Programming
+
+Dynamic programming, like the divide-and-conquer method, solves
+problems by combining the solutions to subproblems. ("Programming"
+in this context refers to a tabular method, not to writing computer
+code.) As we saw in Chapters 2 and 4, divide-and-conquer algorithms
+partition the problem into disjoint subproblems, solve the subproblems
+recursively, and then combine their solutions to solve the original
+problem. In contrast, dynamic programming applies when the
+subproblems overlap--that is, when subproblems share
+subsubproblems. In this context, a divide-and-conquer algorithm does
+more work than necessary, repeatedly solving the common
+subsubproblems. A dynamic-programming algorithm solves each
+subsubproblem just once and then saves its answer in a table, thereby
+avoiding the work of recomputing the answer every time it solves each
+subsubproblem.
+
+Dynamic programming typically applies to optimization problems.
+
+Such problems can have many possible solutions. Each solution has a
+value, and you want to find a solution with the optimal (minimum or
+
+maximum) value. We call such a solution an optimal solution to the
+problem, as opposed to the optimal solution, since there may be several
+
+solutions that achieve the optimal value.
+To develop a dynamic-programming algorithm, follow a sequence of
+
+four steps:
+
+1. Characterize the structure of an optimal solution.
+2. Recursively define the value of an optimal solution.
+
+3. Compute the value of an optimal solution, typically in a bottom-
+up fashion.
+
+4. Construct an optimal solution from computed information.
+
+Steps 13 form the basis of a dynamic-programming solution to a
+problem. If you need only the value of an optimal solution, and not the
+solution itself, then you can omit step 4. When you do perform step 4, it
+often pays to maintain additional information during step 3 so that you
+can easily construct an optimal solution.
+
+The sections that follow use the dynamic-programming method to
+solve some optimization problems. Section 14.1 examines the problem
+of cutting a rod into rods of smaller length in a way that maximizes
+their total value. Section 14.2 shows how to multiply a chain of matrices
+while performing the fewest total scalar multiplications. Given these
+examples of dynamic programming, Section 14.3 discusses two key
+characteristics that a problem must have for dynamic programming to
+be a viable solution technique. Section 14.4 then shows how to find the
+longest common subsequence of two sequences via dynamic
+programming. Finally, Section 14.5 uses dynamic programming to
+construct binary search trees that are optimal, given a known
+distribution of keys to be looked up.

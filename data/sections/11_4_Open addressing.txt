@@ -1,0 +1,431 @@
+11.4 Open addressing
+
+This section describes open addressing, a method for collision
+resolution that, unlike chaining, does not make use of storage outside of
+
+the hash table itself. In open addressing, all elements occupy the hash
+
+table itself. That is, each table entry contains either an element of the
+dynamic set or NIL. No lists or elements are stored outside the table,
+unlike in chaining. Thus, in open addressing, the hash table can "fill up"
+so that no further insertions can be made. One consequence is that the
+load factor can never exceed 1.
+
+Collisions are handled as follows: when a new element is to be
+inserted into the table, it is placed in its "first-choice" location if
+possible. If that location is already occupied, the new element is placed
+in its "second-choice" location. The process continues until an empty
+slot is found in which to place the new element. Different elements have
+different preference orders for the locations.
+
+To search for an element, systematically examine the preferred table
+slots for that element, in order of decreasing preference, until either you
+find the desired element or you find an empty slot and thus verify that
+the element is not in the table.
+
+Of course, you could use chaining and store the linked lists inside the
+hash table, in the otherwise unused hash-table slots (see Exercise 11.24), but the advantage of open addressing is that it avoids pointers
+altogether. Instead of following pointers, you compute the sequence of
+slots to be examined. The memory freed by not storing pointers
+provides the hash table with a larger number of slots in the same
+amount of memory, potentially yielding fewer collisions and faster
+retrieval.
+
+To perform insertion using open addressing, successively examine, or
+
+probe, the hash table until you find an empty slot in which to put the
+key. Instead of being fixed in the order 0, 1, ..., m - 1 (which implies a
+(n) search time), the sequence of positions probed depends upon the
+
+key being inserted. To determine which slots to probe, the hash function
+includes the probe number (starting from 0) as a second input. Thus,
+the hash function becomes
+
+h : U × {0, 1, ..., m - 1} {0, 1, ..., m - 1}.
+
+Open addressing requires that for every key k, the probe sequence h(k,
+0), h(k, 1), ..., h(k, m - 1) be a permutation of 0, 1, ..., m - 1, so that
+
+every hash-table position is eventually considered as a slot for a new
+key as the table fills up. The HASH-INSERT procedure on the following
+
+page assumes that the elements in the hash table T are keys with no
+satellite information: the key k is identical to the element containing key
+k. Each slot contains either a key or NIL (if the slot is empty). The
+HASH-INSERT procedure takes as input a hash table T and a key
+k that is assumed to be not already present in the hash table. It either
+returns the slot number where it stores key k or flags an error because
+
+the hash table is already full.
+
+HASH-INSERT(T, k)
+1i = 0
+
+2 repeat
+
+3 q = h(k, i)
+
+4 if T[q] == NIL
+
+5 T[q] = k
+
+6 return q
+
+7 else i = i + 1
+
+8 until i == m
+
+9 error "hash table overflow"
+
+HASH-SEARCH(T, k)
+
+1 i=0
+
+2 repeat
+
+3 q = h(k, i)
+
+4 if T[q] == k
+
+5 return q
+
+6 i=i+1
+
+7 until T[q] == NIL or i == m
+
+8 return NIL
+
+The algorithm for searching for key k probes the same sequence of
+slots that the insertion algorithm examined when key k was inserted.
+
+Therefore, the search can terminate (unsuccessfully) when it finds an
+
+empty slot, since k would have been inserted there and not later in its
+
+probe sequence. The procedure HASH-SEARCH takes as input a hash
+
+table T and a key k, returning q if it finds that slot q contains key k, or
+NIL if key k is not present in table T.
+
+Deletion from an open-address hash table is tricky. When you delete
+
+a key from slot q, it would be a mistake to mark that slot as empty by
+
+simply storing NIL in it. If you did, you might be unable to retrieve any
+
+key k for which slot q was probed and found occupied when k was
+
+inserted. One way to solve this problem is by marking the slot, storing
+
+in it the special value DELETED instead of NIL. The HASH-INSERT
+
+procedure then has to treat such a slot as empty so that it can insert a
+
+new key there. The HASH-SEARCH procedure passes over DELETED
+
+values while searching, since slots containing DELETED were filled
+
+when the key being searched for was inserted. Using the special value
+DELETED, however, means that search times no longer depend on the
+load factor , and for this reason chaining is frequently selected as a
+collision resolution technique when keys must be deleted. There is a
+simple special case of open addressing, linear probing, that avoids the
+need to mark slots with DELETED. Section 11.5.1 shows how to delete
+from a hash table when using linear probing.
+
+In our analysis, we assume independent uniform permutation hashing
+(also confusingly known as uniform hashing in the literature): the probe
+sequence of each key is equally likely to be any of the m! permutations
+of 0, 1, ..., m - 1. Independent uniform permutation hashing
+
+generalizes the notion of independent uniform hashing defined earlier
+to a hash function that produces not just a single slot number, but a
+whole probe sequence. True independent uniform permutation hashing
+is difficult to implement, however, and in practice suitable
+approximations (such as double hashing, defined below) are used.
+
+We'll examine both double hashing and its special case, linear
+
+probing. These techniques guarantee that h(k, 0), h(k, 1), ..., h(k, m -
+1) is a permutation of 0, 1, ..., m - 1 for each key k. (Recall that the
+second parameter to the hash function h is the probe number.) Neither
+
+double hashing nor linear probing meets the assumption of independent
+uniform permutation hashing, however. Double hashing cannot
+
+generate more than m2 different probe sequences (instead of the m! that
+
+independent uniform permutation hashing requires). Nonetheless,
+double hashing has a large number of possible probe sequences and, as
+you might expect, seems to give good results. Linear probing is even
+
+more restricted, capable of generating only m different probe sequences.
+
+Double hashing
+
+Double hashing offers one of the best methods available for open
+addressing because the permutations produced have many of the
+
+characteristics of randomly chosen permutations. Double hashing uses a
+
+hash function of the form
+
+h(k, i) = (h1(k) + ih2(k)) mod m,
+
+where both h1 and h2 are auxiliary hash functions. The initial probe
+goes to position T[h1(k)], and successive probe positions are offset from
+previous positions by the amount h2(k), modulo m. Thus, the probe
+sequence here depends in two ways upon the key k, since the initial
+probe position h1(k), the step size h2(k), or both, may vary. Figure 11.5
+
+gives an example of insertion by double hashing.
+
+In order for the entire hash table to be searched, the value h2(k)
+must be relatively prime to the hash-table size m. (See Exercise 11.4-5.)
+A convenient way to ensure this condition is to let m be an exact power
+of 2 and to design h2 so that it always produces an odd number.
+Another way is to let m be prime and to design h2 so that it always
+returns a positive integer less than m. For example, you could choose m
+
+prime and let
+
+Figure 11.5 Insertion by double hashing. The hash table has size 13 with h1(k) = k mod 13 and
+h2(k) = 1 + (k mod 11). Since 14 = 1 (mod 13) and 14 = 3 (mod 11), the key 14 goes into
+
+empty slot 9, after slots 1 and 5 are examined and found to be occupied.
+
+h1(k) = k mod m,
+h2(k) = 1 + (k mod m),
+
+where m is chosen to be slightly less than m (say, m - 1). For example, if
+k = 123456, m = 701, and m = 700, then h1(k) = 80 and h2(k) = 257, so
+
+that the first probe goes to position 80, and successive probes examine
+
+every 257th slot (modulo m) until the key has been found or every slot
+
+has been examined.
+
+Although values of m other than primes or exact powers of 2 can in
+
+principle be used with double hashing, in practice it becomes more
+
+difficult to efficiently generate h2(k) (other than choosing h2(k) = 1,
+
+which gives linear probing) in a way that ensures that it is relatively
+
+prime to m, in part because the relative density (m)/m of such numbers
+for general m may be small (see equation (31.25) on page 921).
+
+When m is prime or an exact power of 2, double hashing produces
+(m2) probe sequences, since each possible (h1(k), h2(k)) pair yields a
+distinct probe sequence. As a result, for such values of m, double
+
+hashing appears to perform close to the "ideal" scheme of independent
+uniform permutation hashing.
+
+Linear probing
+
+Linear probing, a special case of double hashing, is the simplest open-
+
+addressing approach to resolving collisions. As with double hashing, an
+
+auxiliary hash function h1 determines the first probe position h1(k) for
+inserting an element. If slot T[h1(k)] is already occupied, probe the next
+position T[h1(k) + 1]. Keep going as necessary, on up to slot T[m - 1],
+and then wrap around to slots T[0], T[1], and so on, but never going
+past slot T[h1(k) - 1]. To view linear probing as a special case of double
+hashing, just set the double-hashing step function h2 to be fixed at 1:
+h2(k) = 1 for all k. That is, the hash function is
+
+for i = 0, 1, ..., m - 1. The value of h1(k) determines the entire probe
+sequence, and so assuming that h1(k) can take on any value in {0, 1, ...,
+m - 1}, linear probing allows only m distinct probe sequences.
+
+We'll revisit linear probing in Section 11.5.1.
+
+Analysis of open-address hashing
+
+As in our analysis of chaining in Section 11.2, we analyze open
+
+addressing in terms of the load factor = n/m of the hash table. With
+open addressing, at most one element occupies each slot, and thus n
+m, which implies 1. The analysis below requires to be strictly less
+
+than 1, and so we assume that at least one slot is empty. Because
+deleting from an open-address hash table does not really free up a slot,
+we assume as well that no deletions occur.
+
+For the hash function, we assume independent uniform permutation
+
+hashing. In this idealized scheme, the probe sequence h(k, 0), h(k, 1),
+..., h(k, m - 1) used to insert or search for each key k is equally likely
+to be any permutation of 0, 1, ..., m - 1. Of course, any given key has
+
+a unique fixed probe sequence associated with it. What we mean here is
+that, considering the probability distribution on the space of keys and
+the operation of the hash function on the keys, each possible probe
+sequence is equally likely.
+
+We now analyze the expected number of probes for hashing with
+open addressing under the assumption of independent uniform
+permutation hashing, beginning with the expected number of probes
+made in an unsuccessful search (assuming, as stated above, that < 1).
+
+The bound proven, of 1/(1 - ) = 1 + + 2 + 3 + , has an
+intuitive interpretation. The first probe always occurs. With probability
+approximately , the first probe finds an occupied slot, so that a second
+probe happens. With probability approximately 2, the first two slots
+are occupied so that a third probe ensues, and so on.
+
+Theorem 11.6
+Given an open-address hash table with load factor = n/m < 1, the
+
+expected number of probes in an unsuccessful search is at most 1/(1 -
+), assuming independent uniform permutation hashing and no
+deletions.
+
+Proof In an unsuccessful search, every probe but the last accesses an
+
+occupied slot that does not contain the desired key, and the last slot
+
+probed is empty. Let the random variable X denote the number of
+
+probes made in an unsuccessful search, and define the event Ai, for i =
+1, 2, ..., as the event that an ith probe occurs and it is to an occupied
+slot. Then the event {X i} is the intersection of events A1 A2
+Ai-1. We bound Pr{X i} by bounding Pr{A1 A2 Ai-1}.
+
+By Exercise C.2-5 on page 1190,
+
+Pr{A1 A2 = Pr{A1} · Pr{A2 | A1} · Pr {A3 | A1 A2}
+
+Ai-1}
+
+Pr{Ai-1 | A1 A2 Ai-2}.
+
+Since there are n elements and m slots, Pr{A1} = n/m. For j > 1, the
+probability that there is a jth probe and it is to an occupied slot, given
+that the first j - 1 probes were to occupied slots, is (n - j + 1)/(m - j +
+1). This probability follows because the jth probe would be finding one
+of the remaining (n - (j - 1)) elements in one of the (m - (j - 1))
+
+unexamined slots, and by the assumption of independent uniform
+
+permutation hashing, the probability is the ratio of these quantities.
+
+Since n < m implies that (n - j)/(m - j) n/m for all j in the range 0 j <
+m, it follows that for all i in the range 1 i m, we have
+
+The product in the first line has i - 1 factors. When i = 1, the product is
+1, the identity for multiplication, and we get Pr{X 1} = 1, which makes
+sense, since there must always be at least 1 probe. If each of the first n
+
+probes is to an occupied slot, then all occupied slots have been probed.
+
+Then, the (n + 1)st probe must be to an empty slot, which gives Pr{X
+i} = 0 for i > n + 1. Now, we use equation (C.28) on page 1193 to bound
+
+the expected number of probes:
+
+If is a constant, Theorem 11.6 predicts that an unsuccessful search
+
+runs in O(1) time. For example, if the hash table is half full, the average
+
+number of probes in an unsuccessful search is at most 1/(1 - .5) = 2. If
+it is 90% full, the average number of probes is at most 1/(1 - .9) = 10.
+
+Theorem 11.6 yields almost immediately how well the HASHINSERT procedure performs.
+
+Corollary 11.7
+
+Inserting an element into an open-address hash table with load factor
+, where < 1, requires at most 1/(1 - ) probes on average, assuming
+independent uniform permutation hashing and no deletions.
+
+Proof An element is inserted only if there is room in the table, and thus
+
+< 1. Inserting a key requires an unsuccessful search followed by
+placing the key into the first empty slot found. Thus, the expected
+number of probes is at most 1/(1 - ).
+
+It takes a little more work to compute the expected number of
+probes for a successful search.
+
+Theorem 11.8
+
+Given an open-address hash table with load factor < 1, the expected
+number of probes in a successful search is at most
+
+assuming independent uniform permutation hashing with no deletions
+and assuming that each key in the table is equally likely to be searched
+for.
+
+Proof A search for a key k reproduces the same probe sequence as
+when the element with key k was inserted. If k was the (i + 1)st key
+
+inserted into the hash table, then the load factor at the time it was
+
+inserted was i/m, and so by Corollary 11.7, the expected number of
+probes made in a search for k is at most 1/(1 - i/m) = m/(m - i).
+Averaging over all n keys in the hash table gives us the expected number
+
+of probes in a successful search:
+
+If the hash table is half full, the expected number of probes in a
+successful search is less than 1.387. If the hash table is 90% full, the
+expected number of probes is less than 2.559. If = 1, then in an
+
+unsuccessful search, all m slots must be probed. Exercise 11.4-4 asks
+
+you to analyze a successful search when = 1.
+
+Exercises
+
+11.4-1
+
+Consider inserting the keys 10, 22, 31, 4, 15, 28, 17, 88, 59 into a hash
+
+table of length m = 11 using open addressing. Illustrate the result of
+inserting these keys using linear probing with h(k, i) = (k + i) mod m
+and using double hashing with h1(k) = k and h2(k) = 1 + (k mod (m -
+
+1)).
+
+11.4-2
+
+Write pseudocode for HASH-DELETE that fills the deleted key's slot
+with the special value DELETED, and modify HASH-SEARCH and
+HASH-INSERT as needed to handle DELETED.
+
+11.4-3
+
+Consider an open-address hash table with independent uniform
+permutation hashing and no deletions. Give upper bounds on the
+expected number of probes in an unsuccessful search and on the
+expected number of probes in a successful search when the load factor
+is 3/4 and when it is 7/8.
+
+11.4-4
+
+Show that the expected number of probes required for a successful
+
+search when = 1 (that is, when n = m), is Hm, the mth harmonic
+
+number.
+
+11.4-5
+Show that, with double hashing, if m and h2(k) have greatest common
+divisor d 1 for some key k, then an unsuccessful search for key k
+examines (1/d)th of the hash table before returning to slot h1(k). Thus,
+when d = 1, so that m and h2(k) are relatively prime, the search may
+examine the entire hash table. (Hint: See Chapter 31.)
+
+11.4-6
+
+Consider an open-address hash table with a load factor . Approximate
+the nonzero value for which the expected number of probes in an
+
+unsuccessful search equals twice the expected number of probes in a
+successful search. Use the upper bounds given by Theorems 11.6 and
+11.8 for these expected numbers of probes.

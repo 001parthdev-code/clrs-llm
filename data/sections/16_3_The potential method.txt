@@ -1,0 +1,222 @@
+16.3 The potential method
+
+Instead of representing prepaid work as credit stored with specific
+
+objects in the data structure, the potential method of amortized analysis
+
+represents the prepaid work as "potential energy," or just "potential,"
+which can be released to pay for future operations. The potential
+applies to the data structure as a whole rather than to specific objects
+within the data structure.
+
+The potential method works as follows. Starting with an initial data
+
+structure D0, a sequence of n operations occurs. For each i = 1, 2, ... , n,
+let ci be the actual cost of the ith operation and Di be the data structure
+that results after applying the ith operation to data structure Di-1. A
+potential function maps each data structure Di to a real number
+(Di), which is the potential associated with Di. The amortized cost i of
+the ith operation with respect to potential function is defined by
+
+The amortized cost of each operation is therefore its actual cost plus
+the change in potential due to the operation. By equation (16.2), the
+
+total amortized cost of the n operations is
+
+The second equation follows from equation (A.12) on page 1143
+
+because the (Di) terms telescope.
+
+If you can define a potential function so that (Dn) (D0), then
+
+the total amortized cost gives an upper bound on the total
+
+actual cost . In practice, you don't always know how many
+
+operations might be performed. Therefore, if you require that (Di)
+(D0) for all i, then you guarantee, as in the accounting method, that
+you've paid in advance. It's usually simplest to just define (D0) to be 0
+and then show that (Di) 0 for all i. (See Exercise 16.3-1 for an easy
+way to handle cases in which (D0) 0.)
+
+Intuitively, if the potential difference (Di) - (Di-1) of the ith
+operation is positive, then the amortized cost i represents an
+overcharge to the ith operation, and the potential of the data structure
+
+increases. If the potential difference is negative, then the amortized cost
+
+represents an undercharge to the ith operation, and the decrease in the
+
+potential pays for the actual cost of the operation.
+The amortized costs defined by equations (16.2) and (16.3) depend
+
+on the choice of the potential function . Different potential functions
+may yield different amortized costs, yet still be upper bounds on the
+actual costs. You will often find trade-offs that you can make in
+choosing a potential function. The best potential function to use
+depends on the desired time bounds.
+
+Stack operations
+
+To illustrate the potential method, we return once again to the example
+of the stack operations PUSH, POP, and MULTIPOP. We define the
+potential function on a stack to be the number of objects in the
+
+stack. The potential of the empty initial stack D0 is (D0) = 0. Since
+the number of objects in the stack is never negative, the stack Di that
+results after the ith operation has nonnegative potential, and thus
+
+(Di) 0
+= (D0).
+
+The total amortized cost of n operations with respect to therefore
+
+represents an upper bound on the actual cost.
+Now let's compute the amortized costs of the various stack
+
+operations. If the ith operation on a stack containing s objects is a
+
+PUSH operation, then the potential difference is
+
+(Di) - (Di-1) = (s + 1) - s
+
+= 1.
+
+By equation (16.2), the amortized cost of this PUSH operation is
+
+i = ci + (Di) - (Di-1)
+
+=1+1
+= 2.
+
+Suppose that the ith operation on the stack of s objects is
+MULTIPOP(S, k), which causes k = min {s, k} objects to be popped
+off the stack. The actual cost of the operation is k, and the potential
+
+difference is
+
+(Di) - (Di-1) = -k.
+
+Thus, the amortized cost of the MULTIPOP operation is
+
+i = ci + (Di) - (Di-1)
+= k - k
+
+= 0.
+
+Similarly, the amortized cost of an ordinary POP operation is 0.
+
+The amortized cost of each of the three operations is O(1), and thus
+the total amortized cost of a sequence of n operations is O(n). Since
+(Di) (D0), the total amortized cost of n operations is an upper
+bound on the total actual cost. The worst-case cost of n operations is
+therefore O(n).
+
+Incrementing a binary counter
+
+As another example of the potential method, we revisit incrementing a
+
+k-bit binary counter. This time, the potential of the counter after the ith
+
+INCREMENT operation is defined to be the number of 1-bits in the
+
+counter after the ith operation, which we'll denote by bi.
+
+Here is how to compute the amortized cost of an INCREMENT
+
+operation. Suppose that the ith INCREMENT operation resets ti bits
+to 0. The actual cost ci of the operation is therefore at most ti + 1, since
+in addition to resetting ti bits, it sets at most one bit to 1. If bi = 0, then
+the ith operation had reset all k bits to 0, and so bi-1 = ti = k. If bi > 0,
+then bi = bi-1 -ti +1. In either case, bi bi-1 - ti + 1, and the potential
+
+difference is
+
+(Di) - (Di-1) (bi-1 - ti + 1) - bi-1
+= 1 - ti.
+
+The amortized cost is therefore
+
+i = ci + (Di) - (Di-1)
+(ti + 1) + (1 - ti)
+
+= 2.
+
+If the counter starts at 0, then (D0) = 0. Since (Di) 0 for all i, the
+total amortized cost of a sequence of n INCREMENT operations is an
+upper bound on the total actual cost, and so the worst-case cost of n
+INCREMENT operations is O(n).
+
+The potential method provides a simple and clever way to analyze
+
+the counter even when it does not start at 0. The counter starts with b0
+1-bits, and after n INCREMENT operations it has bn 1-bits, where 0
+b0, bn k. Rewrite equation (16.3) as
+
+Since (D0) = b0, (Dn) = bn, and i 2 for all 1 i n, the total
+actual cost of n INCREMENT operations is
+
+In particular, b0 k means that as long as k = O(n), the total actual cost
+is O(n). In other words, if at least n = (k) INCREMENT operations
+occur, the total actual cost is O(n), no matter what initial value the
+
+counter contains.
+
+Exercises
+
+16.3-1
+Suppose you have a potential function such that (Di) (D0) for
+all i, but (D0) 0. Show that there exists a potential function such
+that (D0) = 0, (Di) 0 for all i 1, and the amortized costs using
+
+are the same as the amortized costs using .
+
+16.3-2
+
+Redo Exercise 16.1-3 using a potential method of analysis.
+
+16.3-3
+
+Consider an ordinary binary min-heap data structure supporting the
+
+instructions INSERT and EXTRACT-MIN that, when there are n items
+in the heap, implements each operation in O(lg n) worst-case time. Give
+a potential function such that the amortized cost of INSERT is O(lg
+n) and the amortized cost of EXTRACT-MIN is O(1), and show that
+
+your potential function yields these amortized time bounds. Note that
+
+in the analysis, n is the number of items currently in the heap, and you
+
+do not know a bound on the maximum number of items that can ever
+be stored in the heap.
+
+16.3-4
+What is the total cost of executing n of the stack operations PUSH,
+POP, and MULTIPOP, assuming that the stack begins with s0 objects
+and finishes with sn objects?
+
+16.3-5
+
+Show how to implement a queue with two ordinary stacks (Exercise
+10.1-7) so that the amortized cost of each ENQUEUE and each
+
+DEQUEUE operation is O(1).
+
+16.3-6
+
+Design a data structure to support the following two operations for a
+
+dynamic multiset S of integers, which allows duplicate values:
+
+INSERT(S, x) inserts x into S.
+
+DELETE-LARGER-HALF(S) deletes the largest |S|/2 elements from
+S.
+
+Explain how to implement this data structure so that any sequence of m
+INSERT and DELETE-LARGER-HALF operations runs in O(m) time.
+
+Your implementation should also include a way to output the elements
+
+of S in O(|S|) time.

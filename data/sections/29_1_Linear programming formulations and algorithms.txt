@@ -1,0 +1,357 @@
+29.1 Linear programming formulations and algorithms
+
+Linear programs take a particular form, which we will examine in this
+section. Multiple algorithms have been developed to solve linear
+programs. Some run in polynomial time, some do not, but they are all
+too complicated to show here. Instead, we will give an example that
+
+demonstrates some ideas behind the simplex algorithm, which is
+currently the most commonly deployed solution method.
+
+General linear programs
+
+In the general linear-programming problem, we wish to optimize a
+linear function subject to a set of linear inequalities. Given a set of real
+
+numbers a1, a2, ... , an and a set of variables x1, x2, ... , xn, we define a
+linear function f on those variables by
+
+If b is a real number and f is a linear function, then the equation
+
+f(x1, x2, ... , xn) = b
+
+is a linear equality and the inequalities
+
+f(x1, x2, ... , xn) b and f(x1, x2, ... , xn) b
+
+are linear inequalities. We use the general term linear constraints to
+
+denote either linear equalities or linear inequalities. Linear
+
+programming does not allow strict inequalities. Formally, a linearprogramming problem is the problem of either minimizing or maximizing
+
+a linear function subject to a finite set of linear constraints. If
+
+minimizing, we call the linear program a minimization linear program,
+and if maximizing, we call the linear program a maximization linear
+program.
+
+In order to discuss linear-programming algorithms and properties, it
+will be helpful to use a standard notation for the input. By convention,
+
+a maximization linear program takes as input n real numbers c1, c2, ... ,
+cn; m real numbers b1, b2, ... , bm; and mn real numbers aij for i = 1, 2,
+... , m and j = 1, 2, ... , n.
+The goal is to find n real numbers x1, x2, ... , xn that
+
+subject to
+
+We call expression (29.11) the objective function and the n + m
+inequalities in lines (29.12) and (29.13) the constraints. The n
+constraints in line (29.13) are the nonnegativity constraints. It can
+
+sometimes be more convenient to express a linear program in a more
+
+compact form. If we create an m × n matrix A = (aij), an m-vector b =
+(bi), an n-vector c = (cj), and an n-vector x = (xj), then we can rewrite
+
+the linear program defined in (29.11)(29.13) as
+
+subject to
+
+In line (29.14), cTx is the inner product of two n-vectors. In inequality
+(29.15), Ax is the m-vector that is the product of an m × n matrix and
+an n-vector, and in inequality (29.16), x 0 means that each entry of the
+vector x must be nonnegative. We call this representation the standard
+form for a linear program, and we adopt the convention that A, b, and c
+
+always have the dimensions given above.
+The standard form above may not naturally correspond to real-life
+
+situations you are trying to model. For example, you might have
+equality constraints or variables that can take on negative values.
+Exercises 29.1-6 and 29.1-7 ask you to show how to convert any linear
+program into this standard form.
+
+We now introduce terminology to describe solutions to linear
+programs. We denote a particular setting of the values in a variable, say
+
+x, by putting a bar over the variable name: x. If x satisfies all the
+constraints, then it is a feasible solution, but if it fails to satisfy at least
+one constraint, then it is an infeasible solution. We say that a solution x
+has objective value cTx. A feasible solution x whose objective value is
+maximum over all feasible solutions is an optimal solution, and we call
+
+its objective value cTx the optimal objective value. If a linear program
+has no feasible solutions, we say that the linear program is infeasible,
+and otherwise, it is feasible. The set of points that satisfy all the
+constraints is the feasible region. If a linear program has some feasible
+
+solutions but does not have a finite optimal objective value, then the
+
+feasible region is unbounded and so is the linear program. Exercise 29.1-
+
+5 asks you to show that a linear program can have a finite optimal
+objective value even if the feasible region is unbounded.
+
+One of the reasons for the power and popularity of linear
+programming is that linear programs can, in general, be solved
+efficiently. There are two classes of algorithms, known as ellipsoid
+algorithms and interior-point algorithms, that solve linear programs in
+polynomial time. In addition, the simplex algorithm is widely used.
+Although it does not run in polynomial time in the worst case, it tends
+to perform well in practice.
+
+We will not give a detailed algorithm for linear programming, but
+will discuss a few important ideas. First, we will give an example of
+using a geometric procedure to solve a two-variable linear program.
+Although this example does not immediately generalize to an efficient
+algorithm for larger problems, it introduces some important concepts
+for linear programming and for optimization in general.
+
+A two-variable linear program
+
+Let us first consider the following linear program with two variables:
+
+subject to
+
+Figure 29.2(a) graphs the constraints in the (x1, x2)-Cartesian
+
+coordinate system. The feasible region in the two-dimensional space
+(highlighted in blue in the figure) is convex.1 Conceptually, you could
+
+evaluate the objective function x1 + x2 at each point in the feasible
+
+region, and then identify a point that has the maximum objective value
+
+as an optimal solution. For this example (and for most linear
+
+programs), however, the feasible region contains an infinite number of
+
+points, and so to solve this linear program, you need an efficient way to
+
+find a point that achieves the maximum objective value without
+
+explicitly evaluating the objective function at every point in the feasible
+
+region.
+
+In two dimensions, you can optimize via a graphical procedure. The
+
+set of points for which x1 + x2 = z, for any z, is a line with a slope of
+-1. Plotting x1 + x2 = 0 produces the line with slope -1 through the
+
+origin, as in Figure 29.2(b). The intersection of this line and the feasible
+
+region is the set of feasible solutions that have an objective value of 0.
+
+In this case, that intersection of the line with the feasible region is the
+
+single point (0, 0). More generally, for any value z, the intersection of
+the line x1 + x2 = z and the feasible region is the set of feasible
+solutions that have objective value z. Figure 29.2(b) shows the lines x1
++ x2 = 0, x1 + x2 = 4, and x1 + x2 = 8. Because the feasible region in
+Figure 29.2 is bounded, there must be some maximum value z for which
+the intersection of the line x1 + x2 = z and the feasible region is
+nonempty. Any point in the feasible region that maximizes x1 + x2 is an
+
+optimal solution to the linear program, which in this case is the vertex
+
+of the feasible region at x1 = 2 and x2 = 6, with objective value 8.
+
+Figure 29.2 (a) The linear program given in (29.18)(29.21). Each constraint is represented by
+a line and a direction. The intersection of the constraints, which is the feasible region, is
+highlighted in blue. (b) The red lines show, respectively, the points for which the objective
+
+value is 0, 4, and 8. The optimal solution to the linear program is x1 = 2 and x2 = 6 with
+
+objective value 8.
+
+It is no accident that an optimal solution to the linear program
+
+occurs at a vertex of the feasible region. The maximum value of z for
+which the line x1 + x2 = z intersects the feasible region must be on the
+
+boundary of the feasible region, and thus the intersection of this line
+with the boundary of the feasible region is either a single vertex or a
+line segment. If the intersection is a single vertex, then there is just one
+optimal solution, and it is that vertex. If the intersection is a line
+segment, every point on that line segment must have the same objective
+value. In particular, both endpoints of the line segment are optimal
+solutions. Since each endpoint of a line segment is a vertex, there is an
+optimal solution at a vertex in this case as well.
+
+Although you cannot easily graph linear programs with more than
+two variables, the same intuition holds. If you have three variables, then
+each constraint corresponds to a half-space in three-dimensional space.
+The intersection of these half-spaces forms the feasible region. The set
+
+of points for which the objective function obtains a given value z is now
+
+a plane (assuming no degenerate conditions). If all coefficients of the
+objective function are nonnegative, and if the origin is a feasible
+solution to the linear program, then as you move this plane away from
+
+the origin, in a direction normal to the objective function, you find
+points of increasing objective value. (If the origin is not feasible or if
+some coefficients in the objective function are negative, the intuitive
+picture becomes slightly more complicated.) As in two dimensions,
+because the feasible region is convex, the set of points that achieve the
+optimal objective value must include a vertex of the feasible region.
+
+Similarly, if you have n variables, each constraint defines a half-space in
+n-dimensional space. We call the feasible region formed by the
+intersection of these half-spaces a simplex. The objective function is
+
+now a hyperplane and, because of convexity, an optimal solution still
+occurs at a vertex of the simplex. Any algorithm for linear programming
+must also identify linear programs that have no solutions, as well as
+linear programs that have no finite optimal solution.
+
+The simplex algorithm takes as input a linear program and returns an
+
+optimal solution. It starts at some vertex of the simplex and performs a
+sequence of iterations. In each iteration, it moves along an edge of the
+simplex from a current vertex to a neighboring vertex whose objective
+value is no smaller than that of the current vertex (and usually is
+larger.) The simplex algorithm terminates when it reaches a local
+maximum, which is a vertex from which all neighboring vertices have a
+smaller objective value. Because the feasible region is convex and the
+objective function is linear, this local optimum is actually a global
+optimum. In Section 29.3, we'll see an important concept called
+"duality," which we'll use to prove that the solution returned by the
+simplex algorithm is indeed optimal.
+
+The simplex algorithm, when implemented carefully, often solves
+general linear programs quickly in practice. With some carefully
+contrived inputs, however, the simplex algorithm can require
+exponential time. The first polynomial-time algorithm for linear
+
+programming was the ellipsoid algorithm, which runs slowly in practice.
+A second class of polynomial-time algorithms are known as interiorpoint methods. In contrast to the simplex algorithm, which moves along
+
+the exterior of the feasible region and maintains a feasible solution that
+is a vertex of the simplex at each iteration, these algorithms move
+through the interior of the feasible region. The intermediate solutions,
+
+while feasible, are not necessarily vertices of the simplex, but the final
+solution is a vertex. For large inputs, interior-point algorithms can run
+as fast as, and sometimes faster than, the simplex algorithm. The
+chapter notes point you to more information about these algorithms.
+
+If you add to a linear program the additional requirement that all
+
+variables take on integer values, you have an integer linear program.
+
+Exercise 34.5-3 on page 1098 asks you to show that just finding a
+feasible solution to this problem is NP-hard. Since no polynomial-time
+algorithms are known for any NP-hard problems, there is no known
+polynomial-time algorithm for integer linear programming. In contrast,
+a general linear-programming problem can be solved in polynomial
+time.
+
+Exercises
+
+29.1-1
+
+Consider the linear program
+
+minimize -2x1 + 3x2
+
+subject to
+
+x1 + x2 = 7
+x1 - 2x2 4
+
+x1 0.
+
+Give three feasible solutions to this linear program. What is the
+objective value of each one?
+
+29.1-2
+
+Consider the following linear program, which has a nonpositivity
+constraint:
+
+minimize 2x1 + 7x2 + x3
+
+subject to
+
+x1 - x3 = 7
+
+3x1 + x2 24
+
+x2 0
+x3 0.
+
+Give three feasible solutions to this linear program. What is the
+objective value of each one?
+
+29.1-3
+
+Show that the following linear program is infeasible:
+
+maximize 3x1 - 2x2
+
+subject to
+
+x1 + x2 2
+-2x1 - 2x2 -10
+
+x1, x2 0.
+
+29.1-4
+
+Show that the following linear program is unbounded:
+
+maximize x1 - x2
+
+subject to
+
+-2x1 + x2 -1
+-x1 - 2x2 -2
+
+x1, x2 0.
+
+29.1-5
+
+Give an example of a linear program for which the feasible region is not
+bounded, but the optimal objective value is finite.
+
+29.1-6
+
+Sometimes, in a linear program, you need to convert constraints from
+one form to another.
+
+a. Show how to convert an equality constraint into an equivalent set of
+
+inequalities. That is, given a constraint , give a set of
+
+inequalities that will be satisfied if and only if ,
+
+b. Show how to convert an inequality constraint into an
+
+equality constraint and a nonnegativity constraint. You will need to
+
+introduce an additional variable s, and use the constraint that s 0.
+
+29.1-7
+
+Explain how to convert a minimization linear program to an equivalent
+maximization linear program, and argue that your new linear program is
+equivalent to the original one.
+
+29.1-8
+
+In the political problem at the beginning of this chapter, there are
+feasible solutions that correspond to winning more voters than there
+
+actually are in the district. For example, you can set x2 to 200, x3 to
+200, and x1 = x4 = 0. That solution is feasible, yet it seems to say that
+
+you will win 400,000 suburban voters, even though there are only
+200,000 actual suburban voters. What constraints can you add to the
+linear program to ensure that you never seem to win more voters than
+there actually are? Even if you don't add these constraints, argue that
+the optimal solution to this linear program can never win more voters
+than there actually are in the district.

@@ -1,0 +1,588 @@
+28.3 Symmetric positive-definite matrices and least-squares
+approximation
+
+Symmetric positive-definite matrices have many interesting and
+
+desirable properties. An n × n matrix A is symmetric positive-definite if A
+= AT(A is symmetric) and xTAx > 0 for all n-vectors x 0 (A is
+
+positive-definite). Symmetric positive-definite matrices are nonsingular,
+and an LU decomposition on them will not divide by 0. This section
+proves these and several other important properties of symmetric
+positive-definite matrices. We'll also see an interesting application to
+curve fitting by a least-squares approximation.
+
+The first property we prove is perhaps the most basic.
+
+Lemma 28.3
+
+Any positive-definite matrix is nonsingular.
+
+Proof Suppose that a matrix A is singular. Then by Corollary D.3 on
+page 1221, there exists a nonzero vector x such that Ax = 0. Hence,
+xTAx = 0, and A cannot be positive-definite.
+
+The proof that an LU decomposition on a symmetric positive-
+
+definite matrix A won't divide by 0 is more involved. We begin by
+proving properties about certain submatrices of A. Define the kth
+leading submatrix of A to be the matrix Ak consisting of the intersection
+of the first k rows and first k columns of A.
+
+Lemma 28.4
+If A is a symmetric positive-definite matrix, then every leading
+submatrix of A is symmetric and positive-definite.
+
+Proof Since A is symmetric, each leading submatrix Ak is also
+symmetric. We'll prove that Ak is positive-definite by contradiction. If
+Ak is not positive-definite, then there exists a k-vector xk 0 such that
+
+. Let A be n × n, and
+
+for submatrices B (which is (n-k)×k) and C (which is (n-k)×(n-k)).
+
+Define the n-vector , where n - k 0s follow xk. Then we have
+
+which contradicts A being positive-definite.
+
+We now turn to some essential properties of the Schur complement.
+
+Let A be a symmetric positive-definite matrix, and let Ak be a leading k
+× k submatrix of A. Partition A once again according to equation
+(28.16). Equation (28.10) generalizes to define the Schur complement S
+of A with respect to Ak as
+
+(By Lemma 28.4, Ak is symmetric and positive-definite, and therefore,
+exists by Lemma 28.3, and S is well defined.) The earlier definition
+
+(28.10) of the Schur complement is consistent with equation (28.17) by
+
+letting k = 1.
+
+The next lemma shows that the Schur-complement matrices of
+symmetric positive-definite matrices are themselves symmetric and
+
+positive-definite. We used this result in Theorem 28.2, and its corollary
+will help prove that LU decomposition works for symmetric positivedefinite matrices.
+
+Lemma 28.5 (Schur complement lemma)
+If A is a symmetric positive-definite matrix and Ak is a leading k × k
+submatrix of A, then the Schur complement S of A with respect to Ak is
+
+symmetric and positive-definite.
+
+Proof Because A is symmetric, so is the submatrix C. By Exercise D.2-
+
+6 on page 1223, the product is symmetric. Since C and are
+
+symmetric, then by Exercise D.1-1 on page 1219, so is S.
+
+It remains to show that S is positive-definite. Consider the partition
+
+of A given in equation (28.16). For any nonzero vector x, we have xTAx
+
+> 0 by the assumption that A is positive-definite. Let the subvectors y
+
+and z consist of the first k and last n - k elements in x, respectively, and
+
+thus they are compatible with Ak and C, respectively. Because exists,
+
+we have
+
+This last equation, which you can verify by multiplying through,
+
+amounts to "completing the square" of the quadratic form. (See
+
+Exercise 28.3-2.)
+
+Since xTAx > 0 holds for any nonzero x, pick any nonzero z and
+
+then choose , which causes the first term in equation (28.18)
+
+to vanish, leaving
+
+as the value of the expression. For any z 0, we therefore have zTSz =
+xTAx > 0, and thus S is positive-definite.
+
+Corollary 28.6
+
+LU decomposition of a symmetric positive-definite matrix never causes
+a division by 0.
+
+Proof Let A be an n × n symmetric positive-definite matrix. In fact,
+
+we'll prove a stronger result than the statement of the corollary: every
+
+pivot is strictly positive. The first pivot is a11. Let e1 be the length-n
+
+unit vector ( 1 0 0 0 )T, so that , which is positive because
+
+e1 is nonzero and A is positive definite. Since the first step of LU
+
+decomposition produces the Schur complement of A with respect to A1
+
+= (a11), Lemma 28.5 implies by induction that all pivots are positive.
+
+Least-squares approximation
+
+One important application of symmetric positive-definite matrices
+arises in fitting curves to given sets of data points. You are given a set of
+
+m data points
+
+(x1, y1), (x2, y2), ... , (xm, ym),
+
+where you know that the yi are subject to measurement errors. You wish
+to determine a function F(x) such that the approximation errors
+
+are small for i = 1, 2, ... , m. The form of the function F depends on the
+
+problem at hand. Let's assume that it has the form of a linearly
+weighted sum
+
+where the number n of summands and the specific basis functions fj are
+
+chosen based on knowledge of the problem at hand. A common choice
+
+is fj(x) = xj-1, which means that
+
+F(x) = c1 + c2x + c3x2 + + cnxn-1
+is a polynomial of degree n - 1 in x. Thus, if you are given m data points
+(x1, y1), (x2, y2), ... , (xm, ym), you need to calculate n coefficients c1,
+c2, ... , cn that minimize the approximation errors 1, 2, ... , m.
+
+By choosing n = m, you can calculate each yi exactly in equation
+(28.19). Such a high-degree polynomial F "fits the noise" as well as the
+data, however, and generally gives poor results when used to predict y
+for previously unseen values of x. It is usually better to choose n
+significantly smaller than m and hope that by choosing the coefficients
+cj well, you can obtain a function F that finds the significant patterns in
+
+the data points without paying undue attention to the noise. Some
+
+theoretical principles exist for choosing n, but they are beyond the
+scope of this text. In any case, once you choose a value of n that is less
+than m, you end up with an overdetermined set of equations whose
+
+solution you wish to approximate. Let's see how to do so.
+Let
+
+denote the matrix of values of the basis functions at the given points,
+
+that is, aij = fj(xi). Let c = (ck) denote the desired n-vector of
+
+coefficients. Then,
+
+is the m-vector of "predicted values" for y. Thus,
+= Ac - y
+
+is the m-vector of approximation errors.
+
+To minimize approximation errors, let's minimize the norm of the
+
+error vector , which gives a least-squares solution, since
+
+Because
+
+to minimize , differentiate 2 with respect to each ck and then set
+
+the result to 0:
+
+The n equations (28.20) for k = 1, 2, ... , n are equivalent to the single
+
+matrix equation
+
+(Ac - y)T A = 0
+
+or, equivalently (using Exercise D.1-2 on page 1219), to
+
+AT(Ac - y) = 0,
+
+which implies
+
+In statistics, equation (28.21) is called the normal equation. The matrix
+ATA is symmetric by Exercise D.1-2, and if A has full column rank,
+then by Theorem D.6 on page 1222, ATA is positive-definite as well.
+Hence, (ATA)-1 exists, and the solution to equation (28.21) is
+
+where the matrix A+ = ((ATA)-1AT) is the pseudoinverse of the matrix
+A. The pseudoinverse naturally generalizes the notion of a matrix
+
+inverse to the case in which A is not square. (Compare equation (28.22)
+as the approximate solution to Ac = y with the solution A-1b as the
+exact solution to Ax = b.)
+
+As an example of producing a least-squares fit, suppose that you
+have five data points
+
+(x1, y1) = (-1, 2),
+(x2, y2) = (1, 1),
+(x3, y3) = (2, 1),
+(x4, y4) = (3, 0),
+(x5, y5) = (5, 3),
+
+shown as orange dots in Figure 28.3, and you want to fit these points
+with a quadratic polynomial
+
+F(x) = c1 + c2x + c3x2.
+
+Start with the matrix of basis-function values
+
+whose pseudoinverse is
+
+Figure 28.3 The least-squares fit of a quadratic polynomial to the set of five data points {(-1,
+2), (1, 1), (2, 1), (3, 0), (5, 3)}. The orange dots are the data points, and the blue dots are their
+
+estimated values predicted by the polynomial F(x) = 1.2 - 0.757x + 0.214x2, the quadratic
+
+polynomial that minimizes the sum of the squared errors, plotted in blue. Each orange line
+shows the error for one data point.
+
+Multiplying y by A+ gives the coefficient vector
+
+which corresponds to the quadratic polynomial
+
+F(x) = 1.200 - 0.757x + 0.214x2
+
+as the closest-fitting quadratic to the given data, in a least-squares
+sense.
+
+As a practical matter, you would typically solve the normal equation
+
+(28.21) by multiplying y by AT and then finding an LU decomposition
+of ATA. If A has full rank, the matrix ATA is guaranteed to be
+
+nonsingular, because it is symmetric and positive-definite. (See Exercise
+D.1-2 and Theorem D.6.)
+
+Figure 28.4 A least-squares fit of a curve of the form
+
+c1 + c2x + c3x2 + c4 sin(2x) + c5 cos(2x)
+
+for the carbon-dioxide concentrations measured in Mauna Loa, Hawaii from 19901 to 2019,
+
+where x is the number of years elapsed since 1990. This curve is the famous "Keeling curve,"
+
+illustrating curve-fitting to nonpolynomial formulas. The sine and cosine terms allow modeling
+of seasonal variations in CO2 concentrations. The red curve shows the measured CO2
+concentrations. The best fit, shown in black, has the form
+
+352.83 + 1.39x + 0.02x2 + 2.83 sin(2x) - 0.94 cos(2x).
+
+We close this section with an example in Figure 28.4, illustrating that
+a curve can also fit a nonpolynomial function. The curve confirms one
+aspect of climate change: that carbon dioxide (CO2) concentrations
+have steadily increased over a period of 29 years. Linear and quadratic
+terms model the annual increase, and sine and cosine terms model
+seasonal variations.
+Exercises
+
+28.3-1
+
+Prove that every diagonal element of a symmetric positive-definite
+matrix is positive.
+
+28.3-2
+
+Let be a 2 × 2 symmetric positive-definite matrix. Prove that
+
+its determinant ac - b2 is positive by "completing the square" in a
+
+manner similar to that used in the proof of Lemma 28.5.
+
+28.3-3
+
+Prove that the maximum element in a symmetric positive-definite matrix
+lies on the diagonal.
+
+28.3-4
+
+Prove that the determinant of each leading submatrix of a symmetric
+positive-definite matrix is positive.
+
+28.3-5
+Let Ak denote the kth leading submatrix of a symmetric positivedefinite matrix A. Prove that det(Ak)/det(Ak-1) is the kth pivot during
+LU decomposition, where, by convention, det(A0) = 1.
+
+28.3-6
+
+Find the function of the form
+
+F(x) = c1 + c2x lg x + c3ex
+
+that is the best least-squares fit to the data points
+
+(1, 1), (2, 1), (3, 3), (4, 8).
+
+28.3-7
+Show that the pseudoinverse A+ satisfies the following four equations:
+
+AA+A = A,
+A+AA+ = A+,
+
+(AA+)T = AA+,
+(A+A)T = A+A.
+
+Problems
+
+28-1 Tridiagonal systems of linear equations
+
+Consider the tridiagonal matrix
+
+a. Find an LU decomposition of A.
+b. Solve the equation Ax = ( 1 1 1 1 1 )T by using forward and back
+
+substitution.
+
+c. Find the inverse of A.
+d. Show how to solve the equation Ax = b for any n × n symmetric
+
+positive-definite, tridiagonal matrix A and any n-vector b in O(n) time
+
+by performing an LU decomposition. Argue that any method based
+
+on forming A-1 is asymptotically more expensive in the worst case.
+e. Show how to solve the equation Ax = b for any n × n nonsingular,
+
+tridiagonal matrix A and any n-vector b in O(n) time by performing an
+
+LUP decomposition.
+
+28-2 Splines
+
+A practical method for interpolating a set of points with a curve is to
+
+use cubic splines. You are given a set {(xi, yi) : i = 0, 1, ... , n} of n + 1
+point-value pairs, where x0 < x1 < < xn. Your goal is to fit a
+piecewise-cubic curve (spline) f(x) to the points. That is, the curve f(x)
+is made up of n cubic polynomials fi(x) = ai + bix + cix2 + dix3 for i =
+
+0, 1, ... , n - 1, where if x falls in the range xi x xi+1, then the value
+of the curve is given by f(x) = fi(x - xi). The points xi at which the
+cubic polynomials are "pasted" together are called knots. For simplicity,
+assume that xi = i for i = 0, 1, ... , n.
+
+To ensure continuity of f(x), require that
+
+f(xi) = fi(0) = yi,
+f(xi+1) = fi(1) = yi+1
+
+for i = 0, 1, ... , n - 1. To ensure that f(x) is sufficiently smooth, also
+
+require the first derivative to be continuous at each knot:
+
+for i = 0, 1, ... , n - 2.
+
+a. Suppose that for i = 0, 1, ... , n, in addition to the point-value pairs
+{(xi, yi)}, you are also given the first derivative Di = f(xi) at each
+knot. Express each coefficient ai, bi, ci, and di in terms of the values
+yi, yi+1, Di, and Di+1. (Remember that xi = i.) How quickly can you
+compute the 4n coefficients from the point-value pairs and first
+
+derivatives?
+
+The question remains of how to choose the first derivatives of f(x) at
+
+the knots. One method is to require the second derivatives to be
+continuous at the knots:
+
+for i = 0, 1, ... , n-2. At the first and last knots, assume that
+
+and . These assumptions make f(x) a
+
+natural cubic spline.
+
+b. Use the continuity constraints on the second derivative to show that
+for i = 1, 2, ... , n - 1,
+
+c. Show that
+
+d. Rewrite equations (28.23)(28.25) as a matrix equation involving the
+vector D = (D0 D1 D2 Dn)T of unknowns. What attributes does
+
+the matrix in your equation have?
+
+e. Argue that a natural cubic spline can interpolate a set of n + 1 point-
+value pairs in O(n) time (see Problem 28-1).
+
+f. Show how to determine a natural cubic spline that interpolates a set
+of n + 1 points (xi, yi) satisfying x0 < x1 < < xn, even when xi is
+not necessarily equal to i. What matrix equation must your method
+
+solve, and how quickly does your algorithm run?
+
+Chapter notes
+
+Many excellent texts describe numerical and scientific computation in
+much greater detail than we have room for here. The following are
+especially readable: George and Liu [180], Golub and Van Loan [192],
+Press, Teukolsky, Vetterling, and Flannery [365, 366], and Strang [422,
+423].
+
+Golub and Van Loan [192] discuss numerical stability. They show
+
+why det(A) is not necessarily a good indicator of the stability of a
+matrix A, proposing instead to use A A-1, where
+
+. They also address the question of how to
+
+compute this value without actually computing A-1.
+
+Gaussian elimination, upon which the LU and LUP decompositions
+are based, was the first systematic method for solving linear systems of
+equations. It was also one of the earliest numerical algorithms.
+Although it was known earlier, its discovery is commonly attributed to
+C. F. Gauss (17771855). In his famous paper [424], Strassen showed
+
+that an n×n matrix can be inverted in O(nlg 7) time. Winograd [460]
+
+originally proved that matrix multiplication is no harder than matrix
+inversion, and the converse is due to Aho, Hopcroft, and Ullman [5].
+
+Another important matrix decomposition is the singular value
+decomposition, or SVD. The SVD factors an m × n matrix A into
+
+, where is an m×n matrix with nonzero values only on the
+diagonal, Q1 is m×m with mutually orthonormal columns, and Q2 is n ×
+n, also with mutually orthonormal columns. Two vectors are
+orthonormal if their inner product is 0 and each vector has a norm of 1.
+
+The books by Strang [422, 423] and Golub and Van Loan [192] contain
+good treatments of the SVD.
+
+Strang [423] has an excellent presentation of symmetric positivedefinite matrices and of linear algebra in general.
+
+1 The year in which Introduction to Algorithms was first published.
+
+29 Linear Programming
+
+Many problems take the form of maximizing or minimizing an objective,
+given limited resources and competing constraints. If you can specify
+the objective as a linear function of certain variables, and if you can
+specify the constraints on resources as equalities or inequalities on
+
+those variables, then you have a linear-programming problem. Linear
+
+programs arise in a variety of practical applications. We begin by
+studying an application in electoral politics.
+
+A political problem
+
+Suppose that you are a politician trying to win an election. Your district
+has three different types of areas--urban, suburban, and rural. These
+areas have, respectively, 100,000, 200,000, and 50,000 registered voters.
+Although not all the registered voters actually go to the polls, you
+decide that to govern effectively, you would like at least half the
+registered voters in each of the three regions to vote for you. You are
+honorable and would never consider supporting policies you don't
+believe in. You realize, however, that certain issues may be more
+effective in winning votes in certain places. Your primary issues are
+preparing for a zombie apocalypse, equipping sharks with lasers,
+building highways for flying cars, and allowing dolphins to vote.
+
+According to your campaign staff 's research, you can estimate how
+many votes you win or lose from each population segment by spending
+$1,000 on advertising on each issue. This information appears in the
+table of Figure 29.1. In this table, each entry indicates the number of
+
+thousands of either urban, suburban, or rural voters who would be won
+over by spending $1,000 on advertising in support of a particular issue.
+Negative entries denote votes that would be lost. Your task is to figure
+out the minimum amount of money that you need to spend in order to
+win 50,000 urban votes, 100,000 suburban votes, and 25,000 rural votes.
+
+You could, by trial and error, devise a strategy that wins the required
+number of votes, but the strategy you come up with might not be the
+least expensive one. For example, you could devote $20,000 of
+advertising to preparing for a zombie apocalypse, $0 to equipping
+sharks with lasers, $4,000 to building highways for flying cars, and
+$9,000 to allowing dolphins to vote. In this case, you would win (20 · -2)
++ (0 · 8) + (4 · 0) + (9 · 10) = 50 thousand urban votes, (20 · 5) + (0 · 2)
++ (4 · 0) + (9 · 0) = 100 thousand suburban votes, and (20 · 3) + (0 · -5)
++ (4 · 10) + (9 · -2) = 82 thousand rural votes. You would win the exact
+number of votes desired in the urban and suburban areas and more
+than enough votes in the rural area. (In fact, according to your model,
+in the rural area you would receive more votes than there are voters.) In
+order to garner these votes, you would have paid for 20 + 0 + 4 + 9 = 33
+thousand dollars of advertising.
+
+Figure 29.1 The effects of policies on voters. Each entry describes the number of thousands of
+urban, suburban, or rural voters who could be won over by spending $1,000 on advertising
+support of a policy on a particular issue. Negative entries denote votes that would be lost.
+
+It's natural to wonder whether this strategy is the best possible. That
+is, can you achieve your goals while spending less on advertising?
+Additional trial and error might help you to answer this question, but a
+
+better approach is to formulate (or model) this question mathematically.
+
+The first step is to decide what decisions you have to make and to
+introduce variables that capture these decisions. Since you have four
+
+decisions, you introduce four decision variables:
+
+x1 is the number of thousands of dollars spent on advertising on
+
+preparing for a zombie apocalypse,
+
+x2 is the number of thousands of dollars spent on advertising on
+
+equipping sharks with lasers,
+
+x3 is the number of thousands of dollars spent on advertising on
+
+building highways for flying cars, and
+
+x4 is the number of thousands of dollars spent on advertising on
+
+allowing dolphins to vote.
+
+You then think about constraints, which are limits, or restrictions, on
+
+the values that the decision variables can take. You can write the
+requirement that you win at least 50,000 urban votes as
+
+Similarly, you can write the requirements that you win at least 100,000
+suburban votes and 25,000 rural votes as
+
+and
+
+Any setting of the variables x1, x2, x3, x4 that satisfies inequalities
+
+(29.1)(29.3) yields a strategy that wins a sufficient number of each type
+of vote.
+
+Finally, you think about your objective, which is the quantity that
+
+you wish to either minimize or maximize. In order to keep costs as small
+as possible, you would like to minimize the amount spent on advertising.
+That is, you want to minimize the expression
+
+Although negative advertising often occurs in political campaigns, there
+is no such thing as negative-cost advertising. Consequently, you require
+that
+
+Combining inequalities (29.1)(29.3) and (29.5) with the objective of
+minimizing (29.4) produces what is known as a "linear program." We
+can format this problem tabularly as
+
+subject to
+
+The solution to this linear program yields your optimal strategy.
+The remainder of this chapter covers how to formulate linear
+
+programs and is an introduction to modeling in general. Modeling
+refers to the general process of converting a problem into a
+mathematical form amenable to solution by an algorithm. Section 29.1
+discusses briefly the algorithmic aspects of linear programming,
+although it does not include the details of a linear-programming
+algorithm. Throughout this book, we have seen ways to model
+problems, such as by shortest paths and connectivity in a graph. When
+modeling a problem as a linear program, you go through the steps used
+in this political example--identifying the decision variables, specifying
+the constraints, and formulating the objective function. In order to
+model a problem as a linear program, the constraints and objectives
+must be linear. In Section 29.2, we will see several other examples of
+modeling via linear programs. Section 29.3 discusses duality, an
+important concept in linear programming and other optimization
+algorithms.

@@ -1,0 +1,202 @@
+13.1 Properties of red-black trees
+
+A red-black tree is a binary search tree with one extra bit of storage per
+node: its color, which can be either RED or BLACK. By constraining
+
+the node colors on any simple path from the root to a leaf, red-black
+trees ensure that no such path is more than twice as long as any other,
+
+so that the tree is approximately balanced. Indeed, as we're about to see,
+the height of a red-black tree with n keys is at most 2 lg(n + 1), which is
+O(lg n).
+
+Each node of the tree now contains the attributes color, key, left,
+right, and p. If a child or the parent of a node does not exist, the
+
+corresponding pointer attribute of the node contains the value NIL.
+Think of these NILs as pointers to leaves (external nodes) of the binary
+
+search tree and the normal, key-bearing nodes as internal nodes of the
+tree.
+
+A red-black tree is a binary search tree that satisfies the following
+
+red-black properties:
+
+1. Every node is either red or black.
+
+2. The root is black.
+
+3. Every leaf (NIL) is black.
+
+4. If a node is red, then both its children are black.
+
+5. For each node, all simple paths from the node to descendant
+leaves contain the same number of black nodes.
+
+Figure 13.1(a) shows an example of a red-black tree.
+As a matter of convenience in dealing with boundary conditions in
+
+red-black tree code, we use a single sentinel to represent NIL (see page
+
+262). For a red-black tree T, the sentinel T.nil is an object with the same
+attributes as an ordinary node in the tree. Its color attribute is BLACK,
+and its other attributes--p, left, right, and key--can take on arbitrary
+
+values. As Figure 13.1(b) shows, all pointers to NIL are replaced by
+
+pointers to the sentinel T.nil.
+
+Why use the sentinel? The sentinel makes it possible to treat a NIL
+
+child of a node x as an ordinary node whose parent is x. An alternative
+
+design would use a distinct sentinel node for each NIL in the tree, so
+that the parent of each NIL is well defined. That approach needlessly
+
+wastes space, however. Instead, just the one sentinel T.nil represents all
+
+the NILs--all leaves and the root's parent. The values of the attributes
+
+p, left, right, and key of the sentinel are immaterial. The red-black tree
+
+procedures can place whatever values in the sentinel that yield simpler
+code.
+
+We generally confine our interest to the internal nodes of a red-black
+tree, since they hold the key values. The remainder of this chapter omits
+the leaves in drawings of red-black trees, as shown in Figure 13.1(c).
+
+We call the number of black nodes on any simple path from, but not
+
+including, a node x down to a leaf the black-height of the node, denoted
+bh(x). By property 5, the notion of black-height is well defined, since all
+
+descending simple paths from the node have the same number of black
+nodes. The black-height of a red-black tree is the black-height of its
+root.
+
+The following lemma shows why red-black trees make good search
+trees.
+
+Lemma 13.1
+A red-black tree with n internal nodes has height at most 2 lg(n + 1).
+
+Proof We start by showing that the subtree rooted at any node x
+contains at least 2bh(x) - 1 internal nodes. We prove this claim by
+induction on the height of x. If the height of x is 0, then x must be a leaf
+(T.nil), and the subtree rooted at x indeed contains at least 2bh(x) - 1 =
+20 - 1 = 0 internal nodes. For the inductive step, consider a node x that
+has positive height and is an internal node. Then node x has two
+
+children, either or both of which may be a leaf. If a child is black, then it
+
+contributes 1 to x's black-height but not to its own. If a child is red, then
+it contributes to neither x's black-height nor its own. Therefore, each
+child has a black-height of either bh(x) - 1 (if it's black) or bh(x) (if it's
+red). Since the height of a child of x is less than the height of x itself, we
+
+can apply the inductive hypothesis to conclude that each child has at
+
+least 2bh(x)-1 - 1 internal nodes. Thus, the subtree rooted at x contains
+at least (2bh(x)-1 - 1) + (2bh(x)-1 - 1) + 1 = 2bh(x) - 1 internal
+
+nodes, which proves the claim.
+
+Figure 13.1 A red-black tree. Every node in a red-black tree is either red or black, the children
+of a red node are both black, and every simple path from a node to a descendant leaf contains
+the same number of black nodes. (a) Every leaf, shown as a NIL, is black. Each non-NIL node
+is marked with its black-height, where NILs have black-height 0. (b) The same red-black tree
+
+but with each NIL replaced by the single sentinel T.nil, which is always black, and with black-
+
+heights omitted. The root's parent is also the sentinel. (c) The same red-black tree but with
+leaves and the root's parent omitted entirely. The remainder of this chapter uses this drawing
+style.
+
+To complete the proof of the lemma, let h be the height of the tree.
+
+According to property 4, at least half the nodes on any simple path from
+the root to a leaf, not including the root, must be black. Consequently,
+
+the black-height of the root must be at least h/2, and thus,
+
+n 2h/2 - 1.
+
+Moving the 1 to the left-hand side and taking logarithms on both sides
+
+yields lg(n + 1) h/2, or h 2 lg(n + 1).
+
+As an immediate consequence of this lemma, each of the dynamic-set
+operations SEARCH, MINIMUM, MAXIMUM, SUCCESSOR, and
+
+PREDECESSOR runs in O(lg n) time on a red-black tree, since each can
+run in O(h) time on a binary search tree of height h (as shown in
+Chapter 12) and any red-black tree on n nodes is a binary search tree
+with height O(lg n). (Of course, references to NIL in the algorithms of
+Chapter 12 have to be replaced by T.nil.) Although the procedures
+TREE-INSERT and TREE-DELETE from Chapter 12 run in O(lg n)
+
+time when given a red-black tree as input, you cannot just use them to
+implement the dynamic-set operations INSERT and DELETE. They do
+not necessarily maintain the red-black properties, so you might not end
+up with a legal red-black tree. The remainder of this chapter shows how
+
+to insert into and delete from a red-black tree in O(lg n) time.
+
+Exercises
+
+13.1-1
+
+In the style of Figure 13.1(a), draw the complete binary search tree of
+height 3 on the keys {1, 2, ..., 15}. Add the NIL leaves and color the
+nodes in three different ways such that the black-heights of the resulting
+red-black trees are 2, 3, and 4.
+
+13.1-2
+
+Draw the red-black tree that results after TREE-INSERT is called on
+the tree in Figure 13.1 with key 36. If the inserted node is colored red, is
+the resulting tree a red-black tree? What if it is colored black?
+
+13.1-3
+Define a relaxed red-black tree as a binary search tree that satisfies red-
+
+black properties 1, 3, 4, and 5, but whose root may be either red or
+
+black. Consider a relaxed red-black tree T whose root is red. If the root
+of T is changed to black but no other changes occur, is the resulting tree
+
+a red-black tree?
+
+13.1-4
+
+Suppose that every black node in a red-black tree "absorbs" all of its
+red children, so that the children of any red node become children of the
+
+black parent. (Ignore what happens to the keys.) What are the possible
+degrees of a black node after all its red children are absorbed? What can
+you say about the depths of the leaves of the resulting tree?
+
+13.1-5
+Show that the longest simple path from a node x in a red-black tree to a
+
+descendant leaf has length at most twice that of the shortest simple path
+
+from node x to a descendant leaf.
+
+13.1-6
+
+What is the largest possible number of internal nodes in a red-black tree
+
+with black-height k? What is the smallest possible number?
+
+13.1-7
+Describe a red-black tree on n keys that realizes the largest possible
+
+ratio of red internal nodes to black internal nodes. What is this ratio?
+What tree has the smallest possible ratio, and what is the ratio?
+
+13.1-8
+
+Argue that in a red-black tree, a red node cannot have exactly one nonNIL child.

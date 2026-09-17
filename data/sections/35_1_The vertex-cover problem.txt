@@ -1,0 +1,156 @@
+35.1 The vertex-cover problem
+
+Section 34.5.2 defined the vertex-cover problem and proved it NP-
+
+complete. Recall that a vertex cover of an undirected graph G = (V, E) is
+a subset V V such that if (u, v) is an edge of G, then either u V or v
+V (or both). The size of a vertex cover is the number of vertices in it.
+
+The vertex-cover problem is to find a vertex cover of minimum size in
+a given undirected graph. We call such a vertex cover an optimal vertex
+cover. This problem is the optimization version of an NP-complete
+
+decision problem.
+Even though nobody knows how to find an optimal vertex cover in a
+
+graph G in polynomial time, there is an efficient algorithm to find a
+
+vertex cover that is near-optimal. The approximation algorithm
+APPROX-VERTEX-COVER on the facing page takes as input an
+
+undirected graph G and returns a vertex cover whose size is guaranteed
+
+to be no more than twice the size of an optimal vertex cover.
+Figure 35.1 illustrates how APPROX-VERTEX-COVER operates on
+
+an example graph. The variable C contains the vertex cover being
+constructed. Line 1 initializes C to the empty set. Line 2 sets E to be a
+copy of the edge set G.E of the graph. The while loop of lines 36
+repeatedly picks an edge (u, v) from E, adds its endpoints u and v into
+C, and deletes all edges in E that u or v covers. Finally, line 7 returns the
+vertex cover C. The running time of this algorithm is O(V + E), using
+adjacency lists to represent E.
+
+APPROX-VERTEX-COVER (G)
+
+1 C=Ø
+2 E = G.E
+
+3 while E Ø
+4 let (u, v) be an arbitrary edge of E
+5 C = C {u, v}
+6 remove from E edge (u, v) and every edge incident on either u or
+
+v
+7 return C
+
+Theorem 35.1
+
+APPROX-VERTEX-COVER is a polynomial-time 2-approximation
+algorithm.
+
+Proof We have already shown that APPROX-VERTEX-COVER runs
+
+in polynomial time.
+
+The set C of vertices that is returned by APPROX-VERTEX-
+
+COVER is a vertex cover, since the algorithm loops until every edge in
+
+G.E has been covered by some vertex in C.
+
+To see that APPROX-VERTEX-COVER returns a vertex cover that
+
+is at most twice the size of an optimal cover, let A denote the set of
+
+edges that line 4 of APPROX-VERTEX-COVER picked. In order to
+
+cover the edges in A, any vertex cover--in particular, an optimal cover
+C*--must include at least one endpoint of each edge in A. No two edges
+in A share an endpoint, since once an edge is picked in line 4, all other
+edges that are incident on its endpoints are deleted from E in line 6.
+Thus, no two edges in A are covered by the same vertex from C*,
+meaning that for every vertex in C*, there is at most one edge in A,
+
+giving the lower bound
+
+on the size of an optimal vertex cover. Each execution of line 4 picks an
+
+edge for which neither of its endpoints is already in C, yielding an upper
+
+bound (an exact upper bound, in fact) on the size of the vertex cover
+returned:
+
+Combining equations (35.2) and (35.3) yields
+
+|C| = 2 |A|
+2 |C*|,
+
+thereby proving the theorem.
+
+Figure 35.1 The operation of APPROX-VERTEX-COVER. (a) The input graph G, which has
+7 vertices and 8 edges. (b) The highlighted edge (b, c) is the first edge chosen by APPROXVERTEX-COVER. Vertices b and c, in blue, are added to the set C containing the vertex
+cover being created. Dashed edges (a, b), (c, e), and (c, d) are removed since they are now
+covered by some vertex in C. (c) Edge (e, f) is chosen, and vertices e and f are added to C. (d)
+Edge (d, g) is chosen, and vertices d and g are added to C. (e) The set C, which is the vertex
+cover produced by APPROX-VERTEX-COVER, contains the six vertices b, c, d, e, f, g. (f)
+The optimal vertex cover for this problem contains only three vertices: b, d, and e.
+
+Let us reflect on this proof. At first, you might wonder how you can
+possibly prove that the size of the vertex cover returned by APPROXVERTEX-COVER is at most twice the size of an optimal vertex cover,
+when you don't even know the size of an optimal vertex cover. Instead
+of requiring that you know the exact size of an optimal vertex cover,
+you find a lower bound on the size. As Exercise 35.1-2 asks you to show,
+
+the set A of edges that line 4 of APPROX-VERTEX-COVER selects is
+
+actually a maximal matching in the graph G. (A maximal matching is a
+
+matching to which no edges can be added and still have a matching.)
+The size of a maximal matching is, as we argued in the proof of
+Theorem 35.1, a lower bound on the size of an optimal vertex cover.
+The algorithm returns a vertex cover whose size is at most twice the size
+
+of the maximal matching A. The approximation ratio comes from
+
+relating the size of the solution returned to the lower bound. We will use
+this methodology in later sections as well.
+
+Exercises
+
+35.1-1
+
+Give an example of a graph for which APPROX-VERTEX-COVER
+always yields a suboptimal solution.
+
+35.1-2
+
+Prove that the set of edges picked in line 4 of APPROX-VERTEX-
+
+COVER forms a maximal matching in the graph G.
+
+35.1-3
+
+Consider the following heuristic to solve the vertex-cover problem.
+Repeatedly select a vertex of highest degree, and remove all of its
+incident edges. Give an example to show that this heuristic does not
+
+provide an approximation ratio of 2. (Hint: Try a bipartite graph with
+
+vertices of uniform degree on the left and vertices of varying degree on
+the right.)
+
+35.1-4
+
+Give an efficient greedy algorithm that finds an optimal vertex cover for
+a tree in linear time.
+
+35.1-5
+
+The proof of Theorem 34.12 on page 1084 illustrates that the vertexcover problem and the NP-complete clique problem are complementary
+in the sense that an optimal vertex cover is the complement of a
+maximum-size clique in the complement graph. Does this relationship
+imply that there is a polynomial-time approximation algorithm with a
+
+constant approximation ratio for the clique problem? Justify your
+answer.

@@ -1,0 +1,253 @@
+32.2 The Rabin-Karp algorithm
+
+Rabin and Karp proposed a string-matching algorithm that performs
+well in practice and that also generalizes to other algorithms for related
+problems, such as two-dimensional pattern matching. The Rabin-Karp
+
+algorithm uses (m) preprocessing time, and its worst-case running
+time is ((n-m+1)m). Based on certain assumptions, however, its
+
+average-case running time is better.
+This algorithm makes use of elementary number-theoretic notions
+
+such as the equivalence of two numbers modulo a third number. You
+might want to refer to Section 31.1 for the relevant definitions.
+
+For expository purposes, let's assume that = {0, 1, 2, ..., 9}, so
+that each character is a decimal digit. (In the general case, you can
+
+assume that each character is a digit in radix-d notation, so that it has a
+numerical value in the range 0 to d 1, where d = ||.) You can then
+view a string of k consecutive characters as representing a length-k
+
+decimal number. For example, the character string 31415 corresponds
+to the decimal number 31,415. Because we interpret the input
+
+characters as both graphical symbols and digits, it will be convenient in
+this section to denote them as digits in standard text font.
+
+Given a pattern P[1:m], let p denote its corresponding decimal value.
+In a similar manner, given a text T[1:n], let ts denote the decimal value
+of the length-m substring T[s + 1:s + m], for s = 0, 1, ..., n m.
+Certainly, ts = p if and only if T [s + 1:s + m] = P[1:m], and thus, s is a
+valid shift if and only if ts = p. If you could compute p in (m) time and
+all the ts values in a total of (n m + 1) time,2 then you could
+determine all valid shifts s in (m)+(n - m + 1) = (n) time by
+comparing p with each of the ts values. (For the moment, let's not worry
+about the possibility that p and the ts values might be very large
+
+numbers.)
+
+Indeed, you can compute p in (m) time using Horner's rule (see
+
+Problem 2-3):
+
+Similarly, you can compute t0 from T[1:m] in (m) time.
+To compute the remaining values t1, t2, ..., tnm in (n m) time,
+
+observe that you can compute ts+1 from ts in constant time, since
+
+Subtracting 10m-1T [s + 1] removes the high-order digit from ts,
+
+multiplying the result by 10 shifts the number left by one digit position,
+
+and adding T[s + m + 1] brings in the appropriate low-order digit. For
+example, suppose that m = 5, ts = 31415, and the new low-order digit is
+T[s + 5 + 1] = 2. The high-order digit to remove is T[s + 1] = 3, and so
+
+ts+1 = 10 (31415 - 10000 · 3) + 2
+
+= 14152.
+
+If you precompute the constant 10m-1 (which you can do in O(1g m)
+
+time using the techniques of Section 31.6, although for this application
+
+a straightforward O(m)-time method suffices), then each execution of
+
+equation (32.1) takes a constant number of arithmetic operations. Thus,
+
+you can compute p in (m) time, and you can compute all of t0, t1, ...,
+tn-m in (n - m + 1) time. Therefore, you can find all occurrences of
+the pattern P[1:m] in the text T[1: n] with (m) preprocessing time and
+(n - m + 1) matching time.
+
+This scheme works well if P is short enough and the alphabet is
+small enough that arithmetic operations on p and ts take constant time.
+But what if P is long, or if the size of means that instead of powers of
+
+10 in equation (32.1) you have to use powers of a larger number (such
+
+as powers of 256 for the extended ASCII character set)? Then the
+
+values of p and ts might be too large to work with in constant time.
+
+Fortunately, this problem can be solved, as Figure 32.4 shows: compute
+
+p and the ts values modulo a suitable modulus q. You can compute p
+modulo q in (m) time and all the ts values modulo q in (n - m + 1)
+time. With || = 10, if you choose the modulus q as a prime such that
+10q just fits within one computer word, then you can perform all the
+
+necessary computations with single-precision arithmetic. In general,
+
+with a d-ary alphabet {0, 1, ..., d 1}, choose q so that dq fits within a
+
+computer word and adjust the recurrence equation (32.1) to work
+
+modulo q, so that it becomes
+
+Figure 32.4 The Rabin-Karp algorithm. Each character is a decimal digit. Values are
+computed modulo 13. (a) A text string. A window of length 5 is shaded blue. The numerical
+value of the blue number, computed modulo 13, yields the value 7. (b) The same text string
+with values computed modulo 13 for each possible position of a length-5 window. Assuming
+
+the pattern P = 31415, look for windows whose value modulo 13 is 7, since 31415 = 7 (mod
+
+13). The algorithm finds two such windows, shaded blue in the figure. The first, beginning at
+text position 7, is indeed an occurrence of the pattern. The second window, beginning at text
+position 13, is a spurious hit. (c) How to compute the value for a window in constant time,
+given the value for the previous window. The first window has value 31415. Dropping the highorder digit 3, shifting left (multiplying by 10), and then adding in the low-order digit 2 gives
+the new value 14152. Because all computations are performed modulo 13, the value for the
+first window is 7, and the value for the new window is 8.
+
+where h = dm-1 mod q is the value of the digit "1" in the high-order
+position of an m-digit text window.
+
+The solution of working modulo q is not perfect, however: ts = p
+(mod q) does not automatically mean that ts = p. On the other hand, if
+ts p (mod q), then you definitely know that ts p, so that shift s is
+invalid. Thus you can use the test ts = p (mod q) as a fast heuristic test
+to rule out invalid shifts. If ts = p (mod q)--a hit--then you need to test
+further to see whether s is really valid or you just have a spurious hit.
+This additional test explicitly checks the condition P[1:m] = T[s + 1:s +
+m]. If q is large enough, then you would hope that spurious hits occur
+
+infrequently enough that the cost of the extra checking is low.
+
+The procedure RABIN-KARP-MATCHER on the next page makes
+
+these ideas precise. The inputs to the procedure are the text T, the
+pattern P, their lengths n and m, the radix d to use (which is typically
+taken to be ||), and the prime q to use. The procedure works as follows.
+All characters are interpreted as radix-d digits. The subscripts on t are
+
+provided only for clarity: the procedure works correctly if all the
+
+subscripts are dropped. Line 1 initializes h to the value of the highorder digit position of an m-digit window. Lines 26 compute p as the
+value of P[1:m] mod q and t0 as the value of T[1:m] mod q. The for loop
+of lines 712 iterates through all possible shifts s, maintaining the
+
+following invariant:
+
+Whenever line 8 is executed, ts = T[s + 1:s + m] mod q.
+
+If a hit occurs because p = ts in line 8, then line 9 determines whether s
+is a valid shift or the hit was spurious via the test P[1:m] == T[s +1:s
++m]. Line 10 prints out any valid shifts that are found. If s < n m
+
+(checked in line 11), then the for loop will iterate at least one more time,
+
+and so line 12 first executes to ensure that the loop invariant holds
+
+upon the next iteration. Line 12 computes the value of ts+1 mod q from
+the value of ts mod q in constant time using equation (32.2) directly.
+
+RABIN-KARP-MATCHER takes (m) preprocessing time, and its
+matching time is ((n - m + 1)m) in the worst case, since (like the naive
+
+string-matching algorithm) the Rabin-Karp algorithm explicitly verifies
+
+every valid shift. If P = am and T = an, then verifying takes
+((n-m+1)m) time, since each of the n-m+1 possible shifts is valid.
+
+In many applications, you expect few valid shifts--perhaps some
+
+constant c of them. In such applications, the expected matching time of
+the algorithm is only O((n-m+1)+cm) = O(n+m), plus the time required
+
+to process spurious hits. We can base a heuristic analysis on the
+
+assumption that reducing values modulo q acts like a random mapping
+from * to q. The expected number of spurious hits is then O(n/q),
+because we can estimate the chance that an arbitrary ts will be
+equivalent to p, modulo q, as 1/q. Since there are O(n) positions at
+which the test of line 8 fails (actually, at most n - m + 1 positions) and
+checking each hit takes O(m) time in line 9, the expected matching time
+
+taken by the Rabin-Karp algorithm is
+
+RABIN-KARP-MATCHER(T, P, n, m, d, q)
+
+1 h = dm-1 mod q // preprocessing
+2 p=0 // matching--try all possible
+3 t0 = 0
+
+4 for i = 1 to m
+5 p = (dp + P[i]) mod q
+6 t0 = (dt0 + T[i]) mod q
+
+7 for s = 0 to n m
+
+shifts
+
+8 if p == ts // a hit?
+
+9 if P[1:m] == T[s + 1:s + m] // valid shift?
+
+10 print "Pattern occurs with shift" s
+
+11 if s < n m
+
+12
+
+O(n) + O(m(v + n/q)),
+
+where v is the number of valid shifts. This running time is O(n) if v =
+O(1) and you choose q m. That is, if the expected number of valid
+shifts is small (O(1)) and you choose the prime q to be larger than the
+
+length of the pattern, then you can expect the Rabin-Karp procedure to
+
+use only O(n + m) matching time. Since m n, this expected matching
+time is O(n).
+
+Exercises
+
+32.2-1
+Working modulo q = 11, how many spurious hits does the Rabin-Karp
+matcher encounter in the text T = 3141592653589793 when looking for
+the pattern P = 26?
+
+32.2-2
+
+Describe how to extend the Rabin-Karp method to the problem of
+
+searching a text string for an occurrence of any one of a given set of k
+patterns. Start by assuming that all k patterns have the same length.
+
+Then generalize your solution to allow the patterns to have different
+lengths.
+
+32.2-3
+
+Show how to extend the Rabin-Karp method to handle the problem of
+
+looking for a given m × m pattern in an n × n array of characters. (The
+
+pattern may be shifted vertically and horizontally, but it may not be
+rotated.)
+
+32.2-4
+Alice has a copy of a long n-bit file A = an1, an2, ..., a0, and Bob
+similarly has an n-bit file B = bn1, bn2, ..., b0. Alice and Bob wish to
+know if their files are identical. To avoid transmitting all of A or B, they
+use the following fast probabilistic check. Together, they select a prime q
+> 1000n and randomly select an integer x from {0, 1, ..., q 1}. Letting
+
+Alice evaluates A(x) and Bob evaluates B(x). Prove that if A B, there
+is at most one chance in 1000 that A(x) = B(x), whereas if the two files
+
+are the same, A(x) is necessarily the same as B(x). (Hint: See Exercise
+
+31.4-4.)

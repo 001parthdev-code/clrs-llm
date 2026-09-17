@@ -1,0 +1,339 @@
+23.2 The Floyd-Warshall algorithm
+
+Having already seen one dynamic-programming solution to the all-pairs
+
+shortest-paths problem, in this section we'll see another: the FloydWarshall algorithm, which runs in (V3) time. As before, negative-
+
+weight edges may be present, but not negative-weight cycles. As in
+Section 23.1, we develop the algorithm by following the dynamicprogramming process. After studying the resulting algorithm, we
+present a similar method for finding the transitive closure of a directed
+graph.
+
+The structure of a shortest path
+
+In the Floyd-Warshall algorithm, we characterize the structure of a
+shortest path differently from how we characterized it in Section 23.1.
+The Floyd-Warshall algorithm considers the intermediate vertices of a
+
+shortest path, where an intermediate vertex of a simple path p = v1, v2,
+... , vl is any vertex of p other than v1 or vl, that is, any vertex in the set
+{v2, v3, ... , vl-1}.
+
+The Floyd-Warshall algorithm relies on the following observation.
+
+Numbering the vertices of G by V = {1, 2, ... , n}, take a subset {1, 2, ...
+, k} of vertices for some 1 k n. For any pair of vertices i, j V,
+consider all paths from i to j whose intermediate vertices are all drawn
+from {1, 2, ... , k}, and let p be a minimum-weight path from among
+them. (Path p is simple.) The Floyd-Warshall algorithm exploits a
+relationship between path p and shortest paths from i to j with all
+intermediate vertices in the set {1, 2, ... , k - 1}. The details of the
+relationship depend on whether k is an intermediate vertex of path p or
+
+not.
+
+Figure 23.3 Optimal substructure used by the Floyd-Warshall algorithm. Path p is a shortest
+path from vertex i to vertex j, and k is the highest-numbered intermediate vertex of p. Path p1,
+the portion of path p from vertex i to vertex k, has all intermediate vertices in the set {1, 2, ...
+, k - 1}. The same holds for path p2 from vertex k to vertex j.
+
+If k is not an intermediate vertex of path p, then all intermediate
+vertices of path p belong to the set {1, 2, ... , k - 1}. Thus a
+shortest path from vertex i to vertex j with all intermediate
+vertices in the set {1, 2, ... , k - 1} is also a shortest path from i to
+j with all intermediate vertices in the set {1, 2, ... , k}.
+
+If k is an intermediate vertex of path p, then decompose p into
+, as Figure 23.3 illustrates. By Lemma 22.1, p1 is a
+
+shortest path from i to k with all intermediate vertices in the set
+{1, 2, ... , k}. In fact, we can make a slightly stronger statement.
+Because vertex k is not an intermediate vertex of path p1, all
+
+intermediate vertices of p1 belong to the set {1, 2, ... , k - 1}.
+
+Therefore p1 is a shortest path from i to k with all intermediate
+
+vertices in the set {1, 2, ... , k - 1}. Likewise, p2 is a shortest path
+
+from vertex k to vertex j with all intermediate vertices in the set
+{1, 2, ... , k - 1}.
+
+A recursive solution to the all-pairs shortest-paths problem
+
+The above observations suggest a recursive formulation of shortest-
+
+path estimates that differs from the one in Section 23.1. Let be the
+
+weight of a shortest path from vertex i to vertex j for which all
+intermediate vertices belong to the set {1, 2, ... , k}. When k = 0, a path
+from vertex i to vertex j with no intermediate vertex numbered higher
+
+than 0 has no intermediate vertices at all. Such a path has at most one
+
+edge, and hence . Following the above discussion, define
+
+recursively by
+
+Because for any path, all intermediate vertices belong to the set {1, 2, ...
+
+, n}, the matrix gives the final answer: for all i, j V.
+
+Computing the shortest-path weights bottom up
+
+Based on recurrence (23.6), the bottom-up procedure FLOYDWARSHALL computes the values in order of increasing values of
+
+k. Its input is an n × n matrix W defined as in equation (23.1). The
+procedure returns the matrix D(n) of shortest-path weights. Figure 23.4
+shows the matrices D(k) computed by the Floyd-Warshall algorithm for
+
+the graph in Figure 23.1.
+
+FLOYD-WARSHALL(W, n)
+
+1 D(0) = W
+
+2 for k = 1 to n
+
+3 let be a new n × n matrix
+
+4 for i = 1 to n
+
+5 for j = 1 to n
+
+6
+
+7 return D(n)
+
+The running time of the Floyd-Warshall algorithm is determined by
+the triply nested for loops of lines 26. Because each execution of line 6
+
+takes O(1) time, the algorithm runs in (n3) time. As in the final
+
+algorithm in Section 23.1, the code is tight, with no elaborate data
+structures, and so the constant hidden in the -notation is small. Thus,
+the Floyd-Warshall algorithm is quite practical for even moderate-sized
+input graphs.
+
+Constructing a shortest path
+
+There are a variety of different methods for constructing shortest paths
+
+in the Floyd-Warshall algorithm. One way is to compute the matrix D of
+
+shortest-path weights and then construct the predecessor matrix
+
+from the D matrix. Exercise 23.1-7 asks you to implement this method
+so that it runs in O(n3) time. Given the predecessor matrix , the
+
+PRINT-ALL-PAIRS-SHORTEST-PATH procedure prints the vertices
+on a given shortest path.
+
+Alternatively, the predecessor matrix ... can be computed while the
+
+algorithm computes the matrices D(0), D(1), ... , D(n). Specifically,
+compute a sequence of matrices (0), (1), ... , (n), where = (n)
+and is the predecessor of vertex j on a shortest path from vertex i
+with all intermediate vertices in the set {1, 2, ... , k}.
+
+Figure 23.4 The sequence of matrices D(k) and (k) computed by the Floyd-Warshall
+
+algorithm for the graph in Figure 23.1.
+
+Here's a recursive formulation of . When k = 0, a shortest path
+from i to j has no intermediate vertices at all, and so
+
+For k 1, if the path has k as an intermediate vertex, so that it is i k
+j where k j, then choose as the predecessor of j on this path the
+same vertex as the predecessor of j chosen on a shortest path from k
+with all intermediate vertices in the set {1, 2, ... , k - 1}. Otherwise,
+when the path from i to j does not have k as an intermediate vertex,
+
+choose the same predecessor of j as on a shortest path from i with all
+intermediate vertices in the set {1, 2, ... , k - 1}. Formally, for k 1,
+
+Exercise 23.2-3 asks you to show how to incorporate the (k) matrix
+
+computations into the FLOYD-WARSHALL procedure. Figure 23.4
+
+shows the sequence of (k) matrices that the resulting algorithm
+
+computes for the graph of Figure 23.1. The exercise also asks for the
+
+more difficult task of proving that the predecessor subgraph G,i is a
+shortest-paths tree with root i. Exercise 23.2-7 asks for yet another way
+
+to reconstruct shortest paths.
+
+Transitive closure of a directed graph
+
+Given a directed graph G = (V, E) with vertex set V = {1, 2, ... , n}, you
+might wish to determine simply whether G contains a path from i to j
+for all vertex pairs i, j V, without regard to edge weights. We define
+the transitive closure of G as the graph G* = (V, E*), where
+
+E* = {(i, j) : there is a path from vertex i to vertex j in G}.
+
+One way to compute the transitive closure of a graph in (n3) time
+is to assign a weight of 1 to each edge of E and run the Floyd-Warshall
+algorithm. If there is a path from vertex i to vertex j, you get dij < n.
+Otherwise, you get dij = .
+
+There is another, similar way to compute the transitive closure of G
+
+in (n3) time, which can save time and space in practice. This method
+
+substitutes the logical operations (logical OR) and (logical AND)
+
+for the arithmetic operations min and + in the Floyd-Warshall
+
+algorithm. For i, j, k = 1, 2, ... , n, define to be 1 if there exists a path
+in graph G from vertex i to vertex j with all intermediate vertices in the
+set {1, 2, ... , k}, and 0 otherwise. To construct the transitive closure G*
+
+= (V, E*), put edge (i, j) into E* if and only if . A recursive
+
+definition of , analogous to recurrence (23.6), is
+
+Figure 23.5 A directed graph and the matrices T(k) computed by the transitive-closure
+
+algorithm.
+
+and for k 1,
+
+As in the Floyd-Warshall algorithm, the TRANSITIVE-CLOSURE
+
+procedure computes the matrices in order of increasing k.
+
+TRANSITIVE-CLOSURE(G, n)
+
+1 let be a new n × n matrix
+
+2for i = 1 to n
+
+3 for j = 1 to n
+
+4 if i == j or (i, j) G.E
+
+5
+
+6 else
+
+7for k = 1 to n
+
+8 let be a new n × n matrix
+
+9 for i = 1 to n
+
+10 for j = 1 to n
+
+11
+
+12return T(n)
+
+Figure 23.5 shows the matrices T(k) computed by the
+
+TRANSITIVE-CLOSURE procedure on a sample graph. The
+TRANSITIVE-CLOSURE procedure, like the Floyd-Warshall
+
+algorithm, runs in (n3) time. On some computers, though, logical
+
+operations on single-bit values execute faster than arithmetic
+operations on integer words of data. Moreover, because the direct
+transitive-closure algorithm uses only boolean values rather than
+integer values, its space requirement is less than the Floyd-Warshall
+algorithm's by a factor corresponding to the size of a word of computer
+storage.
+
+Exercises
+
+23.2-1
+
+Run the Floyd-Warshall algorithm on the weighted, directed graph of
+
+Figure 23.2. Show the matrix D(k) that results for each iteration of the
+
+outer loop.
+
+23.2-2
+
+Show how to compute the transitive closure using the technique of
+Section 23.1.
+
+23.2-3
+Modify the FLOYD-WARSHALL procedure to compute the (k)
+
+matrices according to equations (23.7) and (23.8). Prove rigorously that
+
+for all i V, the predecessor subgraph G,i is a shortest-paths tree with
+
+root i. (Hint: To show that G,i is acyclic, first show that implies
+
+, according to the definition of . Then adapt the proof of
+
+Lemma 22.16.)
+
+23.2-4
+
+As it appears on page 657, the Floyd-Warshall algorithm requires (n3)
+space, since it creates for i, j, k = 1, 2, ... , n. Show that the procedure
+
+FLOYD-WARSHALL, which simply drops all the superscripts, is
+
+correct, and thus only (n2) space is required.
+
+FLOYD-WARSHALL(W, n)
+
+1 D=W
+
+2 for k = 1 to n
+
+3 for i = 1 to n
+
+4 for j = 1 to n
+
+5 dij = min {dij, dik + dkj}
+
+6 return D
+
+23.2-5
+
+Consider the following change to how equation (23.8) handles equality:
+
+Is this alternative definition of the predecessor matrix correct?
+
+23.2-6
+
+Show how to use the output of the Floyd-Warshall algorithm to detect
+the presence of a negative-weight cycle.
+
+23.2-7
+
+Another way to reconstruct shortest paths in the Floyd-Warshall
+
+algorithm uses values for i,j,k = 1, 2, ... , n, where is the highestnumbered intermediate vertex of a shortest path from i to j in which all
+intermediate vertices lie in the set {1, 2, ... , k}. Give a recursive
+
+formulation for , modify the FLOYD-WARSHALL procedure to
+
+compute the values, and rewrite the PRINT-ALL-PAIRS-
+
+SHORTEST-PATH procedure to take the matrix as an input.
+
+How is the matrix like the s table in the matrix-chain multiplication
+
+problem of Section 14.2?
+
+23.2-8
+
+Give an O(VE)-time algorithm for computing the transitive closure of a
+directed graph G = (V, E). Assume that |V| = O(E) and that the graph is
+
+represented with adjacency lists.
+
+23.2-9
+Suppose that it takes f(|V|, |E|) time to compute the transitive closure of
+a directed acyclic graph, where f is a monotonically increasing function
+of both |V| and |E|. Show that the time to compute the transitive closure
+G* = (V, E*) of a general directed graph G = (V, E) is then f(|V|, |E|) +
+O(V + E*).

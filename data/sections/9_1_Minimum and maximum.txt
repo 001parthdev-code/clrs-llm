@@ -1,0 +1,117 @@
+9.1 Minimum and maximum
+
+How many comparisons are necessary to determine the minimum of a
+
+set of n elements? To obtain an upper bound of n 1 comparisons, just
+
+examine each element of the set in turn and keep track of the smallest
+element seen so far. The MINIMUM procedure assumes that the set
+
+resides in array A[1 : n].
+
+MINIMUM(A, n)
+
+1 min = A[1]
+
+2 for i = 2 to n
+
+3 if min > A[i]
+
+4 min = A[i]
+
+5 return min
+
+It's no more difficult to find the maximum with n 1 comparisons.
+
+Is this algorithm for minimum the best we can do? Yes, because it
+
+turns out that there's a lower bound of n 1 comparisons for the
+
+problem of determining the minimum. Think of any algorithm that
+determines the minimum as a tournament among the elements. Each
+comparison is a match in the tournament in which the smaller of the
+two elements wins. Since every element except the winner must lose at
+
+least one match, we can conclude that n 1 comparisons are necessary
+
+to determine the minimum. Hence the algorithm MINIMUM is optimal
+with respect to the number of comparisons performed.
+
+Simultaneous minimum and maximum
+
+Some applications need to find both the minimum and the maximum of
+
+a set of n elements. For example, a graphics program may need to scale
+a set of (x, y) data to fit onto a rectangular display screen or other
+
+graphical output device. To do so, the program must first determine the
+minimum and maximum value of each coordinate.
+
+Of course, we can determine both the minimum and the maximum of
+
+n elements using (n) comparisons. We simply find the minimum and
+maximum independently, using n 1 comparisons for each, for a total
+of 2n 2 = (n) comparisons.
+
+Although 2n 2 comparisons is asymptotically optimal, it is possible
+
+to improve the leading constant. We can find both the minimum and the
+
+maximum using at most 3 n/2 comparisons. The trick is to maintain
+
+both the minimum and maximum elements seen thus far. Rather than
+processing each element of the input by comparing it against the
+current minimum and maximum, at a cost of 2 comparisons per
+element, process elements in pairs. Compare pairs of elements from the
+
+input first with each other, and then compare the smaller with the
+
+current minimum and the larger to the current maximum, at a cost of 3
+comparisons for every 2 elements.
+
+How you set up initial values for the current minimum and maximum
+
+depends on whether n is odd or even. If n is odd, set both the minimum
+
+and maximum to the value of the first element, and then process the
+
+rest of the elements in pairs. If n is even, perform 1 comparison on the
+
+first 2 elements to determine the initial values of the minimum and
+maximum, and then process the rest of the elements in pairs as in the
+
+case for odd n.
+Let's count the total number of comparisons. If n is odd, then 3 n/2
+
+comparisons occur. If n is even, 1 initial comparison occurs, followed by
+another 3(n 2)/2 comparisons, for a total of 3n/2 2. Thus, in either
+case, the total number of comparisons is at most 3 n/2.
+
+Exercises
+
+9.1-1
+
+Show that the second smallest of n elements can be found with n + lg
+n 2 comparisons in the worst case. (Hint: Also find the smallest
+
+element.)
+
+9.1-2
+Given n > 2 distinct numbers, you want to find a number that is neither
+
+the minimum nor the maximum. What is the smallest number of
+comparisons that you need to perform?
+
+9.1-3
+
+A racetrack can run races with five horses at a time to determine their
+relative speeds. For 25 horses, it takes six races to determine the fastest
+horse, assuming transitivity (see page 1159). What's the minimum
+number of races it takes to determine the fastest three horses out of 25?
+
+9.1-4
+Prove the lower bound of 3n/2 2 comparisons in the worst case to
+find both the maximum and minimum of n numbers. (Hint: Consider
+
+how many numbers are potentially either the maximum or minimum,
+and investigate how a comparison affects these counts.)

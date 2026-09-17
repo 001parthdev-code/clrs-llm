@@ -1,0 +1,196 @@
+19.3 Disjoint-set forests
+
+A faster implementation of disjoint sets represents sets by rooted trees,
+with each node containing one member and each tree representing one
+
+set. In a disjoint-set forest, illustrated in Figure 19.4(a), each member
+
+points only to its parent. The root of each tree contains the
+representative and is its own parent. As we'll see, although the
+straightforward algorithms that use this representation are no faster
+than ones that use the linked-list representation, two heuristics--"union
+by rank" and "path compression"--yield an asymptotically optimal
+disjoint-set data structure.
+
+The three disjoint-set operations have simple implementations. A
+MAKE-SET operation simply creates a tree with just one node. A
+FIND-SET operation follows parent pointers until it reaches the root of
+the tree. The nodes visited on this simple path toward the root constitute
+
+the find path. A UNION operation, shown in Figure 19.4(b), simply
+
+causes the root of one tree to point to the root of the other.
+
+Figure 19.4 A disjoint-set forest. (a) Trees representing the two sets of Figure 19.2. The tree on
+
+the left represents the set {b, c, e, h}, with c as the representative, and the tree on the right
+represents the set {d, f, g}, with f as the representative. (b) The result of UNION (e, g).
+
+Heuristics to improve the running time
+So far, disjoint-set forests have not improved on the linked-list
+
+implementation. A sequence of n - 1 UNION operations could create a
+tree that is just a linear chain of n nodes. By using two heuristics,
+
+however, we can achieve a running time that is almost linear in the total
+
+number m of operations.
+The first heuristic, union by rank, is similar to the weighted-union
+
+heuristic we used with the linked-list representation. The common-sense
+approach is to make the root of the tree with fewer nodes point to the
+root of the tree with more nodes. Rather than explicitly keeping track of
+the size of the subtree rooted at each node, however, we'll adopt an
+
+approach that eases the analysis. For each node, maintain a rank, which
+
+is an upper bound on the height of the node. Union by rank makes the
+root with smaller rank point to the root with larger rank during a
+UNION operation.
+
+The second heuristic, path compression, is also quite simple and
+
+highly effective. As shown in Figure 19.5, FIND-SET operations use it to
+make each node on the find path point directly to the root. Path
+compression does not change any ranks.
+
+Pseudocode for disjoint-set forests
+The union-by-rank heuristic requires its implementation to keep track of
+
+ranks. With each node x, maintain the integer value x.rank, which is an
+upper bound on the height of x (the number of edges in the longest
+simple path from a descendant leaf to x). When MAKE-SET creates a
+
+singleton set, the single node in the corresponding tree has an initial
+rank of 0. Each FIND-SET operation leaves all ranks unchanged. The
+UNION operation has two cases, depending on whether the roots of the
+trees have equal rank. If the roots have unequal ranks, make the root
+with higher rank the parent of the root with lower rank, but don't
+change the ranks themselves. If the roots have equal ranks, arbitrarily
+choose one of the roots as the parent and increment its rank.
+
+Figure 19.5 Path compression during the operation FIND-SET. Arrows and self-loops at roots
+
+are omitted. (a) A tree representing a set prior to executing FIND-SET(a). Triangles represent
+
+subtrees whose roots are the nodes shown. Each node has a pointer to its parent. (b) The same
+
+set after executing FIND-SET(a). Each node on the find path now points directly to the root.
+
+Let's put this method into pseudocode, appearing on the next page.
+
+The parent of node x is denoted by x.p. The LINK procedure, a
+
+subroutine called by UNION, takes pointers to two roots as inputs. The
+
+FIND-SET procedure with path compression, implemented recursively,
+
+turns out to be quite simple.
+
+The FIND-SET procedure is a two-pass method: as it recurses, it
+
+makes one pass up the find path to find the root, and as the recursion
+
+unwinds, it makes a second pass back down the find path to update each
+
+node to point directly to the root. Each call of FIND-SET(x) returns x.p
+in line 3. If x is the root, then FIND-SET skips line 2 and just returns
+x.p, which is x. In this case the recursion bottoms out. Otherwise, line 2
+executes, and the recursive call with parameter x.p returns a pointer to
+the root. Line 2 updates node x to point directly to the root, and line 3
+
+returns this pointer.
+
+MAKE-SET(x)
+
+1 x.p = x
+2 x.rank = 0
+
+UNION(x, y)
+1 LINK(FIND-SET(x), FIND-SET(y))
+
+LINK(x, y)
+
+1 if x.rank > y.rank
+
+2 y.p = x
+
+3 else x.p = y
+
+4 if x.rank == y.rank
+
+5 y.rank = y.rank + 1
+
+FIND-SET(x) // not the root?
+// the root becomes the parent
+1 if x x.p // return the root
+2 x.p = FIND-SET(x.p)
+3 return x.p
+
+Effect of the heuristics on the running time
+
+Separately, either union by rank or path compression improves the
+running time of the operations on disjoint-set forests, and combining the
+two heuristics yields an even greater improvement. Alone, union by rank
+
+yields a running time of O(m lg n) for a sequence of m operations, n of
+
+which are MAKE-SET (see Exercise 19.4-4), and this bound is tight (see
+
+Exercise 19.3-3). Although we won't prove it here, for a sequence of n
+MAKE-SET operations (and hence at most n - 1 UNION operations)
+and f FIND-SET operations, the worst-case running time using only the
+path-compression heuristic is (n + f · (1 + log2+f/nn)).
+
+Combining union by rank and path compression gives a worst-case
+
+running time of O(m (n)), where (n) is a very slowly growing function,
+
+defined in Section 19.4. In any conceivable application of a disjoint-set
+
+data structure, (n) 4, and thus, its running time is as good as linear in
+m for all practical purposes. Mathematically speaking, however, it is
+superlinear. Section 19.4 proves this O(m(n)) upper bound.
+
+Exercises
+
+19.3-1
+
+Redo Exercise 19.2-2 using a disjoint-set forest with union by rank and
+path compression. Show the resulting forest with each node including its
+
+xi and rank.
+
+19.3-2
+
+Write a nonrecursive version of FIND-SET with path compression.
+
+19.3-3
+Give a sequence of m MAKE-SET, UNION, and FIND-SET operations,
+n of which are MAKE-SET operations, that takes (m lg n) time when
+
+using only union by rank and not path compression.
+
+19.3-4
+Consider the operation PRINT-SET(x), which is given a node x and
+prints all the members of x's set, in any order. Show how to add just a
+
+single attribute to each node in a disjoint-set forest so that PRINT-
+
+SET(x) takes time linear in the number of members of x's set and the
+
+asymptotic running times of the other operations are unchanged.
+
+Assume that you can print each member of the set in O(1) time.
+
+19.3-5
+
+Show that any sequence of m MAKE-SET, FIND-SET, and LINK
+
+operations, where all the LINK operations appear before any of the
+
+FIND-SET operations, takes only O(m) time when using both path
+
+compression and union by rank. You may assume that the arguments to
+LINK are roots within the disjoint-set forest. What happens in the same
+situation when using only path compression and not union by rank?

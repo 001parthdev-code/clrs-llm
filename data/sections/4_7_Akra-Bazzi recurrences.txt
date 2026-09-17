@@ -1,0 +1,539 @@
+4.7 Akra-Bazzi recurrences
+
+This section provides an overview of two advanced topics related to
+divide-and-conquer recurrences. The first deals with technicalities
+arising from the use of floors and ceilings, and the second discusses the
+Akra-Bazzi method, which involves a little calculus, for solving
+complicated divide-and-conquer recurrences.
+
+In particular, we'll look at the class of algorithmic divide-andconquer recurrences originally studied by M. Akra and L. Bazzi [13].
+
+These Akra-Bazzi recurrences take the form
+
+where k is a positive integer; all the constants a1, a2, ... , ak R are
+strictly positive; all the constants b1, b2, ... , bk R are strictly greater
+than 1; and the driving function f (n) is defined on sufficiently large
+
+nonnegative reals and is itself nonnegative.
+
+Akra-Bazzi recurrences generalize the class of recurrences
+
+addressed by the master theorem. Whereas master recurrences
+
+characterize the running times of divide-and-conquer algorithms that
+break a problem into equal-sized subproblems (modulo floors and
+ceilings), Akra-Bazzi recurrences can describe the running time of
+divide-and-conquer algorithms that break a problem into differentsized subproblems. The master theorem, however, allows you to ignore
+floors and ceilings, but the Akra-Bazzi method for solving Akra-Bazzi
+recurrences needs an additional requirement to deal with floors and
+ceilings.
+
+But before diving into the Akra-Bazzi method itself, let's understand
+the limitations involved in ignoring floors and ceilings in Akra-Bazzi
+recurrences. As you're aware, algorithms generally deal with integersized inputs. The mathematics for recurrences is often easier with real
+numbers, however, than with integers, where we must cope with floors
+and ceilings to ensure that terms are well defined. The difference may
+not seem to be much--especially because that's often the truth with
+recurrences--but to be mathematically correct, we must be careful with
+our assumptions. Since our end goal is to understand algorithms and
+not the vagaries of mathematical corner cases, we'd like to be casual yet
+rigorous. How can we treat floors and ceilings casually while still
+ensuring rigor?
+
+From a mathematical point of view, the difficulty in dealing with
+floors and ceilings is that some driving functions can be really, really
+weird. So it's not okay in general to ignore floors and ceilings in AkraBazzi recurrences. Fortunately, most of the driving functions we
+encounter in the study of algorithms behave nicely, and floors and
+ceilings don't make a difference.
+
+The polynomial-growth condition
+
+If the driving function f (n) in equation (4.22) is well behaved in the
+
+following sense, it's okay to drop floors and ceilings.
+
+A function f (n) defined on all sufficiently large positive reals
+
+satisfies the polynomial-growth condition if there exists a
+
+constant such that the following holds: for every constant
+
+1, there exists a constant d > 1 (depending on ) such that f
+(n)/d f ( n) df (n) for all 1 and .
+
+This definition may be one of the hardest in this textbook to get your
+
+head around. To a first order, it says that f (n) satisfies the property that
+f ((n)) = (f (n)), although the polynomial-growth condition is
+
+actually somewhat stronger (see Exercise 4.7-4). The definition also
+
+implies that f (n) is asymptotically positive (see Exercise 4.7-3).
+
+Examples of functions that satisfy the polynomial-growth condition
+
+include any function of the form f (n) = (n lg n lg lgn), where , ,
+
+and are constants. Most of the polynomially bounded functions used
+in this book satisfy the condition. Exponentials and superexponentials
+do not (see Exercise 4.7-2, for example), and there also exist
+polynomially bounded functions that do not.
+
+Floors and ceilings in "nice" recurrences
+
+When the driving function in an Akra-Bazzi recurrence satisfies the
+polynomial-growth condition, floors and ceilings don't change the
+asymptotic behavior of the solution. The following theorem, which is
+presented without proof, formalizes this notion.
+
+Theorem 4.5
+Let T (n) be a function defined on the nonnegative reals that satisfies
+recurrence (4.22), where f (n) satisfies the polynomial-growth condition.
+Let T (n) be another function defined on the natural numbers also
+satisfying recurrence (4.22), except that each T (n/bi) is replaced either
+with T (n/bi) or with T (n/bi). Then we have T (n) = (T (n)).
+
+Floors and ceilings represent a minor perturbation to the arguments
+in the recursion. By inequality (3.2) on page 64, they perturb an
+argument by at most 1. But much larger perturbations are tolerable. As
+
+long as the driving function f (n) in recurrence (4.22) satisfies the
+polynomial-growth condition, it turns out that replacing any term T
+
+(n/bi) with T (n/bi + hi(n)), where |hi(n)| = O(n/lg1+ n) for some
+constant > 0 and sufficiently large n, leaves the asymptotic solution
+
+unaffected. Thus, the divide step in a divide-and-conquer algorithm can
+be moderately coarse without affecting the solution to its running-time
+recurrence.
+
+The Akra-Bazzi method
+
+The Akra-Bazzi method, not surprisingly, was developed to solve Akra-
+
+Bazzi recurrences (4.22), which by dint of Theorem 4.5, applies in the
+
+presence of floors and ceilings or even larger perturbations, as just
+
+discussed. The method involves first determining the unique real
+
+number p such that . Such a p always exists, because when
+
+p , the sum goes to ; it decreases as p increases; and when p ,
+
+it goes to 0. The Akra-Bazzi method then gives the solution to the
+
+recurrence as
+
+As an example, consider the recurrence
+
+We'll see the similar recurrence (9.1) on page 240 when we study an
+
+algorithm for selecting the ith smallest element from a set of n numbers.
+This recurrence has the form of equation (4.22), where a1 = a2 = 1, b1
+= 5, b2 = 10/7, and f (n) = n. To solve it, the Akra-Bazzi method says
+that we should determine the unique p satisfying
+
+Solving for p is kind of messy--it turns out that p = 0.83978 ...--but we
+can solve the recurrence without actually knowing the exact value for p.
+
+Observe that (1/5)0 + (7/10)0 = 2 and (1/5)1 + (7/10)1 = 9/10, and thus
+
+p lies in the range 0 < p < 1. That turns out to be sufficient for the
+
+Akra-Bazzi method to give us the solution. We'll use the fact from
+
+calculus that if k 1, then xkdx = xk + 1/(k + 1), which we'll apply
+with k = p 1. The Akra-Bazzi solution (4.23) gives us
+
+Although the Akra-Bazzi method is more general than the master
+theorem, it requires calculus and sometimes a bit more reasoning. You
+also must ensure that your driving function satisfies the polynomialgrowth condition if you want to ignore floors and ceilings, although
+that's rarely a problem. When it applies, the master method is much
+simpler to use, but only when subproblem sizes are more or less equal.
+They are both good tools for your algorithmic toolkit.
+Exercises
+
+4.7-1
+Consider an Akra-Bazzi recurrence T (n) on the reals as given in
+recurrence (4.22), and define T (n) as
+
+where c > 0 is constant. Prove that whatever the implicit initial
+conditions for T (n) might be, there exist initial conditions for T (n)
+such that T (n) = cT (n) for all n > 0. Conclude that we can drop the
+
+asymptotics on a driving function in any Akra-Bazzi recurrence
+without affecting its asymptotic solution.
+
+4.7-2
+Show that f (n) = n2 satisfies the polynomial-growth condition but that f
+(n) = 2n does not.
+
+4.7-3
+Let f (n) be a function that satisfies the polynomial-growth condition.
+Prove that f (n) is asymptotically positive, that is, there exists a constant
+n0 0 such that f (n) 0 for all n n0.
+
+4.7-4
+Give an example of a function f (n) that does not satisfy the
+polynomial-growth condition but for which f ((n)) = (f (n)).
+
+4.7-5
+
+Use the Akra-Bazzi method to solve the following recurrences.
+
+a. T (n) = T (n/2) + T (n/3) + T (n/6) + n lg n.
+
+b. T (n) = 3T (n/3) + 8T (n/4) + n2/lg n.
+c. T (n) = (2/3)T (n/3) + (1/3)T (2n/3) + lg n.
+d. T (n) = (1/3)T (n/3) + 1/n.
+
+e. T (n) = 3T (n/3) + 3T (2n/3) + n2.
+
+4.7-6
+
+Use the Akra-Bazzi method to prove the continuous master theorem.
+
+Problems
+
+4-1 Recurrence examples
+Give asymptotically tight upper and lower bounds for T (n) in each of
+
+the following algorithmic recurrences. Justify your answers.
+
+a. T (n) = 2T (n/2) + n3.
+b. T (n) = T (8n/11) + n.
+
+c. T (n) = 16T (n/4) + n2.
+
+d. T (n) = 4T (n/2) + n2 lg n.
+
+e. T (n) = 8T (n/3) + n2.
+
+f. T (n) = 7T (n/2) + n2 lg n.
+
+g. .
+
+h. T (n) = T (n 2) + n2.
+
+4-2 Parameter-passing costs
+
+Throughout this book, we assume that parameter passing during
+
+procedure calls takes constant time, even if an N-element array is being
+
+passed. This assumption is valid in most systems because a pointer to
+the array is passed, not the array itself. This problem examines the
+implications of three parameter-passing strategies:
+
+1. Arrays are passed by pointer. Time = (1).
+
+2. Arrays are passed by copying. Time = (N), where N is the size
+
+of the array.
+
+3. Arrays are passed by copying only the subrange that might be
+
+accessed by the called procedure. Time = (n) if the subarray
+contains n elements.
+
+Consider the following three algorithms:
+
+a. The recursive binary-search algorithm for finding a number in a
+
+sorted array (see Exercise 2.3-6).
+
+b. The MERGE-SORT procedure from Section 2.3.1.
+
+c. The MATRIX-MULTIPLY-RECURSIVE procedure from Section
+
+4.1.
+
+Give nine recurrences Ta1(N, n), Ta2(N, n), ... , Tc3(N, n) for the worst-
+
+case running times of each of the three algorithms above when arrays
+and matrices are passed using each of the three parameter-passing
+
+strategies above. Solve your recurrences, giving tight asymptotic
+bounds.
+
+4-3 Solving recurrences with a change of variables
+
+Sometimes, a little algebraic manipulation can make an unknown
+recurrence similar to one you have seen before. Let's solve the
+recurrence
+
+by using the change-of-variables method.
+
+a. Define m = lg n and S(m) = T (2m). Rewrite recurrence (4.25) in
+terms of m and S(m).
+
+b. Solve your recurrence for S(m).
+
+c. Use your solution for S(m) to conclude that T (n) = (lg n lg lg n).
+
+d. Sketch the recursion tree for recurrence (4.25), and use it to explain
+intuitively why the solution is T (n) = (lg n lg lg n).
+
+Solve the following recurrences by changing variables:
+
+e. .
+
+f. .
+
+4-4 More recurrence examples
+Give asymptotically tight upper and lower bounds for T (n) in each of
+
+the following recurrences. Justify your answers.
+
+a. T (n) = 5T (n/3) + n lg n.
+
+b. T (n) = 3T (n/3) + n/lg n.
+
+c. .
+
+d. T (n) = 2T (n/2 2) + n/2.
+
+e. T (n) = 2T (n/2) + n/lg n.
+
+f. T (n) = T (n/2) + T (n/4) + T (n/8) + n.
+
+g. T (n) = T (n 1) + 1/n.
+
+h. T (n) = T (n 1) + lg n.
+
+i. T (n) = T (n 2) + 1/lg n.
+
+j. .
+
+4-5 Fibonacci numbers
+
+This problem develops properties of the Fibonacci numbers, which are
+defined by recurrence (3.31) on page 69. We'll explore the technique of
+generating functions to solve the Fibonacci recurrence. Define the
+
+generating function (or formal power series) F as
+
+where Fi is the ith Fibonacci number.
+a. Show that F (z) = z + zF (z) + z2F (z).
+b. Show that
+
+where is the golden ratio, and is its conjugate (see page 69).
+
+c. Show that
+
+You may use without proof the generating-function version of
+
+equation (A.7) on page 1142, . Because this
+
+equation involves a generating function, x is a formal variable, not a
+
+real-valued variable, so that you don't have to worry about
+
+convergence of the summation or about the requirement in equation
+
+(A.7) that |x| < 1, which doesn't make sense here.
+
+d. Use part (c) to prove that for i > 0, rounded to the nearest
+integer. (Hint: Observe that
+.)
+
+e. Prove that Fi+2 i for i 0.
+
+4-6 Chip testing
+Professor Diogenes has n supposedly identical integrated-circuit chips
+
+that in principle are capable of testing each other. The professor's test
+jig accommodates two chips at a time. When the jig is loaded, each chip
+tests the other and reports whether it is good or bad. A good chip
+always reports accurately whether the other chip is good or bad, but
+the professor cannot trust the answer of a bad chip. Thus, the four
+possible outcomes of a test are as follows:
+
+Chip A says Chip B says Conclusion
+B is good A is good both are good, or both are bad
+B is good A is bad at least one is bad
+B is bad A is good at least one is bad
+B is bad A is bad at least one is bad
+
+a. Show that if at least n/2 chips are bad, the professor cannot
+
+necessarily determine which chips are good using any strategy based
+on this kind of pairwise test. Assume that the bad chips can conspire
+to fool the professor.
+
+Now you will design an algorithm to identify which chips are good and
+
+which are bad, assuming that more than n/2 of the chips are good.
+
+First, you will determine how to identify one good chip.
+
+b. Show that n/2 pairwise tests are sufficient to reduce the problem to
+one of nearly half the size. That is, show how to use n/2 pairwise
+
+tests to obtain a set with at most n/2 chips that still has the property
+
+that more than half of the chips are good.
+
+c. Show how to apply the solution to part (b) recursively to identify one
+
+good chip. Give and solve the recurrence that describes the number of
+tests needed to identify one good chip.
+
+You have now determined how to identify one good chip.
+
+d. Show how to identify all the good chips with an additional (n)
+
+pairwise tests.
+
+4-7 Monge arrays
+An m × n array A of real numbers is a Monge array if for all i, j, k, and l
+such that 1 i < k m and 1 j < l n, we have
+
+A[i, j] + A[k, l] A[i, l] + A[k, j].
+
+In other words, whenever we pick two rows and two columns of a
+Monge array and consider the four elements at the intersections of the
+rows and the columns, the sum of the upper-left and lower-right
+elements is less than or equal to the sum of the lower-left and upperright elements. For example, the following array is Monge:
+
+10 17 13 28 23
+17 22 16 29 23
+24 28 22 34 24
+11 13 6 17 7
+45 44 32 37 23
+36 33 19 21 6
+75 66 51 53 34
+
+a. Prove that an array is Monge if and only if for all i = 1, 2, ..., m 1
+and j = 1, 2, ..., n 1, we have
+
+A[i, j] + A[i + 1, j + 1] A[i, j + 1] + A[i + 1, j].
+
+(Hint: For the "if " part, use induction separately on rows and
+
+columns.)
+
+b. The following array is not Monge. Change one element in order to
+make it Monge. (Hint: Use part (a).)
+
+37 23 22 32
+21 6 7 10
+53 34 30 31
+32 13 9 6
+43 21 15 8
+
+c. Let f (i) be the index of the column containing the leftmost minimum
+element of row i. Prove that f (1) f (2) f (m) for any m × n
+
+Monge array.
+
+d. Here is a description of a divide-and-conquer algorithm that
+computes the leftmost minimum element in each row of an m × n
+Monge array A:
+
+Construct a submatrix A of A consisting of the even-numbered
+rows of A. Recursively determine the leftmost minimum for
+each row of A. Then compute the leftmost minimum in the
+odd-numbered rows of A.
+
+Explain how to compute the leftmost minimum in the odd-numbered
+
+rows of A (given that the leftmost minimum of the even-numbered
+rows is known) in O(m + n) time.
+
+e. Write the recurrence for the running time of the algorithm in part (d).
+Show that its solution is O(m + n log m).
+
+Chapter notes
+
+Divide-and-conquer as a technique for designing algorithms dates back
+at least to 1962 in an article by Karatsuba and Ofman [242], but it might
+have been used well before then. According to Heideman, Johnson, and
+Burrus [211], C. F. Gauss devised the first fast Fourier transform
+algorithm in 1805, and Gauss's formulation breaks the problem into
+smaller subproblems whose solutions are combined.
+
+Strassen's algorithm [424] caused much excitement when it appeared
+in 1969. Before then, few imagined the possibility of an algorithm
+asymptotically faster than the basic MATRIX-MULTIPLY procedure.
+Shortly thereafter, S. Winograd reduced the number of submatrix
+additions from 18 to 15 while still using seven submatrix multiplications.
+This improvement, which Winograd apparently never published (and
+which is frequently miscited in the literature), may enhance the
+practicality of the method, but it does not affect its asymptotic
+performance. Probert [368] described Winograd's algorithm and showed
+that with seven multiplications, 15 additions is the minimum possible.
+
+Strassen's (nlg 7) = O(n2.81) bound for matrix multiplication held
+
+until 1987, when Coppersmith and Winograd [103] made a significant
+
+advance, improving the bound to O(n2.376) time with a mathematically
+
+sophisticated but wildly impractical algorithm based on tensor
+products. It took approximately 25 years before the asymptotic upper
+bound was again improved. In 2012 Vassilevska Williams [445]
+
+improved it to O(n2.37287), and two years later Le Gall [278] achieved
+O(n2.37286), both of them using mathematically fascinating but
+
+impractical algorithms. The best lower bound to date is just the obvious
+
+(n2) bound (obvious because any algorithm for matrix multiplication
+must fill in the n2 elements of the product matrix).
+
+The performance of MATRIX-MULTIPLY-RECURSIVE can be
+improved in practice by coarsening the leaves of the recursion. It also
+exhibits better cache behavior than MATRIX-MULTIPLY, although
+MATRIX-MULTIPLY can be improved by "tiling." Leiserson et al.
+[293] conducted a performance-engineering study of matrix
+multiplication in which a parallel and vectorized divide-and-conquer
+algorithm achieved the highest performance. Strassen's algorithm can
+be practical for large dense matrices, although large matrices tend to be
+sparse, and sparse methods can be much faster. When using limitedprecision floating-point values, Strassen's algorithm produces larger
+
+numerical errors than the (n3) algorithms do, although Higham [215]
+
+demonstrated that Strassen's algorithm is amply accurate for some
+applications.
+
+Recurrences were studied as early as 1202 by Leonardo Bonacci [66],
+also known as Fibonacci, for whom the Fibonacci numbers are named,
+although Indian mathematicians had discovered Fibonacci numbers
+centuries before. The French mathematician De Moivre [108]
+introduced the method of generating functions with which he studied
+Fibonacci numbers (see Problem 4-5). Knuth [259] and Liu [302] are
+good resources for learning the method of generating functions.
+
+Aho, Hopcroft, and Ullman [5, 6] offered one of the first general
+methods for solving recurrences arising from the analysis of divide-andconquer algorithms. The master method was adapted from Bentley,
+Haken, and Saxe [52]. The Akra-Bazzi method is due (unsurprisingly)
+to Akra and Bazzi [13]. Divide-and-conquer recurrences have been
+studied by many researchers, including Campbell [79], Graham, Knuth,
+and Patashnik [199], Kuszmaul and Leiserson [274], Leighton [287],
+Purdom and Brown [371], Roura [389], Verma [447], and Yap [462].
+
+The issue of floors and ceilings in divide-and-conquer recurrences,
+including a theorem similar to Theorem 4.5, was studied by Leighton
+[287]. Leighton proposed a version of the polynomial-growth condition.
+Campbell [79] removed several limitations in Leighton's statement of it
+and showed that there were polynomially bounded functions that do
+not satisfy Leighton's condition. Campbell also carefully studied many
+other technical issues, including the well-definedness of divide-andconquer recurrences. Kuszmaul and Leiserson [274] provided a proof of
+Theorem 4.5 that does not involve calculus or other higher math. Both
+Campbell and Leighton explored the perturbations of arguments
+beyond simple floors and ceilings.
+
+1 This terminology does not mean that either T (n) or f (n) need be continuous, only that the
+domain of T (n) is the real numbers, as opposed to integers.
+
+5 Probabilistic Analysis and Randomized
+
+Algorithms
+
+This chapter introduces probabilistic analysis and randomized
+algorithms. If you are unfamiliar with the basics of probability theory,
+you should read Sections C.1C.4 of Appendix C, which review this
+material. We'll revisit probabilistic analysis and randomized algorithms
+several times throughout this book.

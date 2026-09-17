@@ -1,0 +1,195 @@
+16.1 Aggregate analysis
+
+In aggregate analysis, you show that for all n, a sequence of n operations
+takes T (n) worst-case time in total. In the worst case, the average cost,
+
+or amortized cost, per operation is therefore T (n)/n. This amortized
+
+cost applies to each operation, even when there are several types of
+operations in the sequence. The other two methods we shall study in
+this chapter, the accounting method and the potential method, may
+assign different amortized costs to different types of operations.
+
+Stack operations
+As the first example of aggregate analysis, let's analyze stacks that have
+been augmented with a new operation. Section 10.1.3 presented the two
+
+fundamental stack operations, each of which takes O(1) time:
+PUSH(S, x) pushes object x onto stack S.
+POP(S) pops the top of stack S and returns the popped object. Calling
+
+POP on an empty stack generates an error.
+
+Figure 16.1 The action of MULTIPOP on a stack S, shown initially in (a). The top 4 objects
+are popped by MULTIPOP(S, 4), whose result is shown in (b). The next operation is
+MULTIPOP(S, 7), which empties the stack--shown in (c)--since fewer than 7 objects
+
+remained.
+
+Since each of these operations runs in O(1) time, let us consider the cost
+of each to be 1. The total cost of a sequence of n PUSH and POP
+operations is therefore n, and the actual running time for n operations is
+therefore (n).
+
+Now let's add the stack operation MULTIPOP(S, k), which removes
+the k top objects of stack S, popping the entire stack if the stack
+contains fewer than k objects. Of course, the procedure assumes that k
+
+is positive, and otherwise, the MULTIPOP operation leaves the stack
+unchanged. In the pseudocode for MULTIPOP, the operation STACK-
+
+EMPTY returns TRUE if there are no objects currently on the stack,
+and FALSE otherwise. Figure 16.1 shows an example of MULTIPOP.
+
+MULTIPOP(S, k)
+
+1 while not STACK-EMPTY(S) and k > 0
+2 POP(S)
+3 k=k-1
+
+What is the running time of MULTIPOP(S, k) on a stack of s
+
+objects? The actual running time is linear in the number of POP
+operations actually executed, and thus we can analyze MULTIPOP in
+terms of the abstract costs of 1 each for PUSH and POP. The number
+
+of iterations of the while loop is the number min {s, k} of objects
+
+popped off the stack. Each iteration of the loop makes one call to POP
+
+in line 2. Thus, the total cost of MULTIPOP is min {s, k}, and the
+
+actual running time is a linear function of this cost.
+
+Now let's analyze a sequence of n PUSH, POP, and MULTIPOP
+
+operations on an initially empty stack. The worst-case cost of a
+
+MULTIPOP operation in the sequence is O(n), since the stack size is at
+most n. The worst-case time of any stack operation is therefore O(n),
+and hence a sequence of n operations costs O(n2), since the sequence
+contains at most n MULTIPOP operations costing O(n) each. Although
+this analysis is correct, the O(n2) result, which came from considering
+
+the worst-case cost of each operation individually, is not tight.
+Yes, a single MULTIPOP might be expensive, but an aggregate
+
+analysis shows that any sequence of n PUSH, POP, and MULTIPOP
+
+operations on an initially empty stack has an upper bound on its cost of
+
+O(n). Why? An object cannot be popped from the stack unless it was
+
+first pushed. Therefore, the number of times that POP can be called on
+a nonempty stack, including calls within MULTIPOP, is at most the
+
+number of PUSH operations, which is at most n. For any value of n, any
+sequence of n PUSH, POP, and MULTIPOP operations takes a total of
+O(n) time. Averaging over the n operations gives an average cost per
+operation of O(n)/n = O(1). Aggregate analysis assigns the amortized
+
+cost of each operation to be the average cost. In this example, therefore,
+
+all three stack operations have an amortized cost of O(1).
+
+To recap: although the average cost, and hence the running time, of
+
+a stack operation is O(1), the analysis did not rely on probabilistic
+reasoning. Instead, the analysis yielded a worst-case bound of O(n) on a
+sequence of n operations. Dividing this total cost by n yielded that the
+average cost per operation--that is, the amortized cost--is O(1).
+
+Incrementing a binary counter
+
+As another example of aggregate analysis, consider the problem of
+
+implementing a k-bit binary counter that counts upward from 0. An
+array A[0 : k - 1] of bits represents the counter. A binary number x that
+is stored in the counter has its lowest-order bit in A[0] and its highest-
+
+order bit in A[k - 1], so that . Initially, x = 0, and thus
+
+A[i] = 0 for i = 0, 1, ... , k - 1. To add 1 (modulo 2k) to the value in the
+
+counter, call the INCREMENT procedure.
+
+INCREMENT(A, k)
+
+1i = 0
+2 while i < k and A[i] == 1
+3 A[i] = 0
+4 i=i+1
+5 if i < k
+6 A[i] = 1
+
+Figure 16.2 shows what happens to a binary counter when
+
+INCREMENT is called 16 times, starting with the initial value 0 and
+
+ending with the value 16. Each iteration of the while loop in lines 24
+
+adds a 1 into position i. If A[i] = 1, then adding 1 flips the bit to 0 in
+position i and yields a carry of 1, to be added into position i + 1 during
+the next iteration of the loop. Otherwise, the loop ends, and then, if i <
+k, A[i] must be 0, so that line 6 adds a 1 into position i, flipping the 0 to
+a 1. If the loop ends with i = k, then the call of INCREMENT flipped
+
+all k bits from 1 to 0. The cost of each INCREMENT operation is
+
+linear in the number of bits flipped.
+
+Figure 16.2 An 8-bit binary counter as its value goes from 0 to 16 by a sequence of 16
+INCREMENT operations. Bits that flip to achieve the next value are shaded in blue. The
+running cost for flipping bits is shown at the right. The total cost is always less than twice the
+total number of INCREMENT operations.
+
+As with the stack example, a cursory analysis yields a bound that is
+
+correct but not tight. A single execution of INCREMENT takes (k)
+time in the worst case, in which all the bits in array A are 1. Thus, a
+sequence of n INCREMENT operations on an initially zero counter
+takes O(nk) time in the worst case.
+
+Although a single call of INCREMENT might flip all k bits, not all
+
+bits flip upon each call. (Note the similarity to MULTIPOP, where a
+single call might pop many objects, but not every call pops many
+
+objects.) As Figure 16.2 shows, A[0] does flip each time INCREMENT
+is called. The next bit up, A[1], flips only every other time: a sequence of
+n INCREMENT operations on an initially zero counter causes A[1] to
+flip n/2 times. Similarly, bit A[2] flips only every fourth time, or n/4
+times in a sequence of n INCREMENT operations. In general, for i = 0,
+1, ... , k - 1, bit A[i] flips n/2i times in a sequence of n INCREMENT
+
+operations on an initially zero counter. For i k, bit A[i] does not exist,
+
+and so it cannot flip. The total number of flips in the sequence is thus
+
+by equation (A.7) on page 1142. Thus, a sequence of n INCREMENT
+operations on an initially zero counter takes O(n) time in the worst case.
+
+The average cost of each operation, and therefore the amortized cost
+
+per operation, is O(n)/n = O(1).
+
+Exercises
+
+16.1-1
+
+If the set of stack operations includes a MULTIPUSH operation, which
+
+pushes k items onto the stack, does the O(1) bound on the amortized
+
+cost of stack operations continue to hold?
+
+16.1-2
+Show that if a DECREMENT operation is included in the k-bit counter
+example, n operations can cost as much as (nk) time.
+
+16.1-3
+
+Use aggregate analysis to determine the amortized cost per operation
+
+for a sequence of n operations on a data structure in which the ith
+operation costs i if i is an exact power of 2, and 1 otherwise.

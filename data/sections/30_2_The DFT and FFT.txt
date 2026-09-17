@@ -1,0 +1,341 @@
+30.2 The DFT and FFT
+
+In Section 30.1, we claimed that by computing the DFT and its inverse
+
+by using the FFT, it is possible to evaluate and interpolate a degree n
+polynomial at the complex roots of unity in (n lg n) time. This section
+
+defines complex roots of unity, studies their properties, defines the DFT,
+
+and then shows how the FFT computes the DFT and its inverse in (n
+lg n) time.
+
+Complex roots of unity
+
+A complex nth root of unity is a complex number such that
+n = 1.
+
+There are exactly n complex nth roots of unity: e2ik/n for k = 0, 1, ... ,
+n - 1. To interpret this formula, use the definition of the exponential of
+
+a complex number:
+
+eiu = cos(u) + i sin(u).
+
+Figure 30.2 shows that the n complex roots of unity are equally spaced
+
+around the circle of unit radius centered at the origin of the complex
+plane. The value
+
+Figure 30.2 The values of in the complex plane, where 8 = e2i/8 is the principal
+8th root of unity.
+
+is the principal nth root of unity.2 All other complex nth roots of unity
+
+are powers of n.
+The n complex nth roots of unity,
+
+form a group under multiplication (see Section 31.3). This group has the
+
+same structure as the additive group (n, +) modulo n, since
+
+implies that . Similarly, . The following
+
+lemmas furnish some essential properties of the complex nth roots of
+
+unity.
+
+Lemma 30.3 (Cancellation lemma)
+For any integers n > 0, k 0, and d > 0,
+
+Proof The lemma follows directly from equation (30.6), since
+
+Corollary 30.4
+For any even integer n > 0,
+
+Proof The proof is left as Exercise 30.2-1.
+
+Lemma 30.5 (Halving lemma)
+If n > 0 is even, then the squares of the n complex nth roots of unity are
+the n/2 complex (n/2)th roots of unity.
+
+Proof By the cancellation lemma, for any nonnegative integer
+
+k. Squaring all of the complex nth roots of unity produces each (n/2)th
+
+root of unity exactly twice, since
+
+Thus and have the same square. We could also have used
+
+Corollary 30.4 to prove this property, since implies
+
+, and thus .
+
+As we'll see, the halving lemma is essential to the divide-and-conquer
+approach for converting between coefficient and point-value
+representations of polynomials, since it guarantees that the recursive
+subproblems are only half as large.
+
+Lemma 30.6 (Summation lemma)
+For any integer n 1 and nonzero integer k not divisible by n,
+
+Proof Equation (A.6) on page 1142 applies to complex values as well
+
+as to reals, giving
+
+To see that the denominator is not 0, note that only when k is
+
+divisible by n, which the lemma statement prohibits.
+
+The DFT
+Recall the goal of evaluating a polynomial
+
+of degree-bound n at , , (that is, at the n complex nth roots
+
+of unity).3 The polynomial A is given in coefficient form: a = (a0, a1, ...
+
+, an-1). Let us define the results yk, for k = 0, 1, ... , n - 1, by
+
+The vector y = (y0, y1, ... , yn-1) is the discrete Fourier transform
+(DFT) of the coefficient vector a = (a0, a1, ... , an-1). We also write y
+= DFTn(a).
+
+The FFT
+
+The fast Fourier transform (FFT) takes advantage of the special
+properties of the complex roots of unity to compute DFTn(a) in (n lg
+n) time, as opposed to the (n2) time of the straightforward method.
+Assume throughout that n is an exact power of 2. Although strategies
+
+for dealing with sizes that are not exact powers of 2 are known, they are
+beyond the scope of this book.
+
+The FFT method employs a divide-and-conquer strategy, using the
+
+even-indexed and odd-indexed coefficients of A(x) separately to define
+the two new polynomials Aeven(x) and Aodd(x) of degree-bound n/2:
+
+Aeven(x) = a0 + a2x + a4x2 + + an-2xn/2-1,
+
+Aodd(x) = a1 + a3x + a5x2 + + an-1xn/2-1.
+
+Note that Aeven contains all the even-indexed coefficients of A (the
+binary representation of the index ends in 0) and Aodd contains all the
+
+odd-indexed coefficients (the binary representation of the index ends in
+1). It follows that
+
+so that the problem of evaluating A(x) at , reduces to
+
+1. evaluating the degree-bound n/2 polynomials Aeven(x) and
+Aodd(x) at the points
+
+and then
+
+2. combining the results according to equation (30.9).
+
+By the halving lemma, the list of values (30.10) consists not of n
+distinct values but only of the n/2 complex (n/2)th roots of unity, with
+
+each root occurring exactly twice. Therefore, the FFT recursively
+
+evaluates the polynomials Aeven and Aodd of degree-bound n/2 at the
+n/2 complex (n/2)th roots of unity. These subproblems have exactly the
+same form as the original problem, but are half the size, dividing an n-
+
+element DFTn computation into two n/2-element DFTn/2
+
+computations. This decomposition is the basis for the FFT procedure
+
+on the next page, which computes the DFT of an n-element vector a =
+(a0, a1, ... , an-1), where n is an exact power of 2.
+
+The FFT procedure works as follows. Lines 12 represent the base
+case of the recursion. The DFT of 1 element is the element itself, since
+in this case
+
+y0 =
+= a0 · 1
+= a0.
+
+Lines 56 define the coefficient vectors for the polynomials Aeven and
+Aodd. Lines 3, 4, and 12 guarantee that is updated properly so that
+
+whenever lines 1011 are executed, . (Keeping a running value of
+from iteration to iteration saves time over computing from scratch
+each time through the for loop.4) Lines 78 perform the recursive
+
+DFTn/2 computations, setting, for k = 0, 1, ... , n/2 - 1,
+
+FFT(a, n)
+
+1if n == 1 // DFT of 1 element is the element itself
+
+2 return a
+3n = e2i/n
+
+4 = 1
+
+5aeven = (a0, a2, ... , an-2)
+
+6aodd = (a1, a3, ... , an-1)
+
+7yeven = FFT(aeven, n/2)
+
+8yodd = FFT(aodd, n/2)
+
+9for k = 0 to n/2 - 1 // at this point,
+
+10
+
+11
+
+12 = n
+13return y
+
+or, since by the cancellation lemma,
+
+Lines 1011 combine the results of the recursive DFTn/2 calculations.
+For the first n/2 results y0, y1, ... , yn/2-1, line 10 yields
+
+For yn/2, yn/2+1, ... , yn-1, letting k = 0, 1, ... , n/2 - 1, line 11 yields
+
+Thus the vector y returned by FFT is indeed the DFT of the input
+vector a.
+
+Lines 10 and 11 multiply each value by , for k = 0, 1, ... , n/2 -
+
+1. Line 10 adds this product to , and line 11 subtracts it. Because
+each factor appears in both its positive and negative forms, we call
+
+the factors twiddle factors.
+
+To determine the running time of the procedure FFT, note that
+
+exclusive of the recursive calls, each invocation takes (n) time, where n
+
+is the length of the input vector. The recurrence for the running time is
+therefore
+
+T(n) = 2T(n/2) + (n)
+= (n lg n),
+
+by case 2 of the master theorem (Theorem 4.1). Thus the FFT can
+
+evaluate a polynomial of degree-bound n at the complex nth roots of
+unity in (n lg n) time.
+
+Interpolation at the complex roots of unity
+
+The polynomial multiplication scheme entails converting from
+coefficient form to point-value form by evaluating the polynomial at the
+complex roots of unity, pointwise multiplying, and finally converting
+from point-value form back to coefficient form by interpolating. We've
+just seen how to evaluate, so now we'll see how to interpolate the
+complex roots of unity by a polynomial. To interpolate, we'll write the
+DFT as a matrix equation and then look at the form of the matrix
+inverse.
+
+From equation (30.4), we can write the DFT as the matrix product y
+= Vna, where Vn is a Vandermonde matrix containing the appropriate
+powers of n:
+
+The (k, j) entry of Vn is , for j, k = 0, 1, ... , n - 1. The exponents of
+
+the entries of Vn form a multiplication table for factors 0 to n - 1.
+
+For the inverse operation, which we write as , multiply y by
+
+the matrix , the inverse of Vn.
+
+Theorem 30.7
+For j, k = 0, 1, ... , n - 1, the (j, k) entry of is .
+
+Proof We show that , the n × n identity matrix. Consider the
+(k, k) entry of :
+
+This summation equals 1 if k = k, and it is 0 otherwise by the
+
+summation lemma (Lemma 30.6). Note that in order for the summation
+
+lemma to apply, k - k must not be divisible by n. Indeed, it is not, since
+-(n - 1) k - k n - 1.
+
+With the inverse matrix defined, is given by
+
+for j = 0, 1, ... , n - 1. By comparing equations (30.8) and (30.11), you
+can see that if you modify the FFT algorithm to switch the roles of a
+and y, replace n by , and divide each element of the result by n, you
+
+get the inverse DFT (see Exercise 30.2-4). Thus, is computable in
+
+(n lg n) time as well.
+
+Thus, the FFT and the inverse FFT provide a way to transform a
+
+polynomial of degree-bound n back and forth between its coefficient
+representation and a point-value representation in only (n lg n) time.
+
+In the context of polynomial multiplication, we have shown the
+
+following about the convolution a b of vectors a and b:
+
+Theorem 30.8 (Convolution theorem)
+For any two vectors a and b of length n, where n is an exact power of 2,
+
+where the vectors a and b are padded with 0s to length 2n and · denotes
+the componentwise product of two 2n-element vectors.
+
+Exercises
+
+30.2-1
+
+Prove Corollary 30.4.
+
+30.2-2
+
+Compute the DFT of the vector (0, 1, 2, 3).
+
+30.2-3
+Do Exercise 30.1-1 by using the (n lg n)-time scheme.
+
+30.2-4 in (n lg n) time.
+
+Write pseudocode to compute
+
+30.2-5
+Describe the generalization of the FFT procedure to the case in which n
+
+is an exact power of 3. Give a recurrence for the running time, and solve
+
+the recurrence.
+
+30.2-6
+Instead of performing an n-element FFT over the field of complex
+numbers (where n is an exact power of 2), let's use the ring m of
+integers modulo m, where m = 2tn/2 + 1 and t is an arbitrary positive
+integer. We can use = 2t instead of n as a principal nth root of unity,
+modulo m. Prove that the DFT and the inverse DFT are well defined in
+
+this system.
+
+30.2-7
+Given a list of values z0, z1, ... , zn-1 (possibly with repetitions), show
+how to find the coefficients of a polynomial P(x) of degree-bound n + 1
+that has zeros only at z0, z1, ... , zn-1 (possibly with repetitions). Your
+
+procedure should run in O(n lg2 n) time. (Hint: The polynomial P(x)
+has a zero at zj if and only if P(x) is a multiple of (x - zj).)
+
+30.2-8
+
+The chirp transform of a vector a = (a0, a1, ... , an-1) is the vector y =
+
+(y0, y1, ... , yn-1), where and z is any complex number.
+
+The DFT is therefore a special case of the chirp transform, obtained by
+
+taking z = n. Show how to evaluate the chirp transform for any
+complex number z in O(n lg n) time. (Hint: Use the equation
+
+to view the chirp transform as a convolution.)

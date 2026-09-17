@@ -1,0 +1,337 @@
+27.2 Maintaining a search list
+
+The next example of an online algorithm pertains to maintaining the
+order of elements in a linked list, as in Section 10.2. This problem often
+arises in practice for hash tables when collisions are resolved by
+chaining (see Section 11.2), since each slot contains a linked list.
+Reordering the linked list of elements in each slot of the hash table can
+boost the performance of searches measurably.
+
+The list-maintenance problem can be set up as follows. You are given
+
+a list L of n elements {x1, x2, ... , xn}. We'll assume that the list is
+
+doubly linked, although the algorithms and analysis work just as well
+
+for singly linked lists. Denote the position of element xi in the list L by
+rL(xi), where 1 rL(xi) n. Calling LIST-SEARCH(L, xi) on page 260
+thus takes (rL(xi)) time.
+
+If you know in advance something about the distribution of search
+requests, then it makes sense to arrange the list ahead of time to put the
+more frequently searched elements closer to the front, which minimizes
+the total cost (see Exercise 27.2-1). If instead you don't know anything
+about the search sequence, then no matter how you arrange the list, it is
+possible that every search is for whatever element appears at the tail of
+
+the list. The total searching time would then be (nm), where m is the
+
+number of searches.
+If you notice patterns in the access sequence or you observe
+
+differences in the frequencies in which elements are accessed, then you
+might want to rearrange the list as you perform searches. For example,
+if you discover that every search is for a particular element, you could
+move that element to the front of the list. In general, you could
+rearrange the list after each call to LIST-SEARCH. But how would you
+do so without knowing the future? After all, no matter how you move
+elements around, every search could be for the last element.
+
+But it turns out that some search sequences are "easier" than others.
+Rather than just evaluate performance on the worst-case sequence, let's
+compare a reorganization scheme with whatever an optimal offline
+algorithm would do if it knew the search sequence in advance. That way,
+if the sequence is fundamentally hard, the optimal offline algorithm will
+also find it hard, but if the sequence is easy, we can hope to do
+reasonably well.
+
+To ease analysis, we'll drop the asymptotic notation and say that the
+
+cost is just i to search for the ith element in the list. Let's also assume
+
+that the only way to reorder the elements in the list is by swapping two
+adjacent elements in the list. Because the list is doubly linked, each swap
+incurs a cost of 1. Thus, for example, a search for the sixth element
+followed by moving it forward two places (entailing two swaps) incurs a
+total cost 8. The goal is to minimize the total cost of calls to LISTSEARCH plus the total number of swaps performed.
+
+The online algorithm that we'll explore is MOVE-TO-FRONT(L, x).
+This procedure first searches for x in the doubly linked list L, and then
+it moves x to the front of the list.1 If x is located at position r = rL(x)
+before the call, MOVE-TO-FRONT swaps x with the element in
+position r - 1, then with the element in position r - 2, and so on, until it
+finally swaps x with the element in position 1. Thus if the call MOVETO-FRONT(L, 8) executes on the list L = 5, 3, 12, 4, 8, 9, 22, the list
+becomes 8, 5, 3, 12, 4, 9, 22. The call MOVE-TO-FRONT(L, k) costs
+2rL(k) - 1: it costs rL(k) to search for k, and it costs 1 for each of the
+rL(k) - 1 swaps that move k to the front of the list.
+
+Figure 27.1 The costs incurred by the procedures FORESEE and MOVE-TO-FRONT when
+
+searching for the elements 5, 3, 4, and 4, starting with the list L = 1, 2, 3, 4, 5. If FORESEE
+
+instead moved 3 to the front after the search for 5, the cumulative cost would not change, nor
+would the cumulative cost change if 4 moved to the second position after the search for 5.
+
+We'll see that MOVE-TO-FRONT has a competitive ratio of 4. Let's
+think about what this means. MOVE-TO-FRONT performs a series of
+operations on a doubly linked list, accumulating cost. For comparison,
+suppose that there is an algorithm FORESEE that knows the future.
+Like MOVE-TO-FRONT, it also searches the list and moves elements
+around, but after each call it optimally rearranges the list for the future.
+
+(There may be more than one optimal order.) Thus FORESEE and
+MOVE-TO-FRONT maintain different lists of the same elements.
+
+Consider the example shown in Figure 27.1. Starting with the list 1,
+
+2, 3, 4, 5, four searches occur, for the elements 5, 3, 4, and 4. The
+hypothetical procedure FORESEE, after searching for 3, moves 4 to the
+front of the list, knowing that a search for 4 is imminent. It thus incurs
+a swap cost of 3 upon its second call, after which no further swap costs
+accrue. MOVE-TO-FRONT incurs swap costs in each step, moving the
+found element to the front. In this example, MOVE-TO-FRONT has a
+higher cost in each step, but that is not necessarily always the case.
+
+The key to proving the competitive bound is to show that at any
+point, the total cost of MOVE-TO-FRONT is not much higher than
+that of FORESEE. Surprisingly, we can determine a bound on the costs
+incurred by MOVE-TO-FRONT relative to FORESEE even though
+MOVE-TO-FRONT cannot see the future.
+
+If we compare any particular step, MOVE-TO-FRONT and
+FORESEE may be operating on very different lists and do very
+different things. If we focus on the search for 4 above, we observe that
+FORESEE actually moves it to the front of the list early, paying to
+move the element to the front before it is accessed. To capture this
+
+concept, we use the idea of an inversion: a pair of elements, say a and b,
+in which a appears before b in one list, but b appears before a in
+another list. For two lists L and L, let I(L, L), called the inversion
+count, denote the number of inversions between the two lists, that is, the
+
+number of pairs of elements whose order differs in the two lists. For
+
+example, with lists L = 5,3,1,4,2 and L = 3,1,2,4,5, then out of the
+
+pairs, exactly five of them--(1, 5), (2, 4), (2, 5), (3, 5), (4, 5)--are
+inversions, since these pairs, and only these pairs, appear in different
+
+orders in the two lists. Thus the inversion count is I(L, L) = 5.
+
+In order to analyze the algorithm, we define the following notation.
+Let be the list maintained by MOVE-TO-FRONT immediately after
+
+the ith search, and similarly, let be FORESEE's list immediately after
+the ith search. Let and be the costs incurred by MOVE-TOFRONT and FORESEE on their ith calls, respectively. We don't know
+how many swaps FORESEE performs in its ith call, but we'll denote
+
+that number by ti. Therefore, if the ith operation is a search for element
+x, then
+
+In order to compare these costs more carefully, let's break down the
+elements into subsets, depending on their positions in the two lists
+
+before the ith search, relative to the element x being searched for in the
+ith search. We define three sets:
+
+BB = {elements before x in both and },
+
+BA = {elements before x in but after x in },
+
+AB = {elements after x in but before x in }.
+
+We can now relate the position of element x in and to the sizes
+
+of these sets:
+
+When a swap occurs in one of the lists, it changes the relative
+
+positions of the two elements involved, which in turn changes the
+
+inversion count. Suppose that elements x and y are swapped in some
+
+list. Then the only possible difference in the inversion count between
+
+this list and any other list depends on whether (x, y) is an inversion. In
+
+fact, the inversion count of (x, y) with respect to any other list must
+
+change. If (x, y) is an inversion before the swap, it no longer is
+
+afterward, and vice versa. Therefore, if two consecutive elements x and
+
+y swap positions in a list L, then for any other list L, the value of the
+
+inversion count I(L, L) either increases by 1 or decreases by 1.
+
+As we compare MOVE-TO-FRONT and FORESEE searching and
+
+modifying their lists, we'll think about MOVE-TO-FRONT executing
+
+on its list for the ith time and then FORESEE executing on its list for
+
+the ith time. After MOVE-TO-FRONT has executed for the ith time
+
+and before FORESEE has executed for the ith time, we'll compare
+
+(the inversion count immediately before the ith call of MOVE-
+
+TO-FRONT) with (the inversion count after the ith call of
+
+MOVE-TO-FRONT but before the ith call of FORESEE). We'll
+
+concern ourselves later with what FORESEE does.
+
+Let us analyze what happens to the inversion count after executing
+
+the ith call of MOVE-TO-FRONT, and suppose that it searches for
+
+element x. More precisely, we'll compute , the
+
+change in the inversion count, which gives a rough idea of how much
+
+MOVE-TO-FRONT's list becomes more or less like FORESEE's list.
+
+After searching, MOVE-TO-FRONT performs a series of swaps with
+
+each of the elements on the list that precedes x. Using the notation
+
+above, the number of such swaps is |BB| + |BA|. Bearing in mind that the
+
+list has yet to be changed by the ith call of FORESEE, let's see how
+
+the inversion count changes.
+
+Consider a swap with an element y BB. Before the swap, y precedes
+
+x in both and . After the swap, x precedes y in , and does
+
+not change. Therefore, the inversion count increases by 1 for each
+
+element in BB. Now consider a swap with an element z BA. Before the
+
+swap, z precedes x in but x precedes z in . After the swap, x
+
+precedes z in both lists. Therefore, the inversion count decreases by 1
+
+for each element in BA. Thus altogether, the inversion count increases
+
+by
+
+We have laid the groundwork needed to analyze MOVE-TOFRONT.
+
+Theorem 27.1
+
+Algorithm MOVE-TO-FRONT has a competitive ratio of 4.
+
+Proof The proof uses a potential function, as described in Chapter 16
+on amortized analysis. The value i of the potential function after the
+ith calls of MOVE-TO-FRONT and FORESEE depends on the
+
+inversion count:
+
+(Intuitively, the factor of 2 embodies the notion that each inversion
+represents a cost of 2 for MOVE-TO-FRONT relative to FORESEE: 1
+
+for searching and 1 for swapping.) By equation (27.7), after the ith call
+of MOVE-TO-FRONT, but before the ith call of FORESEE, the
+potential increases by 2(|BB| - |BA|). Since the inversion count of the
+two lists is nonnegative, we have i 0 for all i 0. Assuming that
+
+MOVE-TO-FRONT and FORESEE start with the same list, the initial
+
+potential 0 is 0, so that i 0 for all i.
+
+Drawing from equation (16.2) on page 456, the amortized cost of
+
+the ith MOVE-TO-FRONT operation is
+
+where , the actual cost of the ith MOVE-TO-FRONT operation, is
+
+given by equation (27.3):
+
+Now, let's consider the potential change i - i-1. Since both LM and
+LF change, let's consider the changes to one list at a time. Recall that
+when MOVE-TO-FRONT moves element x to the front, it increases the
+potential by exactly 2(|BB| - |BA|). We now consider how the optimal
+algorithm FORESEE changes its list LF: it performs ti swaps. Each
+
+swap performed by FORESEE either increases or decreases the
+potential by 2, and thus the increase in potential by FORESEE in the
+
+ith call can be at most 2ti. We therefore have
+
+We now finish the proof as in Chapter 16 by showing that the total
+amortized cost provides an upper bound on the total actual cost,
+because the initial potential function is 0 and the potential function is
+
+always nonnegative. By equation (16.3) on page 456, for any sequence
+
+of m MOVE-TO-FRONT operations, we have
+
+Therefore, we have
+
+Thus the total cost of the m MOVE-TO-FRONT operations is at most 4
+times the total cost of the m FORESEE operations, so MOVE-TO-
+
+FRONT is 4-competitive.
+
+Isn't it amazing that we can compare MOVE-TO-FRONT with the
+optimal algorithm FORESEE when we have no idea of the swaps that
+FORESEE makes? We were able to relate the performance of MOVETO-FRONT to the optimal algorithm by capturing how particular
+properties (swaps in this case) must evolve relative to the optimal
+algorithm, without actually knowing the optimal algorithm.
+
+The online algorithm MOVE-TO-FRONT has a competitive ratio of
+4: on any input sequence, it incurs a cost at most 4 times that of any
+other algorithm. On a particular input sequence, it could cost much less
+than 4 times the optimal algorithm, perhaps even matching the optimal
+algorithm.
+
+Exercises
+
+27.2-1
+You are given a set S = {x1, x2, ... , xn} of n elements, and you wish to
+make a static list L (no rearranging once the list is created) containing
+
+the elements of S that is good for searching. Suppose that you have a
+probability distribution, where p(xi) is the probability that a given
+search searches for element xi. Argue that the expected cost for m
+
+searches is
+
+Prove that this sum is minimized when the elements of L are sorted in
+decreasing order with respect to p(xi).
+
+27.2-2
+
+Professor Carnac claims that since FORESEE is an optimal algorithm
+that knows the future, then at each step it must incur no more cost than
+MOVE-TO-FRONT. Either prove that Professor Carnac is correct or
+provide a counterexample.
+
+27.2-3
+
+Another way to maintain a linked list for efficient searching is for each
+
+element to maintain a frequency count: the number of times that the
+
+element has been searched for. The idea is to rearrange list elements
+after searches so that the list is always sorted by decreasing frequency
+
+count, from largest to smallest. Either show that this algorithm is O(1)-
+
+competitive, or prove that it is not.
+
+27.2-4
+
+The model in this section charged a cost of 1 for each swap. We can
+
+consider an alternative cost model in which, after accessing x, you can
+move x anywhere earlier in the list, and there is no cost for doing so.
+
+The only cost is the cost of the actual accesses. Show that MOVE-TOFRONT is 2-competitive in this cost model, assuming that the number
+
+requests is sufficiently large. (Hint: Use the potential function
+
+.)

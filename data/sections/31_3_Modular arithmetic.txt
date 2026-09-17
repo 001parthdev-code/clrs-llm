@@ -1,0 +1,349 @@
+31.3 Modular arithmetic
+
+Informally, you can think of modular arithmetic as arithmetic as usual
+
+over the integers, except that when working modulo n, then every result
+x is replaced by the element of {0, 1, ..., n 1} that is equivalent to x,
+modulo n (so that x is replaced by x mod n). This informal model
+
+suffices if you stick to the operations of addition, subtraction, and
+multiplication. A more formal model for modular arithmetic, which
+follows, is best described within the framework of group theory.
+
+Finite groups
+
+A group (S, ) is a set S together with a binary operation defined on
+S for which the following properties hold:
+
+1. Closure: For all a, b S, we have a b S.
+
+2. Identity: There exists an element e S, called the identity of the
+group, such that e a = a e = a for all a S.
+
+3. Associativity: For all a, b, c S, we have (a b) c = a (b
+c).
+
+4. Inverses: For each a S, there exists a unique element b S,
+called the inverse of a, such that a b = b a = e.
+
+As an example, consider the familiar group (, +) of the integers
+
+under the operation of addition: 0 is the identity, and the inverse of a is
+a. An abelian group (S, ) satisfies the commutative law a b = b a
+for all a, b S. The size of group (S, ) is |S|, and if |S| < , then (S, )
+is a finite group.
+
+The groups defined by modular addition and multiplication
+
+We can form two finite abelian groups by using addition and
+
+multiplication modulo n, where n is a positive integer. These groups are
+based on the equivalence classes of the integers modulo n, defined in
+
+Section 31.1.
+
+To define a group on n, we need suitable binary operations, which
+
+we obtain by redefining the ordinary operations of addition and
+multiplication. We can define addition and multiplication operations for
+
+n, because the equivalence class of two integers uniquely determines
+the equivalence class of their sum or product. That is, if a = a (mod n)
+and b = b (mod n), then
+
+a + b = a + b (mod n),
+ab = ab (mod n).
+
+Thus, we define addition and multiplication modulo n, denoted +n and
+·n, by
+
+(We can define subtraction similarly on n by [a]n n [b]n = [a b]n, but
+
+division is more complicated, as we'll see.) These facts justify the
+common and convenient practice of using the smallest nonnegative
+element of each equivalence class as its representative when performing
+
+computations in n. We add, subtract, and multiply as usual on the
+representatives, but we replace each result x by the representative of its
+class, that is, by x mod n.
+
+Figure 31.2 Two finite groups. Equivalence classes are denoted by their representative
+
+elements. (a) The group (6, +6). (b) The group .
+
+Using this definition of addition modulo n, we define the additive
+group modulo n as (n, +n). The size of the additive group modulo n is |
+n| = n. Figure 31.2(a) gives the operation table for the group (6, +6).
+
+Theorem 31.12
+The system (n, +n) is a finite abelian group.
+
+Proof Equation (31.19) shows that (n, +n) is closed. Associativity and
+commutativity of +n follow from the associativity and commutativity of
+
++:
+
+([a]n +n [b]n) +n [c]n = [a + b]n +n [c]n
+= [(a + b) + c]n
+= [a + (b + c)]n
+= [a]n +n [b + c]n
+= [a]n +n ([b]n +n [c]n),
+
+[a]n +n [b]n = [a + b]n
+= [b + a]n
+= [b]n +n [a]n.
+
+The identity element of (n, +n) is 0 (that is, [0]n). The (additive)
+inverse of an element a (that is, of [a]n) is the element a (that is, [a]n or
+[n a]n), since [a]n +n [a]n = [a a]n = [0]n.
+
+Using the definition of multiplication modulo n, we define the
+multiplicative group modulo n as . The elements of this group are
+the set of elements in n that are relatively prime to n, so that each
+one has a unique inverse, modulo n:
+
+To see that is well defined, note that for 0 a < n, we have a = (a +
+kn) (mod n) for all integers k. By Exercise 31.2-3, therefore, gcd(a, n) =
+1 implies gcd(a + kn, n) = 1 for all integers k. Since [a]n = {a + kn : k
+
+}, the set is well defined. An example of such a group is
+
+where the group operation is multiplication modulo 15. (We have
+
+denoted an element [a]15 as a, and thus, for example, we denote [7]15 as
+
+7.) Figure 31.2(b) shows the group . For example, 8 · 11 = 13
+
+(mod 15), working in . The identity for this group is 1.
+
+Theorem 31.13
+
+The system is a finite abelian group.
+
+Proof Theorem 31.6 implies that is closed. Associativity and
+
+commutativity can be proved for ·n as they were for +n in the proof of
+
+Theorem 31.12. The identity element is [1]n. To show the existence of
+
+inverses, let a be an element of and let (d, x, y) be returned by
+
+EXTENDED-EUCLID(a, n). Then we have d = 1, since , and
+
+or equivalently,
+
+ax = 1 (mod n).
+
+Thus [x]n is a multiplicative inverse of [a]n, modulo n. Furthermore, we
+
+claim that . To see why, equation (31.20) demonstrates that the
+
+smallest positive linear combination of x and n must be 1. Therefore,
+
+Theorem 31.2 implies that gcd(x, n) = 1. We defer the proof that
+
+inverses are uniquely defined until Corollary 31.26 in Section 31.4.
+
+As an example of computing multiplicative inverses, suppose that a =
+5 and n = 11. Then EXTENDED-EUCLID(a, n) returns (d, x, y) = (1,
+
+2, 1), so that 1 = 5 · (2) + 11 · 1. Thus, [2]11 (i.e., [9]11) is the
+
+multiplicative inverse of [5]11.
+
+When working with the groups (n, +n) and in the remainder
+
+of this chapter, we follow the convenient practice of denoting
+
+equivalence classes by their representative elements and denoting the
+
+operations +n and ·n by the usual arithmetic notations + and · (or
+
+juxtaposition, so that ab = a · b) respectively. Furthermore, equivalences
+
+modulo n may also be interpreted as equations in n. For example, the
+
+following two statements are equivalent:
+
+ax = b (mod n)
+
+and
+
+[a]n ·n [x]n = [b]n.
+
+As a further convenience, we sometimes refer to a group (S, )
+
+merely as S when the operation is understood from context. We may
+
+thus refer to the groups (n, +n) and as just n and ,
+
+respectively.
+
+We denote the (multiplicative) inverse of an element a by (a-1 mod
+
+n). Division in is defined by the equation a/b = ab-1 (mod n). For
+
+example, in we have that 7-1 = 13 (mod 15), since 7 · 13 = 91 = 1
+
+(mod 15), so that 2/7 = 2 · 13 = 11 (mod 15).
+
+The size of is denoted (n). This function, known as Euler's phi
+
+function, satisfies the equation
+
+so that p runs over all the primes dividing n (including n itself, if n is
+
+prime). We won't prove this formula here. Intuitively, begin with a list of
+
+the n remainders {0, 1, ..., n 1} and then, for each prime p that divides
+n, cross out every multiple of p in the list. For example, since the prime
+
+divisors of 45 are 3 and 5,
+
+If p is prime, then , and
+
+If n is composite, then (n) < n 1, although it can be shown that
+
+for n 3, where = 0.5772156649 ... is Euler's constant. A somewhat
+simpler (but looser) lower bound for n > 5 is
+
+The lower bound (31.23) is essentially the best possible, since
+
+Subgroups
+
+If (S, ) is a group, S S, and (S, ) is also a group, then (S, ) is a
+subgroup of (S, ). For example, the even integers form a subgroup of
+
+the integers under the operation of addition. The following theorem,
+whose proof we leave as Exercise 31.3-3, provides a useful tool for
+recognizing subgroups.
+
+Theorem 31.14 (A nonempty closed subset of a finite group is a
+subgroup)
+If (S, ) is a finite group and S is any nonempty subset of S such that
+a b S for all a, b S, then (S, ) is a subgroup of (S, ).
+
+For example, the set {0, 2, 4, 6} forms a subgroup of 8, since it is
+nonempty and closed under the operation + (that is, it is closed under
++8).
+
+The following theorem, whose proof is omitted, provides an
+extremely useful constraint on the size of a subgroup.
+
+Theorem 31.15 (Lagrange's theorem)
+If (S, ) is a finite group and (S, ) is a subgroup of (S, ), then |S|
+is a divisor of |S|.
+
+A subgroup S of a group S is a proper subgroup if S S. We'll use
+
+the following corollary in the analysis in Section 31.8 of the MillerRabin primality test procedure.
+
+Corollary 31.16
+If S is a proper subgroup of a finite group S, then |S| |S|/2.
+
+Subgroups generated by an element
+
+Theorem 31.14 affords us a straightforward way to produce a subgroup
+
+of a finite group (S, ): choose an element a and take all elements that
+can be generated from a using the group operation. Specifically, define
+a(k) for k 1 by
+
+For example, taking a = 2 in the group 6 yields the sequence
+
+a(1), a(2), a(3), ... = 2, 4, 0, 2, 4, 0, 2, 4, 0, ....
+We have a(k) = ka mod n in the group n, and a(k) = ak mod n in the
+group . We define the subgroup generated by a, denoted a or (a,
+
+), by
+
+a = {a(k) : k 1}.
+
+We say that a generates the subgroup a or that a is a generator of a.
+Since S is finite, a is a finite subset of S, possibly including all of S.
+
+Since the associativity of implies
+
+a(i) a(j) = a(i+j),
+
+a is closed and therefore, by Theorem 31.14, a is a subgroup of S.
+
+For example, in 6, we have
+
+0 = {0},
+1 = {0, 1, 2, 3, 4, 5},
+2 = {0, 2, 4}.
+
+Similarly, in , we have
+
+1 = {1},
+2 = {1, 2, 4},
+3 = {1, 2, 3, 4, 5, 6}.
+
+The order of a (in the group S), denoted ord(a), is defined as the
+smallest positive integer t such that a(t) = e. (Recall that e S is the
+
+group identity.)
+
+Theorem 31.17
+For any finite group (S, ) and any a S, the order of a is equal to the
+size of the subgroup it generates, or ord(a) = |a|.
+
+Proof Let t = ord(a). Since a(t) = e and a(t+k) = a(t) a(k) = a(k) for
+k 1, if i > t, then a(i) = a(j) for some j < i. Therefore, as we generate
+elements by a, we see no new elements after a(t). Thus, a = {a(1), a(2),
+..., a(t)}, and so |a| t. To show that |a| t, we show that each
+element of the sequence a(1), a(2), ..., a(t) is distinct. Suppose for the
+purpose of contradiction that a(i) = a(j) for some i and j satisfying 1 i
+
+< j t. Then, a(i+k) = a(j+k) for k 0. But this equation implies that
+a(i+(tj)) = a(j+(tj)) = e, a contradiction, since i + (t j) < t but t is the
+least positive value such that a(t) = e. Therefore, each element of the
+sequence a(1), a(2), ..., a(t) is distinct, and |a| t. We conclude that
+ord(a) = |a|.
+
+Corollary 31.18
+The sequence a(1), a(2), ... is periodic with period t = ord(a), that is,
+a(i) = a(j) if and only if i = j (mod t).
+
+Consistent with the above corollary, we define a(0) as e and a(i) as a(i
+mod t), where t = ord(a), for all integers i.
+
+Corollary 31.19
+If (S, ) is a finite group with identity e, then for all a S,
+
+a(|S|) = e.
+
+Proof Lagrange's theorem (Theorem 31.15) implies that ord(a) | |S|,
+and so |S| = 0 (mod t), where t = ord(a). Therefore, a(|S|) = a(0) = e.
+
+Exercises
+
+31.3-1
+
+Draw the group operation tables for the groups (4, +4) and .
+
+Show that these groups are isomorphic by exhibiting a one-to-one
+
+correspondence f between 4 and such that a+b = c (mod 4) if and
+
+only if f(a)·f(b) = f(c) (mod 5).
+
+31.3-2
+
+List all subgroups of 9 and of .
+
+31.3-3
+
+Prove Theorem 31.14.
+
+31.3-4
+Show that if p is prime and e is a positive integer, then
+
+(pe) = pe1(p 1).
+
+31.3-5
+
+Show that for any integer n > 1 and for any , the function
+
+defined by fa(x) = ax mod n is a permutation of .

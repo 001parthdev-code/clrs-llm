@@ -1,0 +1,1158 @@
+32.5 Suffix arrays
+
+The algorithms we have seen thus far in this chapter can efficiently find
+all occurrences of a pattern in a text. That is, however, all they can do.
+This section presents a different approach--suffix arrays--with which
+you can find all occurrences of a pattern in a text, but also quite a bit
+more. A suffix array won't find all occurrences of a pattern as quickly
+as, say, the Knuth-Morris-Pratt algorithm, but its additional flexibility
+makes it well worth studying.
+
+Figure 32.11 The suffix array SA, rank array rank, longest common prefix array LCP, and
+lexicographically sorted suffixes of the text T = ratatat with length n = 7. The value of
+rank[i] indicates the position of the suffix T[i:] in the lexicographically sorted order: rank[SA[i]]
+= i for i = 1, 2, ..., n. The rank array is used to compute the LCP array.
+
+A suffix array is simply a compact way to represent the
+
+lexicographically sorted order of all n suffixes of a length-n text. Given
+a text T[1:n], let T[i:] denote the suffix T[i:n]. The suffix array SA[1:n] of
+T is defined such that if SA[i] = j, then T[j:] is the ith suffix of T in
+lexicographic order.3 That is, the ith suffix of T in lexicographic order is
+T[SA[i]:]. Along with the suffix array, another useful array is the longest
+common prefix array LCPOE[1:n]. The entry LCP[i] gives the length of
+the longest common prefix between the ith and (i 1)st suffixes in the
+sorted order (with LCP[SA[1]] defined to be 0, since there is no prefix
+lexicographically smaller than T[SA[1]:]). Figure 32.11 shows the suffix
+
+array and longest common prefix array for the 7-character text
+
+ratatat.
+Given the suffix array for a text, you can search for a pattern via
+
+binary search on the suffix array. Each occurrence of a pattern in the
+
+text starts some suffix of the text, and because the suffix array is in
+
+lexicographically sorted order, all occurrences of a pattern will appear
+
+at the start of consecutive entries of the suffix array. For example, in
+
+Figure 32.11, the three occurrences of at in ratatat appear in
+
+entries 1 through 3 of the suffix array. If you find the length-m pattern
+in the length-n suffix array via binary search (taking O(m 1g n) time
+because each comparison takes O(m) time), then you can find all
+
+occurrences of the pattern in the text by searching backward and
+
+forward from that spot until you find a suffix that does not start with
+
+the pattern (or you go beyond the bounds of the suffix array). If the
+
+pattern occurs k times, then the time to find all k occurrences is O(m 1g
+n + km).
+
+With the longest common prefix array, you can find a longest
+
+repeated substring, that is, the longest substring that occurs more than
+
+once in the text. If LCP[i] contains a maximum value in the LCP array,
+then a longest repeated substring appears in T[SA[i]:SA[i] + LCP[i] 1].
+In the example of Figure 32.11, the LCP array has one maximum value:
+LCP[3] = 4. Therefore, since SA[3] = 2, the longest repeated substring is
+T[2:5] = atat. Exercise 32.5-3 asks you to use the suffix array and
+
+longest common prefix array to find the longest common substrings
+
+between two texts. Next, we'll see how to compute the suffix array for
+
+an n-character text in O(n 1g n) time and, given the suffix array and the
+text, how to compute the longest common prefix array in (n) time.
+
+Computing the suffix array
+
+There are several algorithms to compute the suffix array of a length-n
+
+text. Some run in linear time, but are rather complicated. One such
+
+algorithm is given in Problem 32-2. Here we'll explore a simpler
+
+algorithm that runs in (n 1g n) time.
+
+The idea behind the O(n 1g n)-time procedure COMPUTE-
+
+SUFFIX-ARRAY on the following page is to lexicographically sort
+
+substrings of the text with increasing lengths. The procedure makes
+
+several passes over the text, with the substring length doubling each
+
+time. By the 1g nth pass, the procedure is sorting all the suffixes,
+
+thereby gaining the information needed to construct the suffix array.
+
+The key to attaining an O(n 1g n)-time algorithm will be to have each
+
+pass after the first sort in linear time, which will indeed be possible by
+
+using radix sort.
+
+Let's start with a simple observation. Consider any two strings, s1
+
+and s2. Decompose s1 into and , so that s1 is concatenated with
+
+. Likewise, let s2 be concatenated with . Now, suppose that is
+
+lexicographically smaller than . Then, regardless of and , it must
+
+be the case that s1 is lexicographically smaller than s2. For example, let
+
+s1 = aaz and s2 = aba, and decompose s1 into and and
+
+s2 into and . Because is lexicographically smaller than
+
+, it follows that s1 is lexicographically smaller than s2, even though is
+
+lexicographically smaller than .
+
+Instead of comparing substrings directly, COMPUTE-SUFFIX-
+
+ARRAY represents substrings of the text with integer ranks. Ranks
+
+have the simple property that one substring is lexicographically smaller
+
+then another if and only if it has a smaller rank. Identical substrings
+
+have equal ranks.
+
+Where do these ranks come from? Initially, the substrings being
+
+considered are just single characters from the text. Assume that, as in
+
+many programming languages, there is a function, ord, that maps a
+
+character to its underlying encoding, which is a positive integer. The
+
+ord function could be the ASCII or Unicode encodings or any other
+
+function that produces a relative ordering of the characters. For
+
+example if all the characters are known to be lowercase letters, then
+
+ord(a) = 1, ord(b) = 2, ..., ord(z) = 26 would work. Once the substrings
+
+being considered contain multiple characters, their ranks will be
+
+positive integers less than or equal to n, coming from their relative
+
+order after being sorted. An empty substring always has rank 0, since it
+
+is lexicographically less than any nonempty substring.
+
+COMPUTE-SUFFIX-ARRAY(T, n)
+
+1 allocate arrays substr-rank[1:n], rank[1:n], and SA[1:n]
+
+2 for i = 1 to n
+
+3 substr-rank[i].left-rank = ord(T[i])
+
+4 if i < n
+
+5 substr-rank[i].right-rank = ord(T[i + 1])
+
+6 else substr-rank[i].right-rank = 0
+
+7 substr-rank[i].index = i
+
+8 sort the array substr-rank into monotonically increasing order
+
+based on the left-rank attributes, using the right-rank
+
+attributes to break ties; if still a tie, the order does not matter
+
+9 l=2
+
+10 while l < n
+
+11 MAKE-RANKS(substr-rank, rank, n)
+
+12 for i = 1 to n
+
+13 substr-rank[i].left-rank = rank[i]
+
+14 if i + l n
+
+15 substr-rank[i].right-rank = rank[i + l]
+
+16 else substr-rank[i].right-rank = 0
+
+17 substr-rank[i].index = i
+
+18 sort the array substr-rank into monotonically increasing
+
+order based on the left-rank attributes, using the right-
+
+rank attributes to break ties; if still a tie, the order does
+
+not matter
+
+19 l = 2l
+
+20 for i = 1 to n
+
+21 SA[i] = substr-rank[i].index
+
+22 return SA
+
+MAKE-RANKS(substr-rank, rank, n)
+
+1 r=1
+2 rank[substr-rank[1].index] = r
+
+3 for i = 2 to n
+
+4 if substr-rank[i].left-rank substr-rank[i 1].left-rank
+or substr-rank[i].right-rank substr-rank[i 1].right-
+rank
+
+5 r=r+1
+
+6 rank[substr-rank[i].index] = r
+
+Figure 32.12 The substr-rank array for indices i = 1, 2, ..., 7 after the for loop of lines 27 and
+after the sorting step in line 8 for input string T = ratatat.
+
+The COMPUTE-SUFFIX-ARRAY procedure uses objects
+internally to keep track of the relative ordering of the substrings
+according to their ranks. When considering substrings of a given length,
+
+the procedure creates and sorts an array substr-rank[1:n] of n objects,
+
+each with the following attributes:
+
+left-rank contains the rank of the left part of the substring.
+
+right-rank contains the rank of the right part of the substring.
+
+index contains the index into the text T of where the substring
+
+starts.
+
+Before delving into the details of how the procedure works, let's look
+
+at how it operates on the input text ratatat, with n = 7. Assuming
+
+that the ord function returns the ASCII code for a character, Figure
+
+32.12 shows the substr-rank array after the for loop of lines 27 and
+then after the sorting step in line 8. The left-rank and right-rank values
+after lines 27 are the ranks of length-1 substrings in positions i and i +
+1, for i = 1, 2, ..., n. These initial ranks are the ASCII values of the
+characters. At this point, the left-rank and right-rank values give the
+
+ranks of the left and right part of each substring of length 2. Because
+the substring starting at index 7 consists of only one character, its right
+
+part is empty and so its right-rank is 0. After the sorting step in line 8,
+the substr-rank array gives the relative lexicographic order of all the
+
+substrings of length 2, with starting points of these substrings in the
+
+index attribute. For example, the lexicographically smallest length-2
+substring is at, which starts at position substr-rank[1].index, which
+equals 2. This substring also occurs at positions substr-rank[2].index = 4
+and substr-rank[3].index = 6.
+
+The procedure then enters the while loop of lines 1019. The loop
+
+variable l gives an upper bound on the length of substrings that have
+
+been sorted thus far. Entering the while loop, therefore, the substrings
+
+of length at most l = 2 are sorted. The call of MAKE-RANKS in line 11
+
+gives each of these substrings its rank in the sorted order, from 1 up to
+the number of unique length-2 substrings, based on the values it finds in
+
+the substr-rank array. With l = 2, MAKE-RANKS sets rank[i] to be the
+rank of the length-2 substring T[i:i + 1]. Figure 32.13 shows these new
+
+ranks, which are not necessarily unique. For example, since the length-2
+substring at occurs at positions 2, 4, and 6, MAKE-RANKS finds that
+
+substr-rank[1], substr-rank[2], and substr-rank[3] have equal values in
+left-rank and in right-rank. Since substr-rank[1].index = 2, substrrank[2].index = 4, and substr-rank[3].index = 6, and since at is the
+smallest substring in lexicographic order, MAKE-RANKS sets rank[2]
+= rank[4] = rank[6] = 1.
+
+Figure 32.13 The rank array after line 11 and the substr-rank array after lines 1217 and after
+line 18 in the first iteration of the while loop of lines 1019, where l = 2.
+
+This iteration of the while loop will sort the substrings of length at
+most 4 based on the ranks from sorting the substrings of length at most
+
+2. The for loop of lines 1217 reconstitutes the substr-rank array, with
+substr-rank[i].left-rank based on rank[i] (the rank of the length-2
+substring T[i:i+1]) and substr-rank[i].right-rank based on rank[i + 2] (the
+rank of the length-2 substring T[i + 2:i + 3], which is 0 if this substring
+starts beyond the end of the length-n text). Together, these two ranks
+give the relative rank of the length-4 substring T[i:i + 3]. Figure 32.13
+
+shows the effect of lines 1217. The figure also shows the result of
+
+sorting the substr-rank array in line 18, based on the left-rank attribute,
+and using the right-rank attribute to break ties. Now substr-rank gives
+
+the lexicographically sorted order of all substrings with length at most
+4.
+
+The next iteration of the while loop, with l = 4, sorts the substrings
+
+of length at most 8 based on the ranks from sorting the substrings of
+length at most4 4. Figure 32.14 shows the ranks of the length-4
+
+substrings and the substr-rank array before and after sorting. This
+
+iteration is the final one, since with the length n of the text equaling 7,
+
+the procedure has sorted all substrings.
+
+Figure 32.14 The rank array after line 11 and the substr-rank array after lines 1217 and after
+line 18 in the second--and final--iteration of the while loop of lines 1019, where l = 4.
+
+In general, as the loop variable l increases, more and more of the
+right parts of the substrings are empty. Therefore, more of the rightrank values are 0. Because i is at most n within the loop of lines 1217,
+the left part of each substring is always nonempty, and so all left-rank
+
+values are always positive.
+This example illuminates why the COMPUTE-SUFFIX-ARRAY
+
+procedure works. The initial ranks established in lines 27 are simply
+the ord values of the characters in the text, and so when line 8 sorts the
+
+substr-rank array, its ordering corresponds to the lexicographic
+
+ordering of the length-2 substrings. Each iteration of the while loop of
+
+lines 1019 takes sorted substrings of length l and produces sorted
+substrings of length 2l. Once l reaches or exceeds n, all substrings have
+
+been sorted.
+Within an iteration of the while loop, the MAKE-RANKS procedure
+
+"re-ranks" the substrings that were sorted, either by line 8 before the
+first iteration or by line 18 in the previous iteration. MAKE-RANKS
+
+takes a substr-rank array, which has been sorted, and fills in an array
+rank[1:n] so that rank[i] is the rank of the ith substring represented in
+the substr-rank array. Each rank is a positive integer, starting from 1,
+and going up to the number of unique substrings of length 2l.
+Substrings with equal values of left-rank and right-rank receive the
+
+same rank. Otherwise, a substring that is lexicographically smaller than
+
+another appears earlier in the substr-rank array, and it receives a
+
+smaller rank. Once the substrings of length 2l are re-ranked, line 18
+
+sorts them by rank, preparing for the next iteration of the while loop.
+
+Once l reaches or exceeds n and all substrings are sorted, the values
+in the index attributes give the starting positions of the sorted
+
+substrings. These indices are precisely the values that constitute the
+
+suffix array.
+
+Let's analyze the running time of COMPUTE-SUFFIX-ARRAY.
+
+Lines 17 take (n) time. Line 8 takes O(n 1g n) time, using either merge
+
+sort (see Section 2.3.1) or heapsort (see Chapter 6). Because the value
+
+of l doubles in each iteration of the while loop of lines 1019, this loop
+makes 1g n 1 iterations. Within each iteration, the call of MAKERANKS takes (n) time, as does the for loop of lines 1217. Line 18,
+like line 8, takes O(n 1g n) time, using either merge sort or heapsort.
+Finally, the for loop of lines 2021 takes (n) time. The total time works
+out to O(n 1g2 n).
+
+A simple observation allows us to reduce the running time to (n 1g
+n). The values of left-rank and right-rank being sorted in line 18 are
+always integers in the range 0 to n. Therefore, radix sort can sort the
+substr-rank array in (n) time by first running counting sort (see
+Chapter 8) based on right-rank and then running counting sort based
+on left-rank. Now each iteration of the while loop of lines 1019 takes
+only (n) time, giving a total time of (n 1g n).
+
+Exercise 32.5-2 asks you to make a simple modification to
+
+COMPUTE-SUFFIX-ARRAY that allows the while loop of lines 1019
+
+to iterate fewer than 1g n 1 times for certain inputs.
+
+Computing the LCP array
+
+Recall that LCP[i] is defined as the length of the longest common prefix
+of the (i 1)st and ith lexicographically smallest suffixes T[SA[i 1]:]
+and T[SA[i]:]. Because T[SA[1]:] is the lexicographically smallest suffix,
+we define LCP[1] to be 0.
+
+In order to compute the LCP array, we need an array rank that is the
+inverse of the SA array, just like the final rank array in COMPUTESUFFIX-ARRAY: if SA[i] = j, then rank[j] = i. That is, we have
+rank[SA[i]] = i for i = 1, 2, ..., n. For a suffix T[i:], the value of rank[i]
+
+gives the position of this suffix in the lexicographically sorted order.
+
+Figure 32.11 includes the rank array for the ratatat example. For
+example, the suffix tat is T[5:]. To find this suffix's position in the
+sorted order, look up rank[5] = 6.
+
+To compute the LCP array, we will need to determine where in the
+
+lexicographically sorted order a suffix appears, but with its first
+
+character removed. The rank array helps. Consider the ith smallest
+suffix, which is T[SA[i]:]. Dropping its first character gives the suffix
+T[SA[i] + 1:], that is, the suffix starting at position SA[i] + 1 in the text.
+The location of this suffix in the sorted order is given by rank[SA[i] + 1].
+
+For example, for the suffix atat, let's see where to find tat (atat with
+
+its first character removed) in the lexicographically sorted order. The
+
+suffix atat appears in position 2 of the suffix array, and SA[2] = 4.
+Thus, rank[SA[2] + 1] = rank[5] = 6, and sure enough the suffix tat
+
+appears in location 6 in the sorted order.
+
+The procedure COMPUTE-LCP on the next page produces the LCP
+
+array. The following lemma helps show that the procedure is correct.
+
+COMPUTE-LCP(T, SA, n)
+
+1allocate arrays rank[1:n] and LCP[1:n]
+
+2for i = 1 to n
+
+3 rank[SA[i]] = i // by definition
+
+4LCP[1] = 0 // also by definition
+
+5l = 0 // initialize length of LCP
+
+6for i = 1 to n
+
+7 if rank[i] > 1
+
+8 j = SA[rank[i] 1] // T[j:] precedes T[i:] lexicographically
+
+9 m = max {i, j }
+
+10 while m + l n and T[i + l] == T[j + l]
+
+11 l=l+1 // next character is in common prefix
+
+12 LCP[rank[i]] = l // length of LCP of T[j:] and T[i:]
+
+13 if l > 0
+
+14 l=l1 // peel off first character of common
+
+prefix
+
+15return LCP
+
+Lemma 32.8
+Consider suffixes T[i 1:] and T[i:], which appear at positions rank[i 1]
+and rank[i], respectively, in the lexicographically sorted order of suffixes.
+If LCP[rank[i 1]] = l > 1, then the suffix T[i:], which is T[i 1:] with its
+first character removed, has LCP[rank[i]] l 1.
+
+Proof The suffix T[i 1:] appears at position rank[i 1] in the
+
+lexicographically sorted order. The suffix immediately preceding it in
+
+the sorted order appears at position rank[i 1] 1 and is T[SA[rank[i
+1] 1]:]. By assumption and the definition of the LCP array, these two
+suffixes, T[SA[rank[i1]1]:] and T[i1:], have a longest common prefix of
+length l > 1. Removing the first character from each of these suffixes
+gives the suffixes T[SA[rank[i 1] 1] + 1:] and T[i:], respectively. These
+suffixes have a longest common prefix of length l 1. If T[SA[rank[i 1]
+1] + 1:] immediately precedes T[i:] in the lexicographically sorted order
+(that is, if rank[SA[rank[i 1] 1] + 1] = rank[i] 1), then the lemma is
+
+proven.
+
+So now assume that T[SA[rank[i 1] 1] + 1:] does not immediately
+precede T[i:] in the sorted order. Since T[SA[rank[i 1] 1]:]
+immediately precedes T[i1:] and they have the same first l > 1
+characters, T[SA[rank[i 1] 1] + 1:] must appear in the sorted order
+somewhere before T[i:], with one or more other suffixes intervening.
+Each of these suffixes must start with the same l 1 characters as
+T[SA[rank[i 1] 1] + 1:] and T[i:], for otherwise it would appear either
+before T[SA[rank[i 1] 1] + 1:] or after T[i:]. Therefore, whichever
+suffix appears in position rank[i] 1, immediately before T[i:], has at
+least its first l 1 characters in common with T[i:]. Thus, LCP[rank[i]] l
+
+1.
+
+The COMPUTE-LCP procedure works as follows. After allocating
+
+the rank and LCP arrays in line 1, lines 23 fill in the rank array and line
+4 pegs LCP[1] to 0, per the definition of the LCP array.
+
+The for loop of lines 614 fills in the rest of the LCP array going by
+decreasing-length suffixes. That is, it fills the position of the LCP array
+
+in the order rank[1], rank[2], rank[3], ..., rank[n], with the assignment
+occurring in line 12. Upon considering a suffix T[i:], line 8 determines
+the suffix T[j:] that immediately precedes T[i:] in the lexicographically
+sorted order. At this point, the longest common prefix of T[j:] and T[i:]
+has length at least l. This property certainly holds upon the first
+iteration of the for loop, when l = 0. Assuming that line 12 sets
+LCP[rank[i]] correctly, line 14 (which decrements l if it is positive) and
+
+Lemma 32.8 maintain this property for the next iteration. The longest
+
+common prefix of T[j:] and T[i:] might be even longer than the value of l
+at the start of the iteration, however. Lines 911 increment l for each
+
+additional character the prefixes have in common so that it achieves the
+
+length of the longest common prefix. The index m is set in line 9 and
+used in the test in line 10 to make sure that the test T[i + l] == T[j + l]
+
+for extending the longest common prefix does not run off the end of the
+
+text T. When the while loop of lines 1011 terminates, l is the length of
+the longest common prefix of T[j:] and T[i:].
+
+As a simple aggregate analysis shows, the COMPUTE-LCP
+
+procedure runs in (n) time. Each of the two for loops iterates n times,
+
+and so it remains only to bound the total number of iterations by the
+
+while loop of lines 1011. Each iteration increases l by 1, and the test m
++ l n ensures that l is always less than n. Because l has an initial value
+of 0 and decreases at most n 1 times in line 14, line 11 increments l
+fewer than 2n times. Thus, COMPUTE-LCP takes (n) time.
+
+Exercises
+
+32.5-1
+Show the substr-rank and rank arrays before each iteration of the while
+
+loop of lines 1019 and after the last iteration of the while loop, the
+
+suffix array SA returned, and the sorted suffixes when COMPUTE-
+
+SUFFIX-ARRAY is run on the text hippityhoppity. Use the
+position of each letter in the alphabet as its ord value, so that ord(b) =
+
+2. Then show the LCP array after each iteration of the for loop of lines
+
+614 of COMPUTE-LCP given the text hippityhoppity and its
+suffix array.
+
+32.5-2
+
+For some inputs, the COMPUTE-SUFFIX-ARRAY procedure can
+
+produce the correct result with fewer than 1g n 1 iterations of the
+
+while loop of lines 1019. Modify COMPUTE-SUFFIX-ARRAY (and,
+if necessary, MAKE-RANKS) so that the procedure can stop before
+
+making all 1g n 1 iterations in some cases. Describe an input that
+allows the procedure to make O(1) iterations. Describe an input that
+
+forces the procedure to make the maximum number of iterations.
+
+32.5-3
+Given two texts, T1 of length n1 and T2 of length n2, show how to use
+
+the suffix array and longest common prefix array to find all of the
+
+longest common substrings, that is, the longest substrings that appear in
+both T1 and T2. Your algorithm should run in O(n 1g n + kl) time,
+where n = n1 + n2 and there are k such longest substrings, each with
+length l.
+
+32.5-4
+
+Professor Markram proposes the following method to find the longest
+
+palindromes in a string T[1:n] by using its suffix array and LCP array.
+
+(Recall from Problem 14-2 that a palindrome is a nonempty string that
+reads the same forward and backward.)
+
+Let @ be a character that does not appear in T. Construct the
+text T as the concatenation of T, @, and the reverse of T.
+Denote the length of T by n = 2n + 1. Create the suffix array
+SA and LCP array LCP for T. Since the indices for a
+
+palindrome and its reverse appear in consecutive positions in
+
+the suffix array, find the entries with the maximum LCP value
+LCP[i] such that SA[i 1] = n SA[i] LCP[i] + 2. (This
+
+constraint prevents a substring--and its reverse--from being
+construed as a palindrome unless it really is one.) For each such
+
+index i, one of the longest palindromes is T[SA[i]:SA[i] + LCP[i]
+
+1].
+
+For example, if the text T is unreferenced, with n = 12, then the
+text T is unreferenced@decnerefernu, with n = 25 and the
+
+following suffix array and LCP array:
+
+The maximum LCP value is achieved at LCP[21] = 5, and SA[20] = 3 =
+n SA[21] LCP[21] + 2. The suffixes of T starting at indices SA[20]
+and SA[21] are referenced@decnerefernu and refernu, both of
+
+which start with the length-5 palindrome refer.
+
+Alas, this method is not foolproof. Give an input string T that causes
+
+this method to give results that are shorter than the longest palindrome
+
+contained within T, and explain why your input causes the method to
+
+fail.
+
+Problems
+
+32-1 String matching based on repetition factors
+Let yi denote the concatenation of string y with itself i times. For
+example, (ab)3 = ababab. We say that a string x * has repetition
+factor r if x = yr for some string y * and some r > 0. Let (x) denote
+the largest r such that x has repetition factor r.
+a. Give an efficient algorithm that takes as input a pattern P[1:m] and
+
+computes the value (P[:i]) for i = 1, 2, ..., m. What is the running time
+
+of your algorithm?
+
+b. For any pattern P[1:m], let *(P) be defined as max {(P[:i]) : 1 i
+m}. Prove that if the pattern P is chosen randomly from the set of all
+binary strings of length m, then the expected value of *(P) is O(1).
+
+c. Argue that the procedure REPETITION-MATCHER correctly finds
+all occurrences of pattern P[1:m] in text T[1:n] in O(*(P)n + m) time.
+
+(This algorithm is due to Galil and Seiferas. By extending these ideas
+
+greatly, they obtained a linear-time string-matching algorithm that
+
+uses only O(1) storage beyond what is required for P and T.)
+
+REPETITION-MATCHER(T, P, n, m)
+
+1k = 1 + *(P)
+2q = 0
+3s = 0
+
+4while s n m
+
+5 if T[s + q + 1] == P[q + 1]
+
+6 q=q+1
+
+7 if q == m
+
+8 print "Pattern occurs with shift" s
+
+9 if q == m or T[s + q + 1] P[q + 1]
+
+10 s = s + max {1, q/k}
+
+11 q=0
+
+32-2 A linear-time suffix-array algorithm
+
+In this problem, you will develop and analyze a linear-time divide-and-
+
+conquer algorithm to compute the suffix array of a text T[1:n]. As in
+
+Section 32.5, assume that each character in the text is represented by an
+
+underlying encoding, which is a positive integer.
+
+The idea behind the linear-time algorithm is to compute the suffix
+
+array for the suffixes starting at 2/3 of the positions in the text,
+
+recursing as needed, use the resulting information to sort the suffixes
+
+starting at the remaining 1/3 of the positions, and then merge the sorted
+
+information in linear time to produce the full suffix array.
+
+For i = 1, 2, ..., n, if i mod 3 equals 1 or 2, then i is a sample position,
+and the suffixes starting at such positions are sample suffixes. Positions
+3, 6, 9, ... are nonsample positions, and the suffixes starting at nonsample
+positions are nonsample suffixes.
+
+The algorithm sorts the sample suffixes, sorts the nonsample suffixes
+
+(aided by the result of sorting the sample suffixes), and merges the
+
+sorted sample and nonsample suffixes. Using the example text T =
+
+bippityboppityboo, here is the algorithm in detail, listing substeps
+of each of the above steps:
+
+1. The sample suffixes comprise about 2/3 of the suffixes. Sort them by
+the following substeps, which work with a heavily modified version of
+
+T and may require recursion. In part (a) of this problem on page 999,
+you will show that the orders of the suffixes of T and the suffixes of
+the modified version of T are the same.
+
+A. Construct two texts P1 and P2 made up of "metacharacters" that
+are actually substrings of three consecutive characters from T. We
+
+delimit each such metacharacter with parentheses. Construct
+
+P1 = (T[1:3])(T[4:6])(T[7:9]) (T[n:n + 2]),
+
+where n is the largest integer congruent to 1, modulo 3, that is less
+than or equal to n and T is extended beyond position n with the
+special character Ø, with encoding 0. With the example text T =
+
+bippityboppityboo, we get that
+
+P1 = (bip) (pit) (ybo) (ppi) (tyb) (ooØ).
+
+Similarly, construct
+
+P2 = (T[2:4])(T[5:7])(T[8:10]) (T[n:n + 2]),
+
+where n is the largest integer congruent to 2, modulo 3, that is less
+than or equal to n. For our example, we have
+
+P2 = (ipp) (ity) (bop) (pit) (ybo) (oØØ).
+
+Figure 32.15 Computed values when sorting the sample suffixes of the linear-time suffix-array
+
+algorithm for the text T = bippityboppityboo.
+
+If n is a multiple of 3, append the metacharacter (ØØØ) to the end
+of P1. In this way, P1 is guaranteed to end with a metacharacter
+
+containing Ø. (This property helps in part (a) of this problem.) The
+
+text P2 may or may not end with a metacharacter containing Ø.
+
+B. Concatenate P1 and P2 to form a new text P. Figure 32.15 shows P
+for our example, along with the corresponding positions of T.
+
+C. Sort and rank the unique metacharacters of P, with ranks starting
+from 1. In the example, P has 10 unique metacharacters: in sorted
+
+order, they are (bip), (bop), (ipp), (ity), (oØØ), (ooØ), (pit),
+(ppi), (tyb), (ybo). The metacharacters (pit) and (ybo) each
+appear twice.
+
+D. As Figure 32.15 shows, construct a new "text" P by renaming each
+metacharacter in P by its rank. If P contains k unique
+metacharacters, then each "character" in P is an integer from 1 to
+k. The suffix arrays for P and P are identical.
+
+E. Compute the suffix array SAP of P. If the characters of P (i.e.,
+the ranks of metacharacters in P) are unique, then you can
+
+compute its suffix array directly, since the ordering of the individual
+characters gives the suffix array. Otherwise, recurse to compute the
+
+suffix array of P, treating the ranks in P as the input characters in
+the recursive call. Figure 32.15 shows the suffix array SAP for our
+example. Since the number of metacharacters in P, and hence the
+
+length of P, is approximately 2n/3, this recursive subproblem is
+
+smaller than the current problem.
+
+F. From SAP and the positions in T corresponding to the sample
+
+positions, compute the list of positions of the sorted sample suffixes
+
+of the original text T. Figure 32.15 shows the list of positions in T
+
+of the sorted sample suffixes in our example.
+
+2. The nonsample suffixes comprise about 1/3 of the suffixes. Using the
+sorted sample suffixes, sort the nonsample suffixes by the following
+substeps.
+
+Figure 32.16 The ranks r1 through rn+3 for the text T = bippityboppityboo with n = 17.
+
+G. Extending the text T by the two special characters ØØ, so that T
+now has n + 2 characters, consider each suffix T[i:] for i = 1, 2, ..., n
++ 2. Assign a rank ri to each suffix T[i:]. For the two special
+characters ØØ, set rn+1 = rn+2 = 0. For the sample positions of T,
+base the rank on the list of sorted sample positions of T. The rank
+is currently undefined for the nonsample positions of T. For these
+positions, set ri = . Figure 32.16 shows the ranks for T =
+bippityboppityboo with n = 17.
+
+H. Sort the nonsample suffixes by comparing tuples (T[i], ri+1). In
+our example, we get T[15:] < T[12:] < T[9:] < T[3:] < T[6:] because
+
+(b, 6) < (i, 10) < (o, 9) < (p, 8) < (t, 12).
+
+3. Merge the sorted sets of suffixes. From the sorted set of suffixes,
+
+determine the suffix array of T.
+
+This completes the description of a linear-time algorithm for computing
+suffix arrays. The following parts of this problem ask you to show that
+
+certain steps of this algorithm are correct and to analyze the
+algorithm's running time.
+
+a. Define a nonempty suffix at position i of the text P created in substep
+B as all metacharacters from position i of P up to and including the
+first metacharacter of P in which Ø appears or the end of P. In the
+example shown in Figure 32.15, the nonempty suffixes of P starting at
+positions 1, 4, and 11 of P are (bip) (pit) (ybo) (ppi) (tyb) (ooØ),
+
+(ppi) (tyb) (ooØ), and (ybo) (oØØ), respectively. Prove that the
+
+order of suffixes of P is the same as the order of its nonempty
+suffixes. Conclude that the order of suffixes of P gives the order of the
+sample suffixes of T. (Hint: If P contains duplicate metacharacters,
+consider separately the cases in which two suffixes both start in P1,
+both start in P2, and one starts in P1 and the other starts in P2. Use
+the property that Ø appears in the last metacharacter of P1.)
+
+b. Show how to perform substep C in (n) time, bearing in mind that in
+a recursive call, the characters in T are actually ranks in P in the
+
+caller.
+
+c. Argue that the tuples in substep H are unique. Then show how to
+perform this substep in (n) time.
+
+d. Consider two suffixes T[i:] and T[j:], where T[i:] is a sample suffix and
+T[j:] is a nonsample suffix. Show how to determine in (1) time
+whether T[i:] is lexicographically smaller than T[j:]. (Hint: Consider
+separately the cases in which i mod 3 = 1 and i mod 3 = 2. Compare
+tuples whose elements are characters in T and ranks as shown in
+
+Figure 32.16. The number of elements per tuple may depend on
+
+whether i mod 3 equals 1 or 2.) Conclude that step 3 can be
+performed in (n) time.
+
+e. Justify the recurrence T(n) T (2n/3 + 2) + (n) for the running time
+of the full algorithm, and show that its solution is O(n). Conclude that
+the algorithm runs in (n) time.
+
+32-3 Burrows-Wheeler transform
+
+The Burrows-Wheeler transform, or BWT, for a text T is defined as
+
+follows. First, append a new character that compares as
+
+lexicographically less than every character of T, and denote this
+character by $ and the resulting string by T. Letting n be the length of
+T, create n rows of characters, where each row is one of the n cyclic
+rotations of T. Next, sort the rows lexicographically. The BWT is then
+the string of n characters in the rightmost column, read top to bottom.
+
+For example, let T = rutabaga, so that T = rutabaga$. The
+
+cyclic rotations are
+
+rutabaga$
+utabaga$r
+tabaga$ru
+abaga$rut
+baga$ruta
+aga$rutab
+ga$rutaba
+a$rutabag
+$rutabaga
+
+Sorting the rows and numbering the sorted rows gives
+
+1 $rutabaga
+2 a$rutabag
+3 abaga$rut
+4 aga$rutab
+5 baga$ruta
+6 ga$rutaba
+7 rutabaga$
+8 tabaga$ru
+9 utabaga$r
+
+The BWT is the rightmost column, agtbaa$ur. (The row numbering
+will be helpful in understanding how to compute the inverse BWT.)
+
+The BWT has applications in bioinformatics, and it can also be a
+step in text compression. That is because it tends to place identical
+characters together, as in the BWT of rutabaga, which places two of
+the instances of a together. When identical characters are placed
+
+together, or even nearby, additional means of compressing become
+available. Following the BWT, combinations of move-to-front encoding,
+run-length encoding, and Huffman coding (see Section 15.3) can
+provide significant text compression. Compression ratios with the BWT
+tend improve as the text length increases.
+
+a. Given the suffix array for T, show how to compute the BWT in (n)
+
+time.
+
+In order to decompress, the BWT must be invertible. Assuming that
+
+the alphabet size is constant, the inverse BWT can be computed in (n)
+
+time from the BWT. Let's look at the BWT of rutabaga, denoting it
+
+by BWT[1:n]. Each character in the BWT has a unique lexicographic
+rank from 1 to n. Denote the rank of BWT[i] by rank[i]. If a character
+
+appears multiple times in the BWT, each instance of the character has a
+rank 1 greater than the previous instance of the character. Here are
+
+BWT and rank for rutabaga:
+
+For example, rank[1] = 2 because BWT[1] = a and the only character
+
+that precedes the first a lexicographically is $ (which we defined to
+precede all other characters, so that $ has rank 1). Next, we have
+
+rank[2] = 6 because BWT[2] = g and five characters in the BWT precede
+
+g lexicographically: $, the three instances of a, and b. Jumping ahead
+
+to rank[5] = 3, that is because BWT[5] = a, and because this a is the
+second instance of a in the BWT, its rank value is 1 greater than the
+rank value for the previous instance of a, in position 1.
+
+There is enough information in BWT and rank to reconstruct T
+from back to front. Suppose that you know the rank r of a character c
+in T. Then c is the first character in row r of the sorted cyclic rotations.
+The last character in row r must be the character that precedes c in T.
+But you know which character is the last character in row r, because it
+is BWT[r]. To reconstruct T from back to front, start with $, which you
+can find in BWT. Then work backward using BWT and rank to
+reconstruct T.
+
+Let's see how this strategy works for rutabaga. The last character
+
+of T, $, appears in position 7 of BWT. Since rank[7] = 1, row 1 of the
+sorted cyclic rotations of T begins with $. The character that precedes
+$ in T is the last character in row 1, which is BWT[1]: a. Now we know
+that the last two characters of T are a$. Looking up rank[1], it equals 2,
+so that row 2 of the sorted cyclic rotations of T begins with a. The last
+character in row 2 precedes a in T, and that character is BWT[2] = g.
+Now we know that the last three characters of T are ga$. Continuing
+on, we have rank[2] = 6, so that row 6 of the sorted cyclic rotations
+begins with g. The character preceding g in T is BWT[6] = a, and so
+the last four characters of T are aga$. Because rank[6] = 4, a begins
+row 4 of the sorted cyclic rotations of T. The character preceding a in
+T is the last character in row 4, BWT[4] = b, and the last five characters
+of T are baga$. And so on, until all n characters of T have been
+
+identified, from back to front.
+
+b. Given the array BWT[1:n], write pseudcode to compute the array
+rank[1:n] in (n) time, assuming that the alphabet size is constant.
+
+c. Given the arrays BWT[1:n] and rank[1:n], write pseudocode to
+compute T in (n) time.
+
+Chapter notes
+
+The relation of string matching to the theory of finite automata is
+discussed by Aho, Hopcroft, and Ullman [5]. The Knuth-Morris-Pratt
+algorithm [267] was invented independently by Knuth and Pratt and by
+Morris, but they published their work jointly. Matiyasevich [317] earlier
+discovered a similar algorithm, which applied only to an alphabet with
+two characters and was specified for a Turing machine with a twodimensional tape. Reingold, Urban, and Gries [377] give an alternative
+treatment of the Knuth-Morris-Pratt algorithm. The Rabin-Karp
+algorithm was proposed by Karp and Rabin [250]. Galil and Seiferas
+[173] give an interesting deterministic linear-time string-matching
+
+algorithm that uses only O(1) space beyond that required to store the
+
+pattern and text.
+
+The suffix-array algorithm in Section 32.5 is by Manber and Myers
+[312], who first proposed the notion of suffix arrays. The linear-time
+algorithm to compute the longest common prefix array presented here
+is by Kasai et al. [252]. Problem 32-2 is based on the DC3 algorithm by
+Kärkkäinen, Sanders, and Burkhardt [245]. For a survey of suffix-array
+algorithms, see the article by Puglisi, Smyth, and Turpin [370]. To learn
+more about the Burrows-Wheeler transform from Problem 32-3, see the
+articles by Burrows and Wheeler [78] and Manzini [314].
+
+1 For suffix arrays, the preprocessing time of O(n 1g n) comes from the algorithm presented in
+Section 32.5. It can be reduced to (n) by using the algorithm in Problem 32-2. The factor k in
+
+the matching time denotes the number of occurrences of the pattern in the text.
+
+2 We write (n m + 1) instead of (n m) because s takes on n - m + 1 different values.
+The "+1" is significant in an asymptotic sense because when m = n, computing the lone ts
+
+value takes (1) time, not (0) time.
+3 Informally, lexicographic order is "alphabetical order" in the underlying character set. A
+more precise definition of lexicographic order appears in Problem 12-2 on page 327.
+
+4 Why keep saying "length at most"? Because for a given value of l, a substring of length l
+starting at position i is T[i:i + l 1]. If i + l - 1 > n, then the substring cuts off at the end of the
+
+text.
+
+33 Machine-Learning Algorithms
+
+Machine learning may be viewed as a subfield of artificial intelligence.
+Broadly speaking, artificial intelligence aims to enable computers to
+carry out complex perception and information-processing tasks with
+human-like performance. The field of AI is vast and uses many different
+algorithmic methods.
+
+Machine learning is rich and fascinating, with strong ties to statistics
+and optimization. Technology today produces enormous amounts of
+data, providing myriad opportunities for machine-learning algorithms
+to formulate and test hypotheses about patterns within the data. These
+hypotheses can then be used to make predictions about the
+characteristics or classifications in new data. Because machine learning
+is particularly good with challenging tasks involving uncertainty, where
+observed data follows unknown rules, it has markedly transformed
+fields such as medicine, advertising, and speech recognition.
+
+This chapter presents three important machine-learning algorithms:
+
+k-means clustering, multiplicative weights, and gradient descent. You
+
+can view each of these tasks as a learning problem, whereby an
+algorithm uses the data collected so far to produce a hypothesis that
+describes the regularities learned and/or makes predictions about new
+data. The boundaries of machine learning are imprecise and evolving--
+
+some might say that the k-means clustering algorithm should be called
+
+"data science" and not "machine learning," and gradient descent,
+though an immensely important algorithm for machine learning, also
+has a multitude of applications outside of machine learning (most
+notably for optimization problems).
+
+Machine learning typically starts with a training phase followed by a
+prediction phase in which predictions are made about new data. For
+online learning, the training and prediction phases are intermingled. The
+training phase takes as input training data, where each input data point
+has an associated output or label; the label might be a category name or
+
+some real-valued attribute. It then produces as an output one or more
+
+hypotheses about how the labels depend on the attributes of the input
+
+data points. Hypotheses can take many forms, typically some type of
+formula or algorithm. The learning algorithm used is often a form of
+gradient descent. The prediction phase then uses the hypothesis on new
+
+data in order to make predictions regarding the labels of new data
+
+points.
+
+The type of learning just described is known as supervised learning,
+
+since it starts with a set of inputs that are each labeled. As an example,
+consider a machine-learning algorithm to recognize spam emails. The
+training data comprises a collection of emails, each of which is labeled
+either "spam" or "not spam." The machine-learning algorithm frames a
+hypothesis, possibly a rule of the form "if an email has one of a set of
+words, then it is likely to be spam." Or it might learn rules that assign a
+spam score to each word and then evaluates a document by the sum of
+the spam scores of its constituent words, so that a document with a
+total score above a certain threshold value is classified as spam. The
+machine-learning algorithm can then predict whether a new email is
+spam or not.
+
+A second form of machine learning is unsupervised learning, where
+
+the training data is unlabeled, as in the clustering problem of Section
+33.1. Here the machine-learning algorithm produces hypotheses
+regarding the centers of groups of input data points.
+
+A third form of machine learning (not covered further here) is
+
+reinforcement learning, where the machine-learning algorithm takes
+
+actions in an environment, receives feedback for those actions from the
+environment, and then updates its model of the environment based on
+the feedback. The learner is in an environment that has some state, and
+the actions of the learner have an effect on that state. Reinforcement
+
+learning is a natural choice for situations such as game playing or
+operating a self-driving car.
+
+Sometimes the goal in a supervised machine-learning application is
+not making accurate predictions of labels for new examples, but rather
+
+performing causal inference: finding an explanatory model that
+
+describes how the various features of an input data point affect its
+associated label. Finding a model that fits a given set of training data
+well can be tricky. It may involve sophisticated optimization methods
+that need to balance between producing a hypothesis that fits the data
+well and producing a hypothesis that is simple.
+
+This chapter focuses on three problem domains: finding hypotheses
+that group the input data points well (using a clustering algorithm),
+learning which predictors (experts) to rely upon for making predictions
+in an online learning problem (using the multiplicative-weights
+algorithm), and fitting a model to data (using gradient descent).
+
+Section 33.1 considers the clustering problem: how to divide a given
+
+set of n training data points into a given number k of groups, or
+
+"clusters," based on a measure of how similar (or more accurately, how
+dissimilar) points are to each other. The approach is iterative, beginning
+with an arbitrary initial clustering and incorporating successive
+improvements until no further improvements occur. Clustering is often
+used as an initial step when working on a machine-learning problem to
+discover what structure exists in the data.
+
+Section 33.2 shows how to make online predictions quite accurately
+when you have a set of predictors, often called "experts," to rely on,
+many of which might be poor predictors, but some of which are good
+predictors. At first, you do not know which predictors are poor and
+which are good. The goal is to make predictions on new examples that
+are nearly as good as the predictions made by the best predictor. We
+study an effective multiplicative-weights prediction method that
+associates a positive real weight with each predictor and multiplicatively
+decreases the weights associated with predictors when they make poor
+predictions. The model in this section is online (see Chapter 27): at each
+step, we do not know anything about the future examples. In addition,
+we are able to make predictions even in the presence of adversarial
+
+experts, who are collaborating against us, a situation that actually
+happens in game-playing settings.
+
+Finally, Section 33.3 introduces gradient descent, a powerful
+optimization technique used to find parameter settings in machinelearning models. Gradient descent also has many applications outside of
+machine learning. Intuitively, gradient descent finds the value that
+produces a local minimum for a function by "walking downhill." In a
+learning application, a "downhill step" is a step that adjusts hypothesis
+parameters so that the hypothesis does better on the given set of
+labeled examples.
+
+This chapter makes extensive use of vectors. In contrast to the rest
+of the book, vector names in this chapter appear in boldface, such as x,
+to more clearly delineate which quantities are vectors. Components of
+
+vectors do not appear in boldface, so if vector x has d dimensions, we
+might write x = (x1, x2, ..., xd).

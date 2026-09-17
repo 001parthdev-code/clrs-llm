@@ -1,0 +1,397 @@
+34.4 NP-completeness proofs
+
+The proof that the circuit-satisfiability problem is NP-complete showed
+
+directly that L P CIRCUIT-SAT for every language L NP. This
+
+section shows how to prove that languages are NP-complete without
+
+directly reducing every language in NP to the given language. We'll
+
+explore examples of this methodology by proving that various formulasatisfiability problems are NP-complete. Section 34.5 provides many
+more examples.
+
+The following lemma provides a foundation for showing that a given
+language is NP-complete.
+
+Lemma 34.8
+If L is a language such that L P L for some L NPC, then L is NPhard. If, in addition, we have L NP, then L NPC.
+
+Proof Since L is NP-complete, for all L NP, we have L P L. By
+supposition, we have L P L, and thus by transitivity (Exercise 34.3-2),
+we have L P L, which shows that L is NP-hard. If L NP, we also
+have L NPC.
+
+In other words, by reducing a known NP-complete language L to L,
+we implicitly reduce every language in NP to L. Thus, Lemma 34.8
+provides a method for proving that a language L is NP-complete:
+
+1. Prove L NP.
+
+2. Prove that L is NP-hard:
+
+a. Select a known NP-complete language L.
+
+b. Describe an algorithm that computes a function f mapping
+every instance x {0, 1}* of L to an instance f (x) of L.
+
+c. Prove that the function f satisfies x L if and only if f (x) L
+for all x {0, 1}*.
+
+d. Prove that the algorithm computing f runs in polynomial time.
+
+This methodology of reducing from a single known NP-complete
+language is far simpler than the more complicated process of showing
+directly how to reduce from every language in NP. Proving CIRCUITSAT NPC furnishes a starting point. Knowing that the circuitsatisfiability problem is NP-complete makes it much easier to prove that
+other problems are NP-complete. Moreover, as the catalog of known
+NP-complete problems grows, so will the choices for languages from
+which to reduce.
+
+Formula satisfiability
+
+To illustrate the reduction methodology, let's see an NP-completeness
+
+proof for the problem of determining whether a boolean formula, not a
+circuit, is satisfiable. This problem has the historical honor of being the
+
+first problem ever shown to be NP-complete.
+
+We formulate the (formula) satisfiability problem in terms of the
+
+language SAT as follows. An instance of SAT is a boolean formula
+composed of
+
+1. n boolean variables: x1, x2, ... , xn;
+2. m boolean connectives: any boolean function with one or two
+
+inputs and one output, such as (AND), (OR), ¬ (NOT),
+(implication), (if and only if); and
+
+3. parentheses. (Without loss of generality, assume that there are
+no redundant parentheses, i.e., a formula contains at most one
+pair of parentheses per boolean connective.)
+
+We can encode a boolean formula in a length that is polynomial in n +
+m. As in boolean combinational circuits, a truth assignment for a
+
+boolean formula is a set of values for the variables of , and a
+
+satisfying assignment is a truth assignment that causes it to evaluate to
+1. A formula with a satisfying assignment is a satisfiable formula. The
+
+satisfiability problem asks whether a given boolean formula is satisfiable,
+which we can express in formal-language terms as
+
+SAT = { : is a satisfiable boolean formula}.
+As an example, the formula
+
+= ((x1 x2) ¬((¬x1 x3) x4)) ¬x2
+has the satisfying assignment x1 = 0, x2 = 0, x3 = 1, x4 = 1, since
+
+and thus this formula belongs to SAT.
+The naive algorithm to determine whether an arbitrary boolean
+
+formula is satisfiable does not run in polynomial time. A formula with n
+variables has 2n possible assignments. If the length of is polynomial
+in n, then checking every assignment requires (2n) time, which is
+
+superpolynomial in the length of . As the following theorem shows, a
+polynomial-time algorithm is unlikely to exist.
+
+Theorem 34.9
+
+Satisfiability of boolean formulas is NP-complete.
+
+Proof We start by arguing that SAT NP. Then we prove that SAT is
+
+NP-hard by showing that CIRCUIT-SAT P SAT, which by Lemma
+34.8 will prove the theorem.
+
+To show that SAT belongs to NP, we show that a certificate
+consisting of a satisfying assignment for an input formula can be
+
+verified in polynomial time. The verifying algorithm simply replaces
+each variable in the formula with its corresponding value and then
+evaluates the expression, much as we did in equation (34.2) above. This
+task can be done in polynomial time. If the expression evaluates to 1,
+then the algorithm has verified that the formula is satisfiable. Thus, SAT
+belongs to NP.
+
+To prove that SAT is NP-hard, we show that CIRCUIT-SAT P SAT.
+In other words, we need to show how to reduce any instance of circuit
+satisfiability to an instance of formula satisfiability in polynomial time.
+We can use induction to express any boolean combinational circuit as a
+boolean formula. We simply look at the gate that produces the circuit
+output and inductively express each of the gate's inputs as formulas. We
+then obtain the formula for the circuit by writing an expression that
+applies the gate's function to its inputs' formulas.
+
+Figure 34.10 Reducing circuit satisfiability to formula satisfiability. The formula produced by
+the reduction algorithm has a variable for each wire in the circuit and a clause for each logic
+gate.
+
+Unfortunately, this straightforward method does not amount to a
+polynomial-time reduction. As Exercise 34.4-1 asks you to show, shared
+subformulas--which arise from gates whose output wires have fan-out
+of 2 or more--can cause the size of the generated formula to grow
+exponentially. Thus, the reduction algorithm must be somewhat more
+clever.
+
+Figure 34.10 illustrates how to overcome this problem, using as an
+
+example the circuit from Figure 34.8(a). For each wire xi in the circuit
+C, the formula has a variable xi. To express how each gate operates,
+
+construct a small formula involving the variables of its incident wires.
+The formula has the form of an "if and only if " (), with the variable
+for the gate's output on the left and on the right a logical expression
+encapsulating the gate's function on its inputs. For example, the
+operation of the output AND gate (the rightmost gate in the figure) is
+
+x10 (x7 x8 x9). We call each of these small formulas a clause.
+
+The formula produced by the reduction algorithm is the AND of
+the circuit-output variable with the conjunction of clauses describing
+the operation of each gate. For the circuit in the figure, the formula is
+
+= x10 (x4 ¬x3)
+(x5 (x1 x2))
+(x6 ¬x4)
+(x7 (x1 x2 x4))
+(x8 (x5 x6))
+(x9 (x6 x7))
+(x10 (x7 x8 x9)).
+
+Given a circuit C, it is straightforward to produce such a formula in
+
+polynomial time.
+
+Why is the circuit C satisfiable exactly when the formula is
+satisfiable? If C has a satisfying assignment, then each wire of the circuit
+
+has a well-defined value, and the output of the circuit is 1. Therefore,
+when wire values are assigned to variables in , each clause of
+evaluates to 1, and thus the conjunction of all evaluates to 1.
+
+Conversely, if some assignment causes to evaluate to 1, the circuit C is
+
+satisfiable by an analogous argument. Thus, we have shown that
+CIRCUIT-SAT P SAT, which completes the proof.
+
+3-CNF satisfiability
+
+Reducing from formula satisfiability gives us an avenue to prove many
+problems NP-complete. The reduction algorithm must handle any input
+
+formula, though, and this requirement can lead to a huge number of
+cases to consider. Instead, it is usually simpler to reduce from a
+restricted language of boolean formulas. Of course, the restricted
+language must not be polynomial-time solvable. One convenient
+language is 3-CNF satisfiability, or 3-CNF-SAT.
+
+In order to define 3-CNF satisfiability, we first need to define a few
+
+terms. A literal in a boolean formula is an occurrence of a variable (such
+as x1) or its negation (¬x1). A clause is the OR of one or more literals,
+such as x1 ¬x2 ¬x3. A boolean formula is in conjunctive normal
+form, or CNF, if it is expressed as an AND of clauses, and it's in 3conjunctive normal form, or 3-CNF, if each clause contains exactly three
+
+distinct literals.
+For example, the boolean formula
+
+(x1 ¬x1 ¬x2) (x3 x2 x4) (¬x1 ¬x3 ¬x4)
+
+is in 3-CNF. The first of its three clauses is (x1 ¬x1 ¬x2), which
+contains the three literals x1, ¬x1, and ¬x2.
+
+The language 3-CNF-SAT consists of encodings of boolean
+formulas in 3-CNF that are satisfiable. The following theorem shows
+that a polynomial-time algorithm that can determine the satisfiability of
+boolean formulas is unlikely to exist, even when they are expressed in
+this simple normal form.
+
+Theorem 34.10
+
+Satisfiability of boolean formulas in 3-conjunctive normal form is NPcomplete.
+
+Proof The argument from the proof of Theorem 34.9 to show that SAT
+
+NP applies equally well here to show that 3-CNF-SAT NP. By
+Lemma 34.8, therefore, we need only show that SAT P 3-CNF-SAT.
+
+Figure 34.11 The tree corresponding to the formula = ((x1 x2)¬((¬x1 x3)x4))¬x2.
+
+We break the reduction algorithm into three basic steps. Each step
+progressively transforms the input formula closer to the desired 3conjunctive normal form.
+
+The first step is similar to the one used to prove CIRCUIT-SAT P
+SAT in Theorem 34.9. First, construct a binary "parse" tree for the
+input formula , with literals as leaves and connectives as internal
+nodes. Figure 34.11 shows such a parse tree for the formula
+
+If the input formula contains a clause such as the OR of several literals,
+use associativity to parenthesize the expression fully so that every
+internal node in the resulting tree has just one or two children. The
+binary parse tree is like a circuit for computing the function.
+
+Mimicking the reduction in the proof of Theorem 34.9, introduce a
+
+variable yi for the output of each internal node. Then rewrite the
+
+original formula as the AND of the variable at the root of the parse
+tree and a conjunction of clauses describing the operation of each node.
+For the formula (34.3), the resulting expression is
+
+= y1 (y1 (y2 ¬x2))
+
+(y2 (y3 y4))
+(y3 (x1 x2))
+(y4 ¬y5)
+(y5 (y6 x4))
+(y6 (¬x1 x3)).
+
+Figure 34.12 The truth table for the clause (y1 (y2 ¬x2)).
+
+The formula thus obtained is a conjunction of clauses , each of
+which has at most three literals. These clauses are not yet ORs of three
+literals.
+
+The second step of the reduction converts each clause into
+conjunctive normal form. Construct a truth table for by evaluating all
+possible assignments to its variables. Each row of the truth table
+consists of a possible assignment of the variables of the clause, together
+with the value of the clause under that assignment. Using the truth-
+
+table entries that evaluate to 0, build a formula in disjunctive normal
+form (or DNF)--an OR of ANDs--that is equivalent to ¬ . Then
+
+negate this formula and convert it into a CNF formula by using
+
+DeMorgan's laws for propositional logic,
+¬(a b) = ¬a ¬b,
+¬(a b) = ¬a ¬b,
+
+to complement all literals, change ORs into ANDs, and change ANDs
+into ORs.
+
+In our example, the clause converts into CNF
+as follows. The truth table for appears in Figure 34.12. The DNF
+formula equivalent to ¬ is
+
+(y1 y2 x2) (y1 ¬y2 x2) (y1 ¬y2 ¬x2) (¬y1 y2
+¬x2).
+
+Negating and applying DeMorgan's laws yields the CNF formula
+
+which is equivalent to the original clause .
+At this point, each clause of the formula has been converted
+
+into a CNF formula , and thus is equivalent to the CNF formula
+consisting of the conjunction of the . Moreover, each clause of has
+at most three literals.
+
+The third and final step of the reduction further transforms the
+
+formula so that each clause has exactly three distinct literals. From the
+
+clauses of the CNF formula , construct the final 3-CNF formula .
+
+This formula also uses two auxiliary variables, p and q. For each clause
+Ci of , include the following clauses in :
+
+If Ci contains three distinct literals, then simply include Ci as a
+
+clause of .
+
+If Ci contains exactly two distinct literals, that is, if Ci = (l1 l2),
+where l1 and l2 are literals, then include (l1 l2 p) (l1 l2
+¬p) as clauses of . The literals p and ¬p merely fulfill the
+
+syntactic requirement that each clause of contain exactly three
+
+distinct literals. Whether p = 0 or p = 1, one of the clauses is
+equivalent to l1 l2, and the other evaluates to 1, which is the
+
+identity for AND.
+
+If Ci contains just one distinct literal l, then include (l p q)(l
+p ¬q) (l ¬p q) (l ¬p ¬q) as clauses of . Regardless
+
+of the values of p and q, one of the four clauses is equivalent to l,
+
+and the other three evaluate to 1.
+
+We can see that the 3-CNF formula is satisfiable if and only if is
+satisfiable by inspecting each of the three steps. Like the reduction from
+CIRCUIT-SAT to SAT, the construction of from in the first step
+preserves satisfiability. The second step produces a CNF formula
+that is algebraically equivalent to . Then the third step produces a 3CNF formula that is effectively equivalent to , since any
+
+assignment to the variables p and q produces a formula that is
+
+algebraically equivalent to .
+We must also show that the reduction can be computed in
+
+polynomial time. Constructing from introduces at most one
+variable and one clause per connective in . Constructing from
+can introduce at most eight clauses into for each clause from ,
+since each clause of contains at most three variables, and the truth
+table for each clause has at most 23 = 8 rows. The construction of
+from introduces at most four clauses into for each clause of .
+Thus the size of the resulting formula is polynomial in the length of
+the original formula. Each of the constructions can be accomplished in
+polynomial time.
+
+Exercises
+
+34.4-1
+
+Consider the straightforward (nonpolynomial-time) reduction in the
+
+proof of Theorem 34.9. Describe a circuit of size n that, when converted
+
+to a formula by this method, yields a formula whose size is exponential
+
+in n.
+
+34.4-2
+
+Show the 3-CNF formula that results upon using the method of
+Theorem 34.10 on the formula (34.3).
+
+34.4-3
+
+Professor Jagger proposes to show that SAT P 3-CNF-SAT by using
+only the truth-table technique in the proof of Theorem 34.10, and not
+the other steps. That is, the professor proposes to take the boolean
+formula , form a truth table for its variables, derive from the truth
+table a formula in 3-DNF that is equivalent to ¬, and then negate and
+apply DeMorgan's laws to produce a 3-CNF formula equivalent to .
+Show that this strategy does not yield a polynomial-time reduction.
+
+34.4-4
+
+Show that the problem of determining whether a boolean formula is a
+
+tautology is complete for co-NP. (Hint: See Exercise 34.3-7.)
+
+34.4-5
+
+Show that the problem of determining the satisfiability of boolean
+formulas in disjunctive normal form is polynomial-time solvable.
+
+34.4-6
+
+Someone gives you a polynomial-time algorithm to decide formula
+satisfiability. Describe how to use this algorithm to find satisfying
+assignments in polynomial time.
+
+34.4-7
+
+Let 2-CNF-SAT be the set of satisfiable boolean formulas in CNF with
+exactly two literals per clause. Show that 2-CNF-SAT P. Make your
+
+algorithm as efficient as possible. (Hint: Observe that x y is equivalent
+to ¬x y. Reduce 2-CNF-SAT to an efficiently solvable problem on a
+
+directed graph.)

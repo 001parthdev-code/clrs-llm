@@ -1,0 +1,320 @@
+17.1 Dynamic order statistics
+
+Chapter 9 introduced the notion of an order statistic. Specifically, the
+
+ith order statistic of a set of n elements, where i {1, 2, ... , n}, is simply
+
+the element in the set with the ith smallest key. In Chapter 9, you saw
+how to determine any order statistic in O(n) time from an unordered
+
+set. This section shows how to modify red-black trees so that you can
+
+determine any order statistic for a dynamic set in O(lg n) time and also
+compute the rank of an element--its position in the linear order of the
+set--in O(lg n) time.
+
+Figure 17.1 An order-statistic tree, which is an augmented red-black tree. In addition to its
+
+usual attributes, each node x has an attribute x.size, which is the number of nodes, other than
+the sentinel, in the subtree rooted at x.
+
+Figure 17.1 shows a data structure that can support fast order-
+
+statistic operations. An order-statistic tree T is simply a red-black tree
+with additional information stored in each node. Each node x contains
+the usual red-black tree attributes x.key, x.color, x.p, x.left, and x.right,
+along with a new attribute, x.size. This attribute contains the number of
+internal nodes in the subtree rooted at x (including x itself, but not
+
+including any sentinels), that is, the size of the subtree. If we define the
+
+sentinel's size to be 0--that is, we set T.nil.size to be 0--then we have
+
+the identity
+
+x.size = x.left.size + x.right.size + 1.
+
+Keys need not be distinct in an order-statistic tree. For example, the
+tree in Figure 17.1 has two keys with value 14 and two keys with value
+21. When equal keys are present, the above notion of rank is not well
+defined. We remove this ambiguity for an order-statistic tree by defining
+the rank of an element as the position at which it would be printed in an
+inorder walk of the tree. In Figure 17.1, for example, the key 14 stored
+
+in a black node has rank 5, and the key 14 stored in a red node has rank
+6.
+
+Retrieving the element with a given rank
+
+Before we show how to maintain the size information during insertion
+and deletion, let's see how to implement two order-statistic queries that
+use this additional information. We begin with an operation that
+
+retrieves the element with a given rank. The procedure OS-SELECT(x,
+i) on the following page returns a pointer to the node containing the ith
+smallest key in the subtree rooted at x. To find the node with the ith
+smallest key in an order-statistic tree T, call OS-SELECT(T.root, i).
+
+Here is how OS-SELECT works. Line 1 computes r, the rank of
+node x within the subtree rooted at x. The value of x.left.size is the
+number of nodes that come before x in an inorder tree walk of the
+subtree rooted at x. Thus, x.left.size + 1 is the rank of x within the
+subtree rooted at x. If i = r, then node x is the ith smallest element, and
+so line 3 returns x. If i < r, then the ith smallest element resides in x's
+left subtree, and therefore, line 5 recurses on x.left. If i > r, then the ith
+smallest element resides in x's right subtree. Since the subtree rooted at
+x contains r elements that come before x's right subtree in an inorder
+tree walk, the ith smallest element in the subtree rooted at x is the (i -
+r)th smallest element in the subtree rooted at x.right. Line 6 determines
+
+this element recursively.
+
+OS-SELECT(x, i)
+1 r = x.left.size + 1 // rank of x within the subtree rooted at x
+2 if i == r
+3 return x
+4 elseif i < r
+5 return OS-SELECT(x.left, i)
+6 else return OS-SELECT(x.right, i - r)
+
+As an example of how OS-SELECT operates, consider a search for
+the 17th smallest element in the order-statistic tree of Figure 17.1. The
+
+search starts with x as the root, whose key is 26, and with i = 17. Since
+
+the size of 26's left subtree is 12, its rank is 13. Thus, the node with rank
+
+17 is the 17 - 13 = 4th smallest element in 26's right subtree. In the
+
+recursive call, x is the node with key 41, and i = 4. Since the size of 41's
+
+left subtree is 5, its rank within its subtree is 6. Therefore, the node with
+
+rank 4 is the 4th smallest element in 41's left subtree. In the recursive
+
+call, x is the node with key 30, and its rank within its subtree is 2. The
+
+procedure recurses once again to find the 4 - 2 = 2nd smallest element
+
+in the subtree rooted at the node with key 38. Its left subtree has size 1,
+
+which means it is the second smallest element. Thus, the procedure
+
+returns a pointer to the node with key 38.
+
+Because each recursive call goes down one level in the order-statistic
+
+tree, the total time for OS-SELECT is at worst proportional to the
+
+height of the tree. Since the tree is a red-black tree, its height is O(lg n),
+where n is the number of nodes. Thus, the running time of OS-SELECT
+is O(lg n) for a dynamic set of n elements.
+
+Determining the rank of an element
+
+Given a pointer to a node x in an order-statistic tree T, the procedure
+OS-RANK on the facing page returns the position of x in the linear
+order determined by an inorder tree walk of T.
+
+OS-RANK(T, x)
+
+1 r = x.left.size + 1 // rank of x within the subtree
+
+rooted at x
+
+2 y=x // root of subtree being examined
+
+3 while y T.root
+
+4 if y == y.p.right // if root of a right subtree ...
+
+5 r = r + y.p.left.size // ... add in parent and its left
+
++1 subtree
+
+6 y = y.p // move y toward the root
+7 return r
+
+The OS-RANK procedure works as follows. You can think of node
+
+x's rank as the number of nodes preceding x in an inorder tree walk,
+plus 1 for x itself. OS-RANK maintains the following loop invariant:
+
+At the start of each iteration of the while loop of lines 36, r is
+the rank of x.key in the subtree rooted at node y.
+
+We use this loop invariant to show that OS-RANK works correctly as
+
+follows:
+
+Initialization: Prior to the first iteration, line 1 sets r to be the rank of
+x.key within the subtree rooted at x. Setting y = x in line 2 makes the
+
+invariant true the first time the test in line 3 executes.
+
+Maintenance: At the end of each iteration of the while loop, line 6 sets y
+= y.p. Thus, we must show that if r is the rank of x.key in the subtree
+rooted at y at the start of the loop body, then r is the rank of x.key in
+the subtree rooted at y.p at the end of the loop body. In each iteration
+of the while loop, consider the subtree rooted at y.p. The value of r
+already includes the number of nodes in the subtree rooted at node y
+that precede x in an inorder walk, and so the procedure must add the
+nodes in the subtree rooted at y's sibling that precede x in an inorder
+walk, plus 1 for y.p if it, too, precedes x. If y is a left child, then
+neither y.p nor any node in y.p's right subtree precedes x, and so OS-
+RANK leaves r alone. Otherwise, y is a right child and all the nodes in
+y.p's left subtree precede x, as does y.p itself. In this case, line 5 adds
+y.p.left.size + 1 to the current value of r.
+
+Termination: Because each iteration of the loop moves y toward the root
+and the loop terminates when y = T.root, the loop eventually
+terminates. Moreover, the subtree rooted at y is the entire tree. Thus,
+the value of r is the rank of x.key in the entire tree.
+
+As an example, when OS-RANK runs on the order-statistic tree of
+Figure 17.1 to find the rank of the node with key 38, the following
+
+sequence of values of y.key and r occurs at the top of the while loop:
+
+iteration y.key r
+
+1 38 2
+
+2 30 4
+
+3 41 4
+
+4 26 17
+
+The procedure returns the rank 17.
+
+Since each iteration of the while loop takes O(1) time, and y goes up
+
+one level in the tree with each iteration, the running time of OS-RANK
+
+is at worst proportional to the height of the tree: O(lg n) on an n-node
+
+order-statistic tree.
+
+Maintaining subtree sizes
+
+Given the size attribute in each node, OS-SELECT and OS-RANK can
+
+quickly compute order-statistic information. But if the basic modifying
+
+operations on red-black trees cannot efficiently maintain the size
+
+attribute, our work will have been for naught. Let's see how to maintain
+subtree sizes for both insertion and deletion without affecting the
+asymptotic running time of either operation.
+
+Recall from Section 13.3 that insertion into a red-black tree consists
+of two phases. The first phase goes down the tree from the root,
+inserting the new node as a child of an existing node. The second phase
+goes up the tree, changing colors and performing rotations to maintain
+the red-black properties.
+
+To maintain the subtree sizes in the first phase, simply increment
+
+x.size for each node x on the simple path traversed from the root down
+toward the leaves. The new node added gets a size of 1. Since there are
+O(lg n) nodes on the traversed path, the additional cost of maintaining
+the size attributes is O(lg n).
+
+In the second phase, the only structural changes to the underlying
+red-black tree are caused by rotations, of which there are at most two.
+
+Moreover, a rotation is a local operation: only two nodes have their size
+
+attributes invalidated. The link around which the rotation is performed
+is incident on these two nodes. Referring to the code for LEFT-
+
+ROTATE(T, x) on page 336, add the following lines:
+
+13y.size = x.size
+
+14 x.size = x.left.size + x.right.size + 1
+
+Figure 17.2 illustrates how the attributes are updated. The change to
+RIGHT-ROTATE is symmetric.
+
+Since inserting into a red-black tree requires at most two rotations,
+
+updating the size attributes in the second phase costs only O(1)
+additional time. Thus, the total time for insertion into an n-node orderstatistic tree is O(lg n), which is asymptotically the same as for an
+
+ordinary red-black tree.
+
+Figure 17.2 Updating subtree sizes during rotations. The updates are local, requiring only the
+
+size information stored in x, y, and the roots of the subtrees shown as triangles.
+
+Deletion from a red-black tree also consists of two phases: the first
+operates on the underlying search tree, and the second causes at most
+three rotations and otherwise performs no structural changes. (See
+
+Section 13.4.) The first phase removes one node z from the tree and
+could move at most two other nodes within the tree (nodes y and x in
+
+Figure 12.4 on page 323). To update the subtree sizes, simply traverse a
+simple path from the lowest node that moves (starting from its original
+
+position within the tree) up to the root, decrementing the size attribute
+of each node on the path. Since this path has length O(lg n) in an nnode red-black tree, the additional time spent maintaining size
+attributes in the first phase is O(lg n). For the O(1) rotations in the
+
+second phase of deletion, handle them in the same manner as for
+insertion. Thus, both insertion and deletion, including maintaining the
+
+size attributes, take O(lg n) time for an n-node order-statistic tree.
+
+Exercises
+
+17.1-1
+
+Show how OS-SELECT(T.root, 10) operates on the red-black tree T
+
+shown in Figure 17.1.
+
+17.1-2
+Show how OS-RANK(T, x) operates on the red-black tree T shown in
+Figure 17.1 and the node x with x.key = 35.
+
+17.1-3
+
+Write a nonrecursive version of OS-SELECT.
+
+17.1-4
+Write a procedure OS-KEY-RANK(T, k) that takes an order-statistic
+tree T and a key k and returns the rank of k in the dynamic set
+represented by T. Assume that the keys of T are distinct.
+
+17.1-5
+Given an element x in an n-node order-statistic tree and a natural
+number i, show how to determine the ith successor of x in the linear
+order of the tree in O(lg n) time.
+
+17.1-6
+The procedures OS-SELECT and OS-RANK use the size attribute of a
+
+node only to compute a rank. Suppose that you store in each node its
+
+rank in the subtree of which it is the root instead of the size attribute.
+
+Show how to maintain this information during insertion and deletion.
+(Remember that these two operations can cause rotations.)
+
+17.1-7
+
+Show how to use an order-statistic tree to count the number of
+
+inversions (see Problem 2-4 on page 47) in an array of n distinct
+elements in O(n lg n) time.
+
+17.1-8
+Consider n chords on a circle, each defined by its endpoints. Describe
+an O(n lg n)-time algorithm to determine the number of pairs of chords
+that intersect inside the circle. (For example, if the n chords are all
+
+diameters that meet at the center, then the answer is .) Assume that
+no two chords share an endpoint.

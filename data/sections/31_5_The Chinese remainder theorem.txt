@@ -1,0 +1,181 @@
+31.5 The Chinese remainder theorem
+
+Around 100 C.E., the Chinese mathematician Sun-Ts solved the
+
+problem of finding those integers x that leave remainders 2, 3, and 2
+
+when divided by 3, 5, and 7 respectively. One such solution is x = 23,
+
+and all solutions are of the form 23+105k for arbitrary integers k. The
+
+"Chinese remainder theorem" provides a correspondence between a
+
+system of equations modulo a set of pairwise relatively prime moduli
+
+(for example, 3, 5, and 7) and an equation modulo their product (for
+
+example, 105).
+
+The Chinese remainder theorem has two major applications. Let the
+
+integer n be factored as n = n1n2 nk, where the factors ni are
+
+pairwise relatively prime. First, the Chinese remainder theorem is a
+
+descriptive "structure theorem" that describes the structure of n as
+
+identical to that of the Cartesian product with
+
+componentwise addition and multiplication modulo ni in the ith
+
+component. Second, this description helps in designing efficient
+
+algorithms, since working in each of the systems can be more
+
+efficient (in terms of bit operations) than working modulo n.
+
+Theorem 31.27 (Chinese remainder theorem)
+Let n = n1n2 nk, where the ni are pairwise relatively prime. Consider
+
+the correspondence
+
+where , and
+
+ai = a mod ni
+
+for i = 1, 2, ..., k. Then, mapping (31.27) is a one-to-one mapping
+
+(bijection) between n and the Cartesian product .
+
+Operations performed on the elements of n can be equivalently
+
+performed on the corresponding k-tuples by performing the operations
+
+independently in each coordinate position in the appropriate system.
+
+That is, if
+
+a (a1, a2, ..., ak),
+
+b (b1, b2, ..., bk),
+
+then
+
+Proof Let's see how to translate between the two representations.
+Going from a to (a1, a2, ..., ak) requires only k "mod" operations. The
+reverse--computing a from inputs (a1, a2, ..., ak)--is only slightly
+
+more complicated.
+
+We begin by defining mi = n/ni for i = 1, 2, ..., k. Thus, mi is the
+product of all of the nj's other than ni: mi = n1n2 ni-1ni+1 nk. We
+
+next define
+
+for i = 1, 2, ..., k. Equation (31.31) is well defined: since mi and ni are
+
+relatively prime (by Theorem 31.6), Corollary 31.26 guarantees that
+
+mod ni exists. Here is how to compute a as a function of the ai and ci:
+
+We now show that equation (31.32) ensures that a = ai (mod ni) for i
+= 1, 2, ..., k. If j i, then mj = 0 (mod ni), which implies that cj = mj = 0
+(mod ni). Note also that ci = 1 (mod ni), from equation (31.31). We thus
+
+have the appealing and useful correspondence
+
+ci (0, 0, ..., 0, 1, 0, ..., 0),
+a vector that has 0s everywhere except in the ith coordinate, where it
+has a 1. The ci thus form a "basis" for the representation, in a certain
+sense. For each i, therefore, we have
+
+which is what we wished to show: our method of computing a from the
+ai's produces a result a that satisfies the constraints a = ai (mod ni) for i
+= 1, 2, ..., k. The correspondence is one-to-one, since we can transform
+
+in both directions. Finally, equations (31.28)(31.30) follow directly
+
+from Exercise 31.1-7, since x mod ni = (x mod n) mod ni for any x and i
+= 1, 2, ..., k.
+
+We'll use the following corollaries later in this chapter.
+
+Corollary 31.28
+If n1, n2, ..., nk are pairwise relatively prime and n = n1n2 nk, then
+for any integers a1, a2, ..., ak, the set of simultaneous equations
+
+x = ai (mod ni),
+
+for i = 1, 2, ..., k, has a unique solution modulo n for the unknown x.
+
+Corollary 31.29
+If n1, n2, ..., nk are pairwise relatively prime and n = n1n2 nk, then
+for all integers x and a,
+
+x = a (mod ni)
+
+for i = 1, 2, ..., k if and only if
+
+x = a (mod n).
+
+As an example of the application of the Chinese remainder theorem,
+suppose that you are given the two equations
+
+a = 2 (mod 5),
+a = 3 (mod 13),
+
+so that a1 = 2, n1 = m2 = 5, a2 = 3, and n2 = m1 = 13, and you wish to
+compute a mod 65, since n = n1n2 = 65. Because 13-1 = 2 (mod 5) and
+
+5-1 = 8 (mod 13), you compute
+
+c1 = 13 · (2 mod 5) = 26,
+c2 = 5 · (8 mod 13) = 40,
+
+and
+
+a = 2 · 26 + 3 · 40 (mod 65)
+
+= 52 + 120 (mod 65)
+
+= 42 (mod 65).
+
+Figure 31.3 An illustration of the Chinese remainder theorem for n1 = 5 and n2 = 13. For this
+example, c1 = 26 and c2 = 40. In row i, column j is shown the value of a, modulo 65, such that
+a mod 5 = i and a mod 13 = j. Note that row 0, column 0 contains a 0. Similarly, row 4,
+column 12 contains a 64 (equivalent to -1). Since c1 = 26, moving down a row increases a by
+26. Similarly, c2 = 40 means that moving right by a column increases a by 40. Increasing a by
+
+1 corresponds to moving diagonally downward and to the right, wrapping around from the
+bottom to the top and from the right to the left.
+
+See Figure 31.3 for an illustration of the Chinese remainder theorem,
+modulo 65.
+
+Thus, you can work modulo n by working modulo n directly or by
+working in the transformed representation using separate modulo ni
+
+computations, as convenient. The computations are entirely equivalent.
+
+Exercises
+
+31.5-1
+Find all solutions to the equations x = 4 (mod 5) and x = 5 (mod 11).
+
+31.5-2
+Find all integers x that leave remainders 1, 2, and 3 when divided by 9,
+
+8, and 7, respectively.
+
+31.5-3
+Argue that, under the definitions of Theorem 31.27, if gcd(a, n) = 1,
+
+then
+
+31.5-4
+
+Under the definitions of Theorem 31.27, prove that for any polynomial
+
+f, the number of roots of the equation f(x) = 0 (mod n) equals the
+product of the number of roots of each of the equations f(x) = 0 (mod
+n1), f(x) = 0 (mod n2), ..., f(x) = 0 (mod nk).

@@ -1,0 +1,157 @@
+8.1 Lower bounds for sorting
+
+A comparison sort uses only comparisons between elements to gain
+
+order information about an input sequence a1, a2, ... , an. That is,
+given two elements ai and aj, it performs one of the tests ai < aj, ai aj,
+
+ai = aj, ai aj, or ai > aj to determine their relative order. It may not
+
+inspect the values of the elements or gain order information about them
+in any other way.
+
+Since we are proving a lower bound, we assume without loss of
+generality in this section that all the input elements are distinct. After
+all, a lower bound for distinct elements applies when elements may or
+
+may not be distinct. Consequently, comparisons of the form ai = aj are
+
+useless, which means that we can assume that no comparisons for exact
+
+equality occur. Moreover, the comparisons ai aj, ai aj, ai > aj, and ai
+< aj are all equivalent in that they yield identical information about the
+relative order of ai and aj. We therefore assume that all comparisons
+have the form ai aj.
+
+Figure 8.1 The decision tree for insertion sort operating on three elements. An internal node
+
+(shown in blue) annotated by i : j indicates a comparison between ai and aj. A leaf annotated
+by the permutation (1), (2), ... , (n) indicates the ordering a(1) a(2) a(n). The
+highlighted path indicates the decisions made when sorting the input sequence a1 = 6, a2 = 8,
+a3 = 5. Going left from the root node, labeled 1:2, indicates that a1 a2. Going right from the
+node labeled 2:3 indicates that a2 > a3. Going right from the node labeled 1:3 indicates that a1
+> a3. Therefore, we have the ordering a3 a1 a2, as indicated in the leaf labeled 3, 1, 2.
+
+Because the three input elements have 3! = 6 possible permutations, the decision tree must
+have at least 6 leaves.
+
+The decision-tree model
+We can view comparison sorts abstractly in terms of decision trees. A
+
+decision tree is a full binary tree (each node is either a leaf or has both
+
+children) that represents the comparisons between elements that are
+
+performed by a particular sorting algorithm operating on an input of a
+given size. Control, data movement, and all other aspects of the
+algorithm are ignored. Figure 8.1 shows the decision tree corresponding
+to the insertion sort algorithm from Section 2.1 operating on an input
+sequence of three elements.
+
+A decision tree has each internal node annotated by i : j for some i
+and j in the range 1 i, j n, where n is the number of elements in the
+input sequence. We also annotate each leaf by a permutation (1), (2),
+... , (n). (See Section C.1 for background on permutations.) Indices in
+
+the internal nodes and the leaves always refer to the original positions
+of the array elements at the start of the sorting algorithm. The
+execution of the comparison sorting algorithm corresponds to tracing a
+simple path from the root of the decision tree down to a leaf. Each
+
+internal node indicates a comparison ai aj. The left subtree then
+dictates subsequent comparisons once we know that ai aj, and the
+right subtree dictates subsequent comparisons when ai > aj. Arriving at
+a leaf, the sorting algorithm has established the ordering a(1) a(2)
+a(n). Because any correct sorting algorithm must be able to
+produce each permutation of its input, each of the n! permutations on n
+
+elements must appear as at least one of the leaves of the decision tree
+for a comparison sort to be correct. Furthermore, each of these leaves
+must be reachable from the root by a downward path corresponding to
+an actual execution of the comparison sort. (We call such leaves
+"reachable.") Thus, we consider only decision trees in which each
+permutation appears as a reachable leaf.
+
+A lower bound for the worst case
+
+The length of the longest simple path from the root of a decision tree to
+any of its reachable leaves represents the worst-case number of
+comparisons that the corresponding sorting algorithm performs.
+Consequently, the worst-case number of comparisons for a given
+comparison sort algorithm equals the height of its decision tree. A
+lower bound on the heights of all decision trees in which each
+permutation appears as a reachable leaf is therefore a lower bound on
+
+the running time of any comparison sort algorithm. The following
+theorem establishes such a lower bound.
+
+Theorem 8.1
+Any comparison sort algorithm requires (n lg n) comparisons in the
+
+worst case.
+
+Proof From the preceding discussion, it suffices to determine the
+
+height of a decision tree in which each permutation appears as a
+
+reachable leaf. Consider a decision tree of height h with l reachable
+leaves corresponding to a comparison sort on n elements. Because each
+of the n! permutations of the input appears as one or more leaves, we
+have n! l. Since a binary tree of height h has no more than 2h leaves,
+
+we have
+
+n! l 2h,
+
+which, by taking logarithms, implies
+
+h lg(n!) (since the lg function is monotonically increasing)
+= (n lg n) (by equation (3.28) on page 67).
+
+Corollary 8.2
+
+Heapsort and merge sort are asymptotically optimal comparison sorts.
+
+Proof The O(n lg n) upper bounds on the running times for heapsort
+and merge sort match the (n lg n) worst-case lower bound from
+
+Theorem 8.1.
+
+Exercises
+
+8.1-1
+
+What is the smallest possible depth of a leaf in a decision tree for a
+comparison sort?
+
+8.1-2
+
+Obtain asymptotically tight bounds on lg(n!) without using Stirling's
+
+approximation. Instead, evaluate the summation using
+
+techniques from Section A.2.
+
+8.1-3
+
+Show that there is no comparison sort whose running time is linear for
+
+at least half of the n! inputs of length n. What about a fraction of 1/n of
+the inputs of length n? What about a fraction 1/2n?
+
+8.1-4
+You are given an n-element input sequence, and you know in advance
+
+that it is partly sorted in the following sense. Each element initially in
+
+position i such that i mod 4 = 0 is either already in its correct position,
+
+or it is one place away from its correct position. For example, you know
+
+that after sorting, the element initially in position 12 belongs in position
+
+11, 12, or 13. You have no advance information about the other
+
+elements, in positions i where i mod 4 0. Show that an (n lg n) lower
+
+bound on comparison-based sorting still holds in this case.

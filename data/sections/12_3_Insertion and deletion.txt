@@ -1,0 +1,464 @@
+12.3 Insertion and deletion
+
+The operations of insertion and deletion cause the dynamic set
+represented by a binary search tree to change. The data structure must
+be modified to reflect this change, but in such a way that the binarysearch-tree property continues to hold. We'll see that modifying the tree
+to insert a new element is relatively straightforward, but deleting a node
+from a binary search tree is more complicated.
+
+Insertion
+
+The TREE-INSERT procedure inserts a new node into a binary search
+
+tree. The procedure takes a binary search tree T and a node z for which
+
+z.key has already been filled in, z.left = NIL, and z.right = NIL. It
+modifies T and some of the attributes of z so as to insert z into an
+
+appropriate position in the tree.
+
+TREE-INSERT(T, z)
+
+1x = T.root // node being compared with z
+2y = NIL // y will be parent of z
+
+3while x NIL // descend until reaching a leaf
+4 y=x
+5 if z.key < x.key // found the location--insert z with parent y
+6 x = x.left // tree T was empty
+7 else x = x.right
+8z.p = y
+
+9if y == NIL
+10 T.root = z
+
+11elseif z.key < y.key
+12 y.left = z
+13else y.right = z
+
+Figure 12.3 shows how TREE-INSERT works. Just like the
+
+procedures TREE-SEARCH and ITERATIVE-TREE-SEARCH,
+
+TREE-INSERT begins at the root of the tree and the pointer x traces a
+
+simple path downward looking for a NIL to replace with the input node
+
+z. The procedure maintains the trailing pointer y as the parent of x.
+
+After initialization, the while loop in lines 37 causes these two pointers
+
+to move down the tree, going left or right depending on the comparison
+
+of z.key with x.key, until x becomes NIL. This NIL occupies the
+position where node z will go. More precisely, this NIL is a left or right
+attribute of the node that will become z's parent, or it is T.root if tree T
+is currently empty. The procedure needs the trailing pointer y, because
+by the time it finds the NIL where z belongs, the search has proceeded
+
+one step beyond the node that needs to be changed. Lines 813 set the
+
+pointers that cause z to be inserted.
+
+Figure 12.3 Inserting a node with key 13 into a binary search tree. The simple path from the
+root down to the position where the node is inserted is shown in blue. The new node and the
+link to its parent are highlighted in orange.
+
+Like the other primitive operations on search trees, the procedure
+
+TREE-INSERT runs in O(h) time on a tree of height h.
+
+Deletion
+
+The overall strategy for deleting a node z from a binary search tree T
+
+has three basic cases and, as we'll see, one of the cases is a bit tricky.
+
+If z has no children, then simply remove it by modifying its parent
+to replace z with NIL as its child.
+
+If z has just one child, then elevate that child to take z's position
+in the tree by modifying z's parent to replace z by z's child.
+
+If z has two children, find z's successor y--which must belong to
+z's right subtree--and move y to take z's position in the tree. The
+rest of z's original right subtree becomes y's new right subtree,
+and z's left subtree becomes y's new left subtree. Because y is z's
+successor, it cannot have a left child, and y's original right child
+moves into y's original position, with the rest of y's original right
+
+subtree following automatically. This case is the tricky one
+
+because, as we'll see, it matters whether y is z's right child.
+
+The procedure for deleting a given node z from a binary search tree
+T takes as arguments pointers to T and z. It organizes its cases a bit
+
+differently from the three cases outlined previously by considering the
+four cases shown in Figure 12.4.
+
+Figure 12.4 Deleting a node z, in blue, from a binary search tree. Node z may be the root, a left
+child of node q, or a right child of q. The node that will replace node z in its position in the tree
+is colored orange. (a) Node z has no left child. Replace z by its right child r, which may or may
+not be NIL. (b) Node z has a left child l but no right child. Replace z by l. (c) Node z has two
+children. Its left child is node l, its right child is its successor y (which has no left child), and y's
+right child is node x. Replace z by y, updating y's left child to become l, but leaving x as y's
+right child. (d) Node z has two children (left child l and right child r), and its successor y r
+lies within the subtree rooted at r. First replace y by its own right child x, and set y to be r's
+parent. Then set y to be q's child and the parent of l.
+
+If z has no left child, then as in part (a) of the figure, replace z by
+its right child, which may or may not be NIL. When z's right child
+is NIL, this case deals with the situation in which z has no
+children. When z's right child is non-NIL, this case handles the
+situation in which z has just one child, which is its right child.
+
+Otherwise, if z has just one child, then that child is a left child. As
+in part (b) of the figure, replace z by its left child.
+
+Otherwise, z has both a left and a right child. Find z's successor y,
+which lies in z's right subtree and has no left child (see Exercise
+12.2-5). Splice node y out of its current location and replace z by
+y in the tree. How to do so depends on whether y is z's right child:
+
+If y is z's right child, then as in part (c) of the figure, replace
+z by y, leaving y's right child alone.
+
+Otherwise, y lies within z's right subtree but is not z's right
+child. In this case, as in part (d) of the figure, first replace y
+by its own right child, and then replace z by y.
+
+As part of the process of deleting a node, subtrees need to move
+around within the binary search tree. The subroutine TRANSPLANT
+replaces one subtree as a child of its parent with another subtree. When
+
+TRANSPLANT replaces the subtree rooted at node u with the subtree
+rooted at node v, node u's parent becomes node v's parent, and u's
+parent ends up having v as its appropriate child. TRANSPLANT allows
+v to be NIL instead of a pointer to a node.
+
+TRANSPLANT(T, u, v)
+
+1 if u.p == NIL
+2 T.root = v
+3 elseif u == u.p.left
+4 u.p.left = v
+5 else u.p.right = v
+6 if v NIL
+7 v.p = u.p
+
+Here is how TRANSPLANT works. Lines 12 handle the case in
+
+which u is the root of T. Otherwise, u is either a left child or a right child
+of its parent. Lines 34 take care of updating u.p.left if u is a left child,
+and line 5 updates u.p.right if u is a right child. Because v may be NIL,
+lines 67 update v.p only if v is non-NIL. The procedure
+TRANSPLANT does not attempt to update v.left and v.right. Doing so,
+
+or not doing so, is the responsibility of TRANSPLANT's caller.
+
+The procedure TREE-DELETE on the facing page uses
+
+TRANSPLANT to delete node z from binary search tree T. It executes
+the four cases as follows. Lines 12 handle the case in which node z has
+no left child (Figure 12.4(a)), and lines 34 handle the case in which z
+
+has a left child but no right child (Figure 12.4(b)). Lines 512 deal with
+
+the remaining two cases, in which z has two children. Line 5 finds node
+y, which is the successor of z. Because z has a nonempty right subtree,
+
+its successor must be the node in that subtree with the smallest key;
+
+hence the call to TREE-MINIMUM(z.right). As we noted before, y has
+no left child. The procedure needs to splice y out of its current location
+and replace z by y in the tree. If y is z's right child (Figure 12.4(c)), then
+lines 1012 replace z as a child of its parent by y and replace y's left
+child by z's left child. Node y retains its right child (x in Figure 12.4(c)),
+and so no change to y.right needs to occur. If y is not z's right child
+(Figure 12.4(d)), then two nodes have to move. Lines 79 replace y as a
+child of its parent by y's right child (x in Figure 12.4(c)) and make z's
+right child (r in the figure) become y's right child instead. Finally, lines
+1012 replace z as a child of its parent by y and replace y's left child by
+z's left child.
+
+TREE-DELETE(T, z)
+
+1if z.left == NIL
+
+2 TRANSPLANT(T, z, z.right) // replace z by its right child
+
+3elseif z.right == NIL // replace z by its left child
+// y is z's successor
+4 TRANSPLANT(T, z, z.left) // is y farther down the tree?
+// replace y by its right child
+5else y = TREE-MINIMUM(z.right)
+
+6 if y z.right
+
+7 TRANSPLANT(T, y, y.right)
+
+8 y.right = z.right // z's right child becomes
+9 y.right.p = y // y's right child
+10 TRANSPLANT(T, z, y) // replace z by its successor y
+11 y.left = z.left // and give z's left child to y,
+12 y.left.p = y
+// which had no left child
+
+Each line of TREE-DELETE, including the calls to TRANSPLANT,
+takes constant time, except for the call to TREE-MINIMUM in line 5.
+
+Thus, TREE-DELETE runs in O(h) time on a tree of height h.
+
+In summary, we have proved the following theorem.
+
+Theorem 12.3
+
+The dynamic-set operations INSERT and DELETE can be
+
+implemented so that each one runs in O(h) time on a binary search tree
+of height h.
+
+Exercises
+
+12.3-1
+
+Give a recursive version of the TREE-INSERT procedure.
+
+12.3-2
+
+Suppose that you construct a binary search tree by repeatedly inserting
+distinct values into the tree. Argue that the number of nodes examined
+in searching for a value in the tree is 1 plus the number of nodes
+examined when the value was first inserted into the tree.
+
+12.3-3
+You can sort a given set of n numbers by first building a binary search
+
+tree containing these numbers (using TREE-INSERT repeatedly to
+insert the numbers one by one) and then printing the numbers by an
+inorder tree walk. What are the worst-case and best-case running times
+for this sorting algorithm?
+
+12.3-4
+
+When TREE-DELETE calls TRANSPLANT, under what
+
+circumstances can the parameter v of TRANSPLANT be NIL?
+
+12.3-5
+Is the operation of deletion "commutative" in the sense that deleting x
+and then y from a binary search tree leaves the same tree as deleting y
+and then x? Argue why it is or give a counterexample.
+
+12.3-6
+Suppose that instead of each node x keeping the attribute x.p, pointing
+to x's parent, it keeps x.succ, pointing to x's successor. Give pseudocode
+
+for TREE-SEARCH, TREE-INSERT, and TREE-DELETE on a binary
+
+search tree T using this representation. These procedures should
+operate in O(h) time, where h is the height of the tree T. You may
+assume that all keys in the binary search tree are distinct. (Hint: You
+
+might wish to implement a subroutine that returns the parent of a
+node.)
+
+12.3-7
+When node z in TREE-DELETE has two children, you can choose node
+y to be its predecessor rather than its successor. What other changes to
+
+TREE-DELETE are necessary if you do so? Some have argued that a
+fair strategy, giving equal priority to predecessor and successor, yields
+better empirical performance. How might TREE-DELETE be minimally
+changed to implement such a fair strategy?
+
+Problems
+
+12-1 Binary search trees with equal keys
+
+Equal keys pose a problem for the implementation of binary search
+trees.
+
+a. What is the asymptotic performance of TREE-INSERT when used to
+insert n items with identical keys into an initially empty binary search
+
+tree?
+
+Consider changing TREE-INSERT to test whether z.key = x.key before
+line 5 and to test whether z.key = y.key before line 11. If equality holds,
+
+implement one of the following strategies. For each strategy, find the
+
+asymptotic performance of inserting n items with identical keys into an
+
+initially empty binary search tree. (The strategies are described for line
+
+5, which compares the keys of z and x. Substitute y for x to arrive at the
+
+strategies for line 11.)
+
+b. Keep a boolean flag x.b at node x, and set x to either x.left or x.right
+based on the value of x.b, which alternates between FALSE and
+TRUE each time TREE-INSERT visits x while inserting a node with
+the same key as x.
+
+c. Keep a list of nodes with equal keys at x, and insert z into the list.
+
+d. Randomly set x to either x.left or x.right. (Give the worst-case
+
+performance and informally derive the expected running time.)
+
+12-2 Radix trees
+
+Given two strings a = a0a1 ... ap and b = b0b1 ... bq, where each ai and
+each bj belongs to some ordered set of characters, we say that string a is
+lexicographically less than string b if either
+
+1. there exists an integer j, where 0 j min {p, q}, such that ai =
+bi for all i = 0, 1, ..., j - 1 and aj < bj, or
+
+2. p < q and ai = bi for all i = 0, 1, ..., p.
+
+For example, if a and b are bit strings, then 10100 < 10110 by rule 1
+(letting j = 3) and 10100 < 101000 by rule 2. This ordering is similar to
+
+that used in English-language dictionaries.
+
+The radix tree data structure shown in Figure 12.5 (also known as a
+trie) stores the bit strings 1011, 10, 011, 100, and 0. When searching for
+a key a = a0a1 ... ap, go left at a node of depth i if ai = 0 and right if ai
+= 1. Let S be a set of distinct bit strings whose lengths sum to n. Show
+how to use a radix tree to sort S lexicographically in (n) time. For the
+
+example in Figure 12.5, the output of the sort should be the sequence 0,
+011, 10, 100, 1011.
+
+Figure 12.5 A radix tree storing the bit strings 1011, 10, 011, 100, and 0. To determine each
+node's key, traverse the simple path from the root to that node. There is no need, therefore, to
+store the keys in the nodes. The keys appear here for illustrative purposes only. Keys
+corresponding to blue nodes are not in the tree. Such nodes are present only to establish a path
+to other nodes.
+
+12-3 Average node depth in a randomly built binary search tree
+A randomly built binary search tree on n keys is a binary search tree
+
+created by starting with an empty tree and inserting the keys in random
+
+order, where each of the n! permutations of the keys is equally likely. In
+
+this problem, you will prove that the average depth of a node in a
+
+randomly built binary search tree with n nodes is O(lg n). The technique
+
+reveals a surprising similarity between the building of a binary search
+tree and the execution of RANDOMIZED-QUICKSORT from Section
+7.3.
+
+Denote the depth of any node x in tree T by d(x, T). Then the total
+path length P(T) of a tree T is the sum, over all nodes x in T, of d(x, T).
+a. Argue that the average depth of a node in T is
+
+Thus, you need to show that the expected value of P(T) is O(n lg n).
+
+b. Let TL and TR denote the left and right subtrees of tree T,
+respectively. Argue that if T has n nodes, then
+P(T) = P(TL) + P(TR) + n - 1.
+
+c. Let P(n) denote the average total path length of a randomly built
+binary search tree with n nodes. Show that
+
+d. Show how to rewrite P(n) as
+
+e. Recalling the alternative analysis of the randomized version of
+quicksort given in Problem 7-3, conclude that P(n) = O(n lg n).
+
+Each recursive invocation of randomized quicksort chooses a random
+pivot element to partition the set of elements being sorted. Each node
+of a binary search tree partitions the set of elements that fall into the
+subtree rooted at that node.
+
+f. Describe an implementation of quicksort in which the comparisons to
+
+sort a set of elements are exactly the same as the comparisons to
+insert the elements into a binary search tree. (The order in which
+comparisons are made may differ, but the same comparisons must
+occur.)
+
+12-4 Number of different binary trees
+Let bn denote the number of different binary trees with n nodes. In this
+problem, you will find a formula for bn, as well as an asymptotic
+
+estimate.
+
+a. Show that b0 = 1 and that, for n 1,
+
+b. Referring to Problem 4-5 on page 121 for the definition of a
+generating function, let B(x) be the generating function
+
+Show that B(x) = xB(x)2 + 1, and hence one way to express B(x) in
+
+closed form is
+
+The Taylor expansion of f(x) around the point x = a is given by
+
+where f(k)(x) is the kth derivative of f evaluated at x.
+c. Show that
+
+(the nth Catalan number) by using the Taylor expansion of
+around x = 0. (If you wish, instead of using the Taylor expansion, you
+
+may use the generalization of the binomial theorem, equation (C.4) on
+
+page 1181, to noninteger exponents n, where for any real number n
+and for any integer k, you can interpret to be n(n - 1) ... (n - k +
+1)/k! if k 0, and 0 otherwise.)
+d. Show that
+
+Chapter notes
+
+Knuth [261] contains a good discussion of simple binary search trees as
+well as many variations. Binary search trees seem to have been
+independently discovered by a number of people in the late 1950s. Radix
+trees are often called "tries," which comes from the middle letters in the
+
+word retrieval. Knuth [261] also discusses them.
+
+Many texts, including the first two editions of this book, describe a
+somewhat simpler method of deleting a node from a binary search tree
+
+when both of its children are present. Instead of replacing node z by its
+successor y, delete node y but copy its key and satellite data into node z.
+
+The downside of this approach is that the node actually deleted might
+not be the node passed to the delete procedure. If other components of
+a program maintain pointers to nodes in the tree, they could mistakenly
+end up with "stale" pointers to nodes that have been deleted. Although
+the deletion method presented in this edition of this book is a bit more
+
+complicated, it guarantees that a call to delete node z deletes node z and
+only node z.
+
+Section 14.5 will show how to construct an optimal binary search
+tree when you know the search frequencies before constructing the tree.
+That is, given the frequencies of searching for each key and the
+frequencies of searching for values that fall between keys in the tree, a
+set of searches in the constructed binary search tree examines the
+minimum number of nodes.
+
+13 Red-Black Trees
+
+Chapter 12 showed that a binary search tree of height h can support any
+
+of the basic dynamic-set operations--such as SEARCH,
+PREDECESSOR, SUCCESSOR, MINIMUM, MAXIMUM, INSERT,
+
+and DELETE--in O(h) time. Thus, the set operations are fast if the
+
+height of the search tree is small. If its height is large, however, the set
+operations may run no faster than with a linked list. Red-black trees are
+one of many search-tree schemes that are "balanced" in order to
+
+guarantee that basic dynamic-set operations take O(lg n) time in the
+
+worst case.

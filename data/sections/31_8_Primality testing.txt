@@ -1,0 +1,1063 @@
+31.8 Primality testing
+
+This section shows how to find large primes. We begin with a discussion
+of the density of primes, proceed to examine a plausible, but incomplete,
+approach to primality testing, and then present an effective randomized
+primality test due to Miller and Rabin.
+
+The density of prime numbers
+
+Many applications, such as cryptography, call for finding large
+"random" primes. Fortunately, large primes are not too rare, so that it is
+feasible to test random integers of the appropriate size until you find
+
+one that is prime. The prime distribution function (n) specifies the
+number of primes that are less than or equal to n. For example, (10) =
+
+4, since there are 4 prime numbers less than or equal to 10, namely, 2, 3,
+5, and 7. The prime number theorem gives a useful approximation to
+
+(n).
+
+Theorem 31.37 (Prime number theorem)
+
+The approximation n/ln n gives reasonably accurate estimates of (n)
+even for small n. For example, it is off by less than 6% at n = 109, where
+(n) = 50,847,534 and n/ln n 48,254,942. (To a number theorist, 109 is
+
+a small number.)
+
+The process of randomly selecting an integer n and determining
+
+whether it is prime is really just a Bernoulli trial (see Section C.4). By
+the prime number theorem, the probability of a success--that is, the
+
+probability that n is prime--is approximately 1/ln n. The geometric
+
+distribution says how many trials must occur to obtain a success, and
+by equation (C.36) on page 1197, the expected number of trials is
+
+approximately ln n. Thus, in order to find a prime that has the same
+length as n by testing integers chosen randomly near n, the expected
+number examined would be approximately ln n. For example, the
+
+expectation is that finding a 1024-bit prime would require testing
+approximately ln 21024 710 randomly chosen 1024-bit numbers for
+primality. (Of course, to cut this figure in half, choose only odd
+integers.)
+
+The remainder of this section shows how to determine whether a
+
+large odd integer n is prime. For notational convenience, we assume that
+n has the prime factorization
+
+where r 1, p1, p2, ..., pr are the prime factors of n, and e1, e2, ..., er
+
+are positive integers. The integer n is prime if and only if r = 1 and e1 =
+
+1.
+
+One simple approach to the problem of testing for primality is trial
+
+division: try dividing n by each integer 2, 3, 5, 7, 9, ..., , skipping
+
+even integers greater than 2. We can conclude that n is prime if and only
+
+if none of the trial divisors divides n. Assuming that each trial division
+
+takes constant time, the worst-case running time is , which is
+
+exponential in the length of n. (Recall that if n is encoded in binary
+
+using bits, then = 1g(n + 1), and so .) Thus, trial
+
+division works well only if n is very small or happens to have a small
+
+prime factor. When it works, trial division has the advantage that it not
+
+only determines whether n is prime or composite, it also determines one
+
+of n's prime factors if n is composite.
+
+This section focuses on finding out whether a given number n is
+
+prime. If n is composite, we won't worry about finding its prime
+
+factorization. Computing the prime factorization of a number is
+
+computationally expensive. You might be surprised that it turns out to
+
+be much easier to ascertain whether a given number is prime than it is
+
+to determine the prime factorization of the number if it is not prime.
+
+Pseudoprimality testing
+
+We'll start with a method for primality testing that "almost works" and,
+in fact, is good enough for many practical applications. Later on, we'll
+refine this method to remove the small defect. Let denote the
+
+nonzero elements of n:
+
+If n is prime, then .
+
+We say that n is a base-a pseudoprime if n is composite and
+
+Fermat's theorem (Theorem 31.31 on page 932) implies that if n is
+
+prime, then n satisfies equation (31.39) for every a in . Thus, if there is
+
+any such that n does not satisfy equation (31.39), then n is
+
+certainly composite. Surprisingly, the converse almost holds, so that this
+
+criterion forms an almost perfect test for primality. Instead of trying
+
+every value of , test to see whether n satisfies equation (31.39) for
+
+just a = 2. If not, then declare n to be composite by returning
+
+COMPOSITE. Otherwise, return PRIME, guessing that n is prime
+
+(when, in fact, all we know is that n is either prime or a base-2
+
+pseudoprime).
+
+The procedure PSEUDOPRIME on the next page pretends in this
+
+manner to check whether n is prime. It uses the procedure
+
+MODULAR-EXPONENTIATION from Section 31.6. It assumes that
+
+the input n is an odd integer greater than 2. This procedure can make
+errors, but only of one type. That is, if it says that n is composite, then it
+is always correct. If it says that n is prime, however, then it makes an
+error only if n is a base-2 pseudoprime.
+
+How often does PSEUDOPRIME err? Surprisingly rarely. There are
+
+only 22 values of n less than 10,000 for which it errs, the first four of
+
+which are 341, 561, 645,
+
+PSEUDOPRIME(n)
+
+1 if MODULAR-EXPONENTIATION(2, n 1, n) 1 (mod n)
+
+2 return COMPOSITE // definitely
+
+3 else return PRIME // we hope!
+
+and 1105. We won't prove it, but the probability that this program
+makes an error on a randomly chosen -bit number goes to 0 as
+approaches . Using more precise estimates due to Pomerance [361] of
+the number of base-2 pseudoprimes of a given size, a randomly chosen
+512-bit number that is called prime by PSEUDOPRIME has less than
+one chance in 1020 of being a base-2 pseudoprime, and a randomly
+chosen 1024-bit number that is called prime has less than one chance in
+1041 of being a base-2 pseudoprime. Thus, if you are merely trying to
+find a large prime for some application, for all practical purposes you
+almost never go wrong by choosing large numbers at random until one
+of them causes PSEUDOPRIME to return PRIME. But when the
+numbers being tested for primality are not randomly chosen, you might
+need a better approach for testing primality. As we'll see, a little more
+cleverness, and some randomization, will yield a primality-testing
+method that works well on all inputs.
+
+Since PSEUDOPRIME checks equation (31.39) for only a = 2, you
+
+might think that you could eliminate all the errors by simply checking
+
+equation (31.39) for a second base number, say a = 3. Better yet, you
+
+could check equation (31.39) for even more values of a. Unfortunately,
+
+even checking for several values of a does not eliminate all errors,
+
+because there exist composite integers n, known as Carmichael numbers,
+
+that satisfy equation (31.39) for all . (The equation does fail when
+
+gcd(a, n) > 1--that is, when --but demonstrating that n is
+
+composite by finding such an a can be difficult if n has only large prime
+
+factors.) The first three Carmichael numbers are 561, 1105, and 1729.
+
+Carmichael numbers are extremely rare. For example, only 255 of them
+
+are less than 100,000,000. Exercise 31.8-2 helps explain why they are so
+
+rare.
+
+Let's see how to improve the primality test so that Carmichael
+
+numbers won't fool it.
+
+The Miller-Rabin randomized primality test
+
+The Miller-Rabin primality test overcomes the problems of the simple
+procedure PSEUDOPRIME with two modifications:
+
+It tries several randomly chosen base values a instead of just one
+
+base value.
+
+While computing each modular exponentiation, it looks for a
+
+nontrivial square root of 1, modulo n, during the final set of
+
+squarings. If it finds one, it stops and returns COMPOSITE.
+Corollary 31.35 from Section 31.6 justifies detecting composites in
+this manner.
+
+The pseudocode for the Miller-Rabin primality test appears in the
+
+procedures MILLER-RABIN and WITNESS. The input n > 2 to
+MILLER-RABIN is the odd number to be tested for primality, and s is
+
+the number of randomly chosen base values from to be tried. The
+code uses the random-number generator RANDOM described on page
+
+129: RANDOM(2, n 2) returns a randomly chosen integer a satisfying
+2 a n 2. (This range of values avoids having a = 1 (mod n).) The
+call of the auxiliary procedure WITNESS(a, n) returns TRUE if and
+only if a is a "witness" to the compositeness of n--that is, if it is
+possible using a to prove (in a manner that we will see) that n is
+composite. The test WITNESS(a, n) is an extension of, but more
+
+effective than, the test in equation (31.39) that formed the basis for
+
+PSEUDOPRIME, using a = 2.
+
+Let's first understand how WITNESS works, and then we'll see how
+
+the Miller-Rabin primality test uses it. Let n 1 = 2tu where t 1 and u
+
+is odd. That is, the binary representation of n 1 is the binary
+
+representation of the odd integer u followed by exactly t zeros.
+
+Therefore, , so that one way to compute an-1 mod n is to
+
+first compute au mod n and then square the result t times successively.
+
+MILLER-RABIN(n, s) // n > 2 is odd
+
+1 for j = 1 to s
+2 a = RANDOM(2, n 2)
+
+3 if WITNESS(a, n)
+
+4 return COMPOSITE// definitely
+
+5 return PRIME // almost surely
+
+WITNESS(a, n)
+
+1 let t and u be such that t 1, u is odd, and n 1 = 2tu
+2 x0 = MODULAR-EXPONENTIATION(a, u, n)
+
+3 for i = 1 to t
+
+4
+
+5 if xi == 1 and xi1 1 and xi1 n 1
+
+6 return TRUE // found a nontrivial square root
+
+of 1
+
+7 if xt 1
+
+8 return TRUE // composite, as in
+
+PSEUDOPRIME
+
+9 return FALSE
+
+This pseudocode for WITNESS computes an1 mod n by first
+computing the value x0 = au mod n in line 2 and then repeatedly
+
+squaring the result t times in the for loop of lines 36. By induction on i,
+
+the sequence x0, x1, ..., xt of values computed satisfies the equation
+for i = 0, 1, ..., t, so that in particular xt = an1 (mod n). After
+
+line 4 performs a squaring step, however, the loop will terminate early if
+lines 56 detect that a nontrivial square root of 1 has just been
+discovered. (We'll explain these tests shortly.) If so, the procedure stops
+and returns TRUE. Lines 78 return TRUE if the value computed for
+
+xt = an1 (mod n) is not equal to 1, just as the PSEUDOPRIME
+
+procedure returns COMPOSITE in this case. Line 9 returns FALSE if
+lines 6 or 8 have not returned TRUE.
+
+The following lemma proves the correctness of WITNESS.
+
+Lemma 31.38
+If WITNESS(a, n) returns TRUE, then a proof that n is composite can
+be constructed using a as a witness.
+
+Proof If WITNESS returns TRUE from line 8, it's because line 7
+
+determined that xt = an1 mod n 1. If n is prime, however, Fermat's
+
+theorem (Theorem 31.31) says that an1 = 1 (mod n) for all . Since
+
+if n is prime, Fermat's theorem also says that an1 = 1 (mod n)
+
+for all . Therefore, n cannot be prime, and the equation an1 mod
+
+n 1 proves this fact.
+
+If WITNESS returns TRUE from line 6, then it has discovered that
+
+xi1 is a nontrivial square root of 1, modulo n, since we have that xi1
+
+±1 (mod n) yet . Corollary 31.35 on page 934 states that only
+
+if n is composite can there exist a nontrivial square root of 1, modulo n,
+
+so that demonstrating that xi1 is a nontrivial square root of 1, modulo
+
+n proves that n is composite.
+
+Thus, if the call WITNESS(a, n) returns TRUE, then n is surely
+composite, and the witness a, along with the reason that the procedure
+
+returns TRUE (did it return from line 6 or from line 8?), provides a
+
+proof that n is composite.
+
+Let's explore an alternative view of the behavior of WITNESS as a
+
+function of the sequence X = x0, x1, ..., xt. We'll find this view useful
+
+later on, when we analyze the error rate of the Miller-Rabin primality
+
+test. Note that if xi = 1 for some 0 i < t, WITNESS might not
+
+compute the rest of the sequence. If it were to do so, however, each
+
+value xi+1, xi+2, ..., xt would be 1, so we can consider these positions
+in the sequence X as being all 1s. There are four cases:
+
+1. X = ..., d, where d 1: the sequence X does not end in 1.
+Return TRUE in line 8, since a is a witness to the compositeness
+of n (by Fermat's Theorem).
+
+2. X = 1, 1, ..., 1: the sequence X is all 1s. Return FALSE, since a
+is not a witness to the compositeness of n.
+
+3. X = ..., 1, 1, ..., 1: the sequence X ends in 1, and the last non-
+1 is equal to 1. Return FALSE, since a is not a witness to the
+compositeness of n.
+
+4. X = ..., d, 1, ..., 1, where d ±1: the sequence X ends in 1, but
+the last non-1 is not 1. Return TRUE in line 6: a is a witness to
+the compositeness of n, since d is a nontrivial square root of 1.
+
+Now, let's examine the Miller-Rabin primality test based on how it
+
+uses the WITNESS procedure. As before, assume that n is an odd
+
+integer greater than 2.
+
+The procedure MILLER-RABIN is a probabilistic search for a proof
+
+that n is composite. The main loop (beginning on line 1) picks up to s
+random values of a from , except for 1 and n 1 (line 2). If it picks a
+value of a that is a witness to the compositeness of n, then MILLER-
+
+RABIN returns COMPOSITE on line 4. Such a result is always correct,
+
+by the correctness of WITNESS. If MILLER-RABIN finds no witness
+
+in s trials, then the procedure assumes that it found no witness because
+no witnesses exist, and therefore it assumes that n is prime. We'll see
+that this result is likely to be correct if s is large enough, but there is still
+a tiny chance that the procedure could be unlucky in its choice of s
+random values of a, so that even though the procedure failed to find a
+
+witness, at least one witness exists.
+
+To illustrate the operation of MILLER-RABIN, let n be the
+Carmichael number 561, so that n 1 = 560 = 24 · 35, t = 4, and u = 35.
+If the procedure chooses a = 7 as a base, the column for b = 35 in
+Figure 31.4 (Section 31.6) shows that WITNESS computes x0 = a35 =
+
+241 (mod 561). Because of how the MODULAR-EXPONENTIATION
+
+procedure operates recursively on its parameter b, the first four
+
+columns in Figure 31.4 represent the factor 24 of 560--the rightmost
+four zeros in the binary representation of 560--reading these four zeros
+from right to left in the binary representation. Thus WITNESS
+
+computes the sequence X = 241, 298, 166, 67, 1. Then, in the last
+squaring step, WITNESS discovers that a280 is a nontrivial square root
+of 1 since a280 = 67 (mod n) and (a280)2 = a560 = 1 (mod n).
+Therefore, a = 7 is a witness to the compositeness of n, WITNESS(7, n)
+
+returns TRUE, and MILLER-RABIN returns COMPOSITE.
+
+If n is a -bit number, MILLER-RABIN requires O(s) arithmetic
+operations and O(s3) bit operations, since it requires asymptotically no
+more work than s modular exponentiations.
+
+Error rate of the Miller-Rabin primality test
+
+If MILLER-RABIN returns PRIME, then there is a very slim chance
+that it has made an error. Unlike PSEUDOPRIME, however, the
+
+chance of error does not depend on n: there are no bad inputs for this
+procedure. Rather, it depends on the size of s and the "luck of the
+draw" in choosing base values a. Moreover, since each test is more
+
+stringent than a simple check of equation (31.39), we can expect on
+general principles that the error rate should be small for randomly
+
+chosen integers n. The following theorem presents a more precise
+
+argument.
+
+Theorem 31.39
+If n is an odd composite number, then the number of witnesses to the
+compositeness of n is at least (n 1)/2.
+
+Proof The proof shows that the number of nonwitnesses is at most (n
+
+1)/2, which implies the theorem.
+
+We start by claiming that any nonwitness must be a member of .
+
+Why? Consider any nonwitness a. It must satisfy an1 = 1 (mod n) or,
+
+equivalently, a · an-2 = 1 (mod n). Thus the equation ax = 1 (mod n)
+
+has a solution, namely an-2. By Corollary 31.21 on page 924, gcd(a, n) |
+
+1, which in turn implies that gcd(a, n) = 1. Therefore, a is a member of
+
+, and all nonwitnesses belong to .
+
+To complete the proof, we show that not only are all nonwitnesses
+
+contained in , they are all contained in a proper subgroup B of
+
+(recall that B is a proper subgroup of when B is subgroup of but B
+
+is not equal to ). By Corollary 31.16 on page 921, we then have
+
+. Since , we obtain |B| (n 1)/2. Therefore, if all
+
+nonwitnesses are contained in a proper subgroup of , then the
+
+number of nonwitnesses is at most (n 1)/2, so that the number of
+
+witnesses must be at least (n 1)/2.
+
+To find a proper subgroup B of containing all of the nonwitnesses,
+
+we consider two cases.
+
+Case 1: There exists an such that
+
+xn1 1 (mod n).
+
+In other words, n is not a Carmichael number. Since, as noted earlier,
+
+Carmichael numbers are extremely rare, case 1 is the more typical case
+
+(e.g., when n has been chosen randomly and is being tested for
+
+primality).
+
+Let . The set B must be nonempty, since 1 B.
+
+The set B is closed under multiplication modulo n, and so B is a
+
+subgroup of by Theorem 31.14. Every nonwitness belongs to B, since
+
+a nonwitness a satisfies an1 = 1 (mod n). Since , we have that
+
+B is a proper subgroup of .
+
+Case 2: For all ,
+
+In other words, n is a Carmichael number. This case is extremely rare in
+
+practice. Unlike a pseudoprimality test, however, the Miller-Rabin test
+
+can efficiently determine that Carmichael numbers are composite, as
+
+we're about to see.
+
+In this case, n cannot be a prime power. To see why, suppose to the
+
+contrary that n = pe, where p is a prime and e > 1. We derive a
+
+contradiction as follows. Since we assume that n is odd, p must also be
+
+odd. Theorem 31.32 on page 933 implies that is a cyclic group: it
+
+contains a generator g such that
+
+. (The formula for (n)
+
+comes from equation (31.21) on page 920.) By equation (31.40), we have
+
+gn1 = 1 (mod n). Then the discrete logarithm theorem (Theorem 31.33
+
+on page 933, taking y = 0) implies that n 1 = 0 (mod (n)), or
+
+(p 1)pe-1 | pe 1.
+
+This statement is a contradiction for e > 1, since (p 1)pe-1 is divisible
+
+by the prime p, but pe 1 is not. Thus n is not a prime power.
+
+Since the odd composite number n is not a prime power, we
+
+decompose it into a product n1n2, where n1 and n2 are odd numbers
+
+greater than 1 that are relatively prime to each other. (There may be
+
+several ways to decompose n, and it does not matter which one we
+
+choose. For example, if , then we can choose and
+
+.)
+
+Recall that t and u are such that n 1 = 2tu, where t 1 and u is odd,
+
+and that for an input a, the procedure WITNESS computes the
+
+sequence
+
+where all computations are performed modulo n.
+
+Let us call a pair (v, j) of integers acceptable if ,
+
+and
+
+Acceptable pairs certainly exist, since u is odd. Choose v = n 1 and j =
+
+0, and let u = 2k + 1, so that . Taking this
+
+number modulo n gives (n 1)2k+1 = (n 1)2k · (n 1) = (1)2k · 1 =
+
+-1 (mod n). Thus, (n 1, 0) is an acceptable pair. Now pick the largest
+
+possible j such that there exists an acceptable pair (v, j), and fix v so that
+
+(v, j) is an acceptable pair. Let
+
+Since B is closed under multiplication modulo n, it is a subgroup of .
+
+By Theorem 31.15 on page 921, therefore, |B| divides . Every
+
+nonwitness must be a member of B, since the sequence X produced by a
+
+nonwitness must either be all 1s or else contain a 1 no later than the
+
+jth position, by the maximality of j. (If (a, j) is acceptable, where a is a
+
+nonwitness, we must have j j by how we chose j.)
+
+We now use the existence of v to demonstrate that there exists a
+
+, and hence that B is a proper subgroup of . Since
+
+, we also have by Corollary 31.29 to the
+
+Chinese remainder theorem. By Corollary 31.28, there exists a w
+
+simultaneously satisfying the equations
+
+w = v (mod n1),
+w = 1 (mod n2).
+
+Therefore,
+
+Corollary 31.29 gives that implies and also that
+
+implies . Hence, we conclude that
+
+, and so w B.
+
+It remains to show that . We start by working separately
+
+modulo n1 and modulo n2. Working modulo n1, since , we have
+
+that gcd(v, n) = 1. Also, we have gcd(v, n1) = 1, since if v does not have
+
+any common divisors with n, then it certainly does not have any
+
+common divisors with n1. Since w = v (mod n1), we see that gcd(w, n1)
+
+= 1. Working modulo n2, we have w = 1 (mod n2) implies gcd(w, n2) = 1
+
+by Exercise 31.2-3. Since gcd(w, n1) = 1 and gcd(w, n2) = 1, Theorem
+
+31.6 on page 908 yields gcd(w, n1n2) = gcd(w, n) = 1. That is, .
+
+Therefore, we have , and we can conclude in case 2 that B,
+
+which includes all nonwitnesses, is a proper subgroup of and
+
+therefore has size at most (n 1)/2.
+
+In either case, the number of witnesses to the compositeness of n is
+
+at least (n 1)/2.
+
+Theorem 31.40
+For any odd integer n > 2 and positive integer s, the probability that
+MILLER-RABIN(n, s) errs is at most 2s.
+
+Proof By Theorem 31.39, if n is composite, then each execution of the
+
+for loop of lines 14 of MILLER-RABIN has a probability of at least
+
+1/2 of discovering a witness to the compositeness of n. MILLER-
+
+RABIN makes an error only if it is so unlucky as to miss discovering a
+
+witness to the compositeness of n on each of the s iterations of the main
+loop. The probability of such a sequence of misses is at most 2s.
+
+If n is prime, MILLER-RABIN always reports PRIME, and if n is
+
+composite, the chance that MILLER-RABIN reports PRIME is at
+
+most 2-s.
+
+When applying MILLER-RABIN to a large randomly chosen
+
+integer n, however, we need to consider as well the prior probability that
+n is prime, in order to correctly interpret MILLER-RABIN's result.
+Suppose that we fix a bit length and choose at random an integer n of
+length bits to be tested for primality, so that 1g n 1.443 ln n. Let
+A denote the event that n is prime. By the prime number theorem
+(Theorem 31.37), the probability that n is prime is approximately
+
+Pr {A} 1/ln n
+
+1.443/.
+
+Now let B denote the event that MILLER-RABIN returns PRIME. We
+
+have that (or equivalently, that Pr{B | A} = 1) and
+
+(or equivalently, that ).
+
+But what is Pr{A | B}, the probability that n is prime, given that
+
+MILLER-RABIN has returned PRIME? By the alternate form of
+
+Bayes's theorem (equation (C.20) on page 1189) and approximating
+
+, we have
+
+This probability does not exceed 1/2 until s exceeds 1g(ln n 1).
+
+Intuitively, that many initial trials are needed just for the confidence
+
+derived from failing to find a witness to the compositeness of n to
+overcome the prior bias in favor of n being composite. For a number
+
+with = 1024 bits, this initial testing requires about
+
+lg(ln n 1) lg(/1.443)
+
+9
+
+trials. In any case, choosing s = 50 should suffice for almost any
+
+imaginable application.
+In fact, the situation is much better. If you are trying to find large
+
+primes by applying MILLER-RABIN to large randomly chosen odd
+
+integers, then choosing a small value of s (say 3) is unlikely to lead to
+
+erroneous results, though we won't prove it here. The reason is that for
+
+a randomly chosen odd composite integer n, the expected number of
+nonwitnesses to the compositeness of n is likely to be considerably
+smaller than (n 1)/2.
+
+If the integer n is not chosen randomly, however, the best that can be
+proven is that the number of nonwitnesses is at most (n 1)/4, using an
+
+improved version of Theorem 31.39. Furthermore, there do exist
+
+integers n for which the number of nonwitnesses is (n 1)/4.
+
+Exercises
+
+31.8-1
+Prove that if an odd integer n > 1 is not a prime or a prime power, then
+there exists a nontrivial square root of 1, modulo n.
+
+31.8-2
+
+It is possible to strengthen Euler's theorem (Theorem 31.30) slightly to
+the form
+
+where and (n) is defined by
+
+Prove that (n) | (n). A composite number n is a Carmichael number if
+(n) | n 1. The smallest Carmichael number is 561 = 3 · 11 · 17, for
+which (n) = 1cm(2, 10, 16) = 80, which divides 560. Prove that
+
+Carmichael numbers must be both "square-free" (not divisible by the
+square of any prime) and the product of at least three primes. (For this
+reason, they are not common.)
+
+31.8-3
+Prove that if x is a nontrivial square root of 1, modulo n, then gcd(x -
+1, n) and gcd(x + 1, n) are both nontrivial divisors of n.
+
+Problems
+
+31-1 Binary gcd algorithm
+
+Most computers can perform the operations of subtraction, testing the
+parity (odd or even) of a binary integer, and halving more quickly than
+
+computing remainders. This problem investigates the binary gcd
+algorithm, which avoids the remainder computations used in Euclid's
+
+algorithm.
+
+a. Prove that if a and b are both even, then gcd(a, b) = 2 · gcd(a/2, b/2).
+
+b. Prove that if a is odd and b is even, then gcd(a, b) = gcd(a, b/2).
+
+c. Prove that if a and b are both odd, then gcd(a, b) = gcd((a b)/2, b).
+
+d. Design an efficient binary gcd algorithm for input integers a and b,
+where a b, that runs in O(1g a) time. Assume that each subtraction,
+
+parity test, and halving takes unit time.
+
+31-2 Analysis of bit operations in Euclid's algorithm
+a. Consider the ordinary "paper and pencil" algorithm for long division:
+
+dividing a by b, which yields a quotient q and remainder r. Show that
+this method requires O((1 + 1g q)1g b) bit operations.
+
+b. Define (a, b) = (1 + 1g a)(1 + 1g b). Show that the number of bit
+
+operations performed by EUCLID in reducing the problem of
+
+computing gcd(a, b) to that of computing gcd(b, a mod b) is at most
+c((a, b) (b, a mod b)) for some sufficiently large constant c > 0.
+
+c. Show that EUCLID(a, b) requires O((a, b)) bit operations in general
+and O(2) bit operations when applied to two -bit inputs.
+
+31-3 Three algorithms for Fibonacci numbers
+
+This problem compares the efficiency of three methods for computing
+
+the nth Fibonacci number Fn, given n. Assume that the cost of adding,
+subtracting, or multiplying two numbers is O(1), independent of the size
+
+of the numbers.
+
+a. Show that the running time of the straightforward recursive method
+for computing Fn based on recurrence (3.31) on page 69 is
+exponential in n. (See, for example, the FIB procedure on page 751.)
+
+b. Show how to compute Fn in O(n) time using memoization.
+
+c. Show how to compute Fn in O(1g n) time using only integer addition
+
+and multiplication. (Hint: Consider the matrix and its powers.)
+
+d. Assume now that adding two -bit numbers takes () time and that
+
+multiplying two -bit numbers takes (2) time. What is the running
+time of these three methods under this more reasonable cost measure
+for the elementary arithmetic operations?
+
+31-4 Quadratic residues
+
+Let p be an odd prime. A number is a quadratic residue modulo p,
+
+if the equation x2 = a (mod p) has a solution for the unknown x.
+
+a. Show that there are exactly (p 1)/2 quadratic residues, modulo p.
+
+b. If p is prime, we define the Legendre symbol , for , to be 1 if a
+
+is a quadratic residue, modulo p, and 1 otherwise. Prove that if ,
+
+then
+
+Give an efficient algorithm that determines whether a given number a
+is a quadratic residue, modulo p. Analyze the efficiency of your
+
+algorithm.
+
+c. Prove that if p is a prime of the form 4k + 3 and a is a quadratic
+residue in , then ak+1 mod p is a square root of a, modulo p. How
+much time is required to find the square root of a quadratic residue a,
+modulo p?
+
+d. Describe an efficient randomized algorithm for finding a
+nonquadratic residue, modulo an arbitrary prime p, that is, a member
+
+of that is not a quadratic residue. How many arithmetic operations
+does your algorithm require on average?
+
+Chapter notes
+
+Knuth [260] contains a good discussion of algorithms for finding the
+greatest common divisor, as well as other basic number-theoretic
+algorithms. Dixon [121] gives an overview of factorization and primality
+
+testing. Bach [33], Riesel [378], and Bach and Shallit [34] provide
+overviews of the basics of computational number theory; Shoup [411]
+provides a more recent survey. The conference proceedings edited by
+Pomerance [362] contains several excellent survey articles.
+
+Knuth [260] discusses the origin of Euclid's algorithm. It appears in
+Book 7, Propositions 1 and 2, of the Greek mathematician Euclid's
+
+Elements, which was written around 300 B.C.E. Euclid's description may
+
+have been derived from an algorithm due to Eudoxus around 375
+B.C.E. Euclid's algorithm may hold the honor of being the oldest
+nontrivial algorithm, rivaled only by an algorithm for multiplication
+known to the ancient Egyptians. Shallit [407] chronicles the history of
+the analysis of Euclid's algorithm.
+
+Knuth attributes a special case of the Chinese remainder theorem
+(Theorem 31.27) to the Chinese mathematician Sun-Ts, who lived
+sometime between 200 B.C.E. and 200 C.E.--the date is quite uncertain.
+The same special case was given by the Greek mathematician
+Nichomachus around 100 C.E. It was generalized by Qin Jiushao in
+1247. The Chinese remainder theorem was finally stated and proved in
+its full generality by L. Euler in 1734.
+
+The randomized primality-testing algorithm presented here is due to
+Miller [327] and Rabin [373] and is the fastest randomized primalitytesting algorithm known, to within constant factors. The proof of
+Theorem 31.40 is a slight adaptation of one suggested by Bach [32]. A
+proof of a stronger result for MILLER-RABIN was given by Monier
+[332, 333]. For many years primality-testing was the classic example of a
+problem where randomization appeared to be necessary to obtain an
+efficient (polynomial-time) algorithm. In 2002, however, Agrawal,
+Kayal, and Saxena [4] surprised everyone with their deterministic
+polynomial-time primality-testing algorithm. Until then, the fastest
+deterministic primality testing algorithm known, due to Cohen and
+
+Lenstra [97], ran in (1g n)O(1g1g1g n) time on input n, which is just
+
+slightly superpolynomial. Nonetheless, for practical purposes,
+randomized primality-testing algorithms remain more efficient and are
+generally preferred.
+
+Beauchemin, Brassard, Crépeau, Goutier, and Pomerance [40] nicely
+
+discuss the problem of finding large "random" primes.
+
+The concept of a public-key cryptosystem is due to Diffie and
+
+Hellman [115]. The RSA cryptosystem was proposed in 1977 by Rivest,
+
+Shamir, and Adleman [380]. Since then, the field of cryptography has
+
+blossomed. Our understanding of the RSA cryptosystem has deepened,
+
+and modern implementations use significant refinements of the basic
+
+techniques presented here. In addition, many new techniques have been
+
+developed for proving cryptosystems to be secure. For example,
+
+Goldwasser and Micali [190] show that randomization can be an
+
+effective tool in the design of secure public-key encryption schemes. For
+
+signature schemes, Goldwasser, Micali, and Rivest [191] present a
+
+digital-signature scheme for which every conceivable type of forgery is
+
+provably as difficult as factoring. Katz and Lindell [253] provide an
+
+overview of modern cryptography.
+
+The best algorithms for factoring large numbers have a running time
+
+that grows roughly exponentially with the cube root of the length of the
+
+number n to be factored. The general number-field sieve factoring
+
+algorithm (as developed by Buhler, Lenstra, and Pomerance [77] as an
+
+extension of the ideas in the number-field sieve factoring algorithm by
+
+Pollard [360] and Lenstra et al. [295] and refined by Coppersmith [102]
+
+and others) is perhaps the most efficient such algorithm in general for
+
+large inputs. Although it is difficult to give a rigorous analysis of this
+
+algorithm, under reasonable assumptions we can derive a running-time
+
+estimate of L(1/3, n)1.902+o(1), where .
+
+The elliptic-curve method due to Lenstra [296] may be more effective
+
+for some inputs than the number-field sieve method, since it can find a
+
+small prime factor p quite quickly. With this method, the time to find p
+
+is estimated to be .
+
+32 String Matching
+
+Text-editing programs frequently need to find all occurrences of a
+pattern in the text. Typically, the text is a document being edited, and
+the pattern searched for is a particular word supplied by the user.
+Efficient algorithms for this problem--called "string matching"--can
+greatly aid the responsiveness of the text-editing program. Among their
+many other applications, string-matching algorithms search for
+particular patterns in DNA sequences. Internet search engines also use
+them to find web pages relevant to queries.
+
+The string-matching problem can be stated formally as follows. The
+
+text is given as an array T[1 : n] of length n, and the pattern is an array
+P[1 : m] of length m n. The elements of P and T are characters drawn
+
+from an alphabet , which is a finite set of characters. For example,
+could be the set {0, 1}, or it could be the set {a, b, ..., z}. The
+
+character arrays P and T are often called strings of characters.
+As Figure 32.1 shows, pattern P occurs with shift s in text T (or,
+
+equivalently, that pattern P occurs beginning at position s + 1 in text T)
+if 0 s n m and T[s + 1:s + m] = P[1:m], that is, if T[s + j] = P[j], for 1
+j m. If P occurs with shift s in T, then s is a valid shift, and otherwise,
+s is an invalid shift. The string-matching problem is the problem of
+finding all valid shifts with which a given pattern P occurs in a given
+text T.
+
+Figure 32.1 An example of the string-matching problem to find all occurrences of the pattern
+
+P = abaa in the text T = abcabaabcabac. The pattern occurs only once in the text, at shift s
+
+= 3, which is a valid shift. A vertical line connects each character of the pattern to its
+matching character in the text, and all matched characters are shaded blue.
+
+Except for the naive brute-force algorithm in Section 32.1, each
+string-matching algorithm in this chapter performs some preprocessing
+based on the pattern and then finds all valid shifts. We call this latter
+phase "matching." Here are the preprocessing and matching times for
+each of the string-matching algorithms in this chapter. The total
+running time of each algorithm is the sum of the preprocessing and
+matching times:
+
+Algorithm Preprocessing time Matching time
+
+Naive 0 O((n m + 1)m)
+
+Rabin-Karp (m) O((n m + 1)m)
+
+Finite automaton O(m ||) (n)
+
+Knuth-Morris-Pratt (m) (n)
+
+Suffix array1 O(n 1g n) O(m 1g n + km)
+
+Section 32.2 presents an interesting string-matching algorithm, due to
+
+Rabin and Karp. Although the ((n m + 1)m) worst-case running time
+
+of this algorithm is no better than that of the naive method, it works
+
+much better on average and in practice. It also generalizes nicely to
+
+other pattern-matching problems. Section 32.3 then describes a string-
+
+matching algorithm that begins by constructing a finite automaton
+
+specifically designed to search for occurrences of the given pattern P in
+a text. This algorithm takes O(m ||) preprocessing time, but only (n)
+
+matching time. Section 32.4 presents the similar, but much cleverer,
+
+Knuth-Morris-Pratt (or KMP) algorithm, which has the same (n)
+matching time, but it reduces the preprocessing time to only (m).
+
+A completely different approach appears in Section 32.5, which
+
+examines suffix arrays and the longest common prefix array. You can
+
+use these arrays not only to find a pattern in a text, but also to answer
+other questions, such as what is the longest repeated substring in the
+text and what is the longest common substring between two texts. The
+
+algorithm to form the suffix array in Section 32.5 takes O(n 1g n) time
+
+and, given the suffix array, the section shows how to compute the
+
+longest common prefix array in O(n) time.
+
+Notation and terminology
+We denote by * (read "sigma-star") the set of all finite-length strings
+formed using characters from the alphabet . This chapter considers
+
+only finite-length strings. The 0-length empty string, denoted , also
+belongs to *. The length of a string x is denoted |x|. The concatenation
+of two strings x and y, denoted xy, has length |x| + |y| and consists of
+the characters from x followed by the characters from y.
+
+Figure 32.2 A graphical proof of Lemma 32.1. Suppose that x z and y z. The three parts
+
+of the figure illustrate the three cases of the lemma. Vertical lines connect matching regions
+
+(shown in blue) of the strings. (a) If |x| |y|, then x y. (b) If |x| |y|, then y x. (c) If |x| = |y|,
+then x = y.
+
+A string w is a prefix of a string x, denoted w x, if x = wy for some
+string y *. Note that if w x, then |w| |x|. Similarly, a string w is a
+suffix of a string x, denoted w x, if x = yw for some y *. As with a
+prefix, w x implies |w| |x|. For example, ab abcca and cca
+abcca. A string w is a proper prefix of x if w x and |w| < |x|, and
+
+likewise for a proper suffix. The empty string is both a suffix and a
+prefix of every string. For any strings x and y and any character a, we
+have x y if and only if xa ya. The and relations are transitive.
+
+The following lemma will be useful later.
+
+Lemma 32.1 (Overlapping-suffix lemma)
+Suppose that x, y, and z are strings such that x z and y z. If |x|
+|y|, then x y. If |x| |y|, then y x. If |x| = |y|, then x = y.
+
+Proof See Figure 32.2 for a graphical proof.
+
+For convenience, denote the k-character prefix P[1:k] of the pattern
+P[1:m] by P[:k]. Thus, we can write P[:0] = and P[:m] = P = P[1:m].
+Similarly, denote the k-character prefix of the text T by T[:k]. Using this
+
+notation, we can state the string-matching problem as that of finding all
+
+shifts s in the range 0 s n m such that P T[:s + m].
+
+Our pseudocode allows two equal-length strings to be compared for
+equality as a primitive operation. If the strings are compared from left
+to right and the comparison stops when a mismatch is discovered, we
+assume that the time taken by such a test is a linear function of the
+
+number of matching characters discovered. To be precise, the test "x ==
+y" is assumed to take (t) time, where t is the length of the longest
+string z such that z x and z y.

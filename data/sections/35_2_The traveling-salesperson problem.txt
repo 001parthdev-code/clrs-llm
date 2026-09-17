@@ -1,0 +1,305 @@
+35.2 The traveling-salesperson problem
+
+The input to the traveling-salesperson problem, introduced in Section
+
+34.5.4, is a complete undirected graph G = (V, E) that has a nonnegative
+integer cost c(u, v) associated with each edge (u, v) E. The goal is to
+find a hamiltonian cycle (a tour) of G with minimum cost. As an
+extension of our notation, let c(A) denote the total cost of the edges in
+the subset A E:
+
+In many practical situations, the least costly way to go from a place u
+to a place w is to go directly, with no intermediate steps. Put another
+
+way, cutting out an intermediate stop never increases the cost. Such a
+
+cost function c satisfies the triangle inequality: for all vertices u, v, w V,
+c(u, w) c(u, v) + c(v, w).
+
+The triangle inequality seems as though it should naturally hold, and
+it is automatically satisfied in several applications. For example, if the
+vertices of the graph are points in the plane and the cost of traveling
+between two vertices is the ordinary euclidean distance between them,
+then the triangle inequality is satisfied. Furthermore, many cost
+functions other than euclidean distance satisfy the triangle inequality.
+
+As Exercise 35.2-2 shows, the traveling-salesperson problem is NPcomplete even if you require the cost function to satisfy the triangle
+inequality. Thus, you should not expect to find a polynomial-time
+algorithm for solving this problem exactly. Your time would be better
+spent looking for good approximation algorithms.
+
+In Section 35.2.1, we examine a 2-approximation algorithm for the
+traveling-salesperson problem with the triangle inequality. In Section
+35.2.2, we show that without the triangle inequality, a polynomial-time
+
+approximation algorithm with a constant approximation ratio does not
+exist unless P = NP.
+
+35.2.1 The traveling-salesperson problem with the triangle inequality
+
+Applying the methodology of the previous section, start by computing
+a structure--a minimum spanning tree--whose weight gives a lower
+bound on the length of an optimal traveling-salesperson tour. Then use
+the minimum spanning tree to create a tour whose cost is no more than
+twice that of the minimum spanning tree's weight, as long as the cost
+function satisfies the triangle inequality. The procedure APPROX-TSPTOUR on the next page implements this approach, calling the
+minimum-spanning-tree algorithm MST-PRIM on page 596 as a
+
+subroutine. The parameter G is a complete undirected graph, and the
+cost function c satisfies the triangle inequality.
+
+Recall from Section 12.1 that a preorder tree walk recursively visits
+every vertex in the tree, listing a vertex when it is first encountered,
+before visiting any of its children.
+
+Figure 35.2 illustrates the operation of APPROX-TSP-TOUR. Part
+(a) of the figure shows a complete undirected graph, and part (b) shows
+
+the minimum spanning tree T grown from root vertex a by MST-PRIM.
+Part (c) shows how a preorder walk of T visits the vertices, and part (d)
+
+displays the corresponding tour, which is the tour returned by
+APPROX-TSP-TOUR. Part (e) displays an optimal tour, which is about
+23% shorter.
+
+Figure 35.2 The operation of APPROX-TSP-TOUR. (a) A complete undirected graph.
+
+Vertices lie on intersections of integer grid lines. For example, f is one unit to the right and two
+units up from h. The cost function between two points is the ordinary euclidean distance. (b) A
+minimum spanning tree T of the complete graph, as computed by MST-PRIM. Vertex a is the
+
+root vertex. Only edges in the minimum spanning tree are shown. The vertices happen to be
+labeled in such a way that they are added to the main tree by MST-PRIM in alphabetical
+
+order. (c) A walk of T, starting at a. A full walk of the tree visits the vertices in the order a, b,
+c, b, h, b, a, d, e, f, e, g, e, d, a. A preorder walk of T lists a vertex just when it is first
+encountered, as indicated by the dot next to each vertex, yielding the ordering a, b, c, h, d, e, f,
+g. (d) A tour obtained by visiting the vertices in the order given by the preorder walk, which is
+the tour H returned by APPROX-TSP-TOUR. Its total cost is approximately 19.074. (e) An
+optimal tour H* for the original complete graph. Its total cost is approximately 14.715.
+
+APPROX-TSP-TOUR (G, c)
+
+1 select a vertex r G.V to be a "root" vertex
+2 compute a minimum spanning tree T for G from root r
+
+using MST-PRIM (G, c, r)
+3 let H be a list of vertices, ordered according to when they are first
+
+visited in a preorder tree walk of T
+
+4 return the hamiltonian cycle H
+
+By Exercise 21.2-2, even with a simple implementation of MST-
+
+PRIM, the running time of APPROX-TSP-TOUR is (V 2). We now
+
+show that if the cost function for an instance of the travelingsalesperson problem satisfies the triangle inequality, then APPROXTSP-TOUR returns a tour whose cost is at most twice the cost of an
+optimal tour.
+
+Theorem 35.2
+
+When the triangle inequality holds, APPROX-TSP-TOUR is a
+polynomial-time 2-approximation algorithm for the travelingsalesperson problem.
+
+Proof We have already seen that APPROX-TSP-TOUR runs in
+
+polynomial time.
+
+Let H* denote an optimal tour for the given set of vertices. Deleting
+
+any edge from a tour yields a spanning tree, and each edge cost is
+
+nonnegative. Therefore, the weight of the minimum spanning tree T
+
+computed in line 2 of APPROX-TSP-TOUR provides a lower bound on
+the cost of an optimal tour:
+
+A full walk of T lists the vertices when they are first visited and also
+
+whenever they are returned to after a visit to a subtree. Let's call this
+
+full walk W. The full walk of our example gives the order
+a, b, c, b, h, b, a, d, e, f, e, g, e, d, a.
+Since the full walk traverses every edge of T exactly twice, by extending
+the definition of the cost c in the natural manner to handle multisets of
+
+edges, we have
+
+Inequality (35.4) and equation (35.5) imply that
+
+and so the cost of W is within a factor of 2 of the cost of an optimal
+
+tour.
+
+Of course, the full walk W is not a tour, since it visits some vertices
+
+more than once. By the triangle inequality, however, deleting a visit to
+
+any vertex from W does not increase the cost. (When a vertex v is
+deleted from W between visits to u and w, the resulting ordering
+specifies going directly from u to w.) Repeatedly apply this operation on
+each visit to a vertex after the first time it's visited in W, so that W is
+
+left with only the first visit to each vertex. In our example, this process
+leaves the ordering
+
+a, b, c, h, d, e, f, g.
+
+This ordering is the same as that obtained by a preorder walk of the
+
+tree T. Let H be the cycle corresponding to this preorder walk. It is a
+
+hamiltonian cycle, since every vertex is visited exactly once, and in fact
+
+it is the cycle computed by APPROX-TSP-TOUR. Since H is obtained
+by deleting vertices from the full walk W, we have
+
+Combining inequalities (35.6) and (35.7) gives c(H) 2c(H*), which
+
+completes the proof.
+
+Despite the small approximation ratio provided by Theorem 35.2,
+APPROX-TSP-TOUR is usually not the best practical choice for this
+problem. There are other approximation algorithms that typically
+perform much better in practice. (See the references at the end of this
+chapter.)
+
+35.2.2 The general traveling-salesperson problem
+
+When the cost function c does not satisfy the triangle inequality, there
+
+is no way to find good approximate tours in polynomial time unless P =
+NP.
+
+Theorem 35.3
+
+If P NP, then for any constant 1, there is no polynomial-time
+approximation algorithm with approximation ratio for the general
+traveling-salesperson problem.
+
+Proof The proof is by contradiction. Suppose to the contrary that for
+
+some number 1, there is a polynomial-time approximation algorithm
+
+A with approximation ratio . Without loss of generality, assume that
+is an integer, by rounding it up if necessary. We will show how to use A
+
+to solve instances of the hamiltonian-cycle problem (defined in Section
+34.2) in polynomial time. Since Theorem 34.13 on page 1085 says that
+the hamiltonian-cycle problem is NP-complete, Theorem 34.4 on page
+1063 implies that if it has a polynomial-time algorithm, then P = NP.
+
+Let G = (V, E) be an instance of the hamiltonian-cycle problem. We
+will show how to determine efficiently whether G contains a hamiltonian
+cycle by making use of the hypothesized approximation algorithm A.
+Convert G into an instance of the traveling-salesperson problem as
+follows. Let G = (V, E) be the complete graph on V, that is,
+
+E = {(u, v) : u, v V and u v}.
+
+Assign an integer cost to each edge in E as follows:
+
+Given a representation of G, it takes time polynomial in |V| and |E| to
+create representations of G and c.
+
+Now consider the traveling-salesperson problem (G, c). If the
+original graph G has a hamiltonian cycle H, then the cost function c
+assigns to each edge of H a cost of 1, and so (G, c) contains a tour of
+cost |V|. On the other hand, if G does not contain a hamiltonian cycle,
+then any tour of G must use some edge not in E. But any tour that uses
+an edge not in E has a cost of at least
+
+( |V| + 1) + (|V| - 1) = |V| + |V|
+> |V|.
+
+Because edges not in G are so costly, there is a gap of at least |V|
+between the cost of a tour that is a hamiltonian cycle in G (cost |V|) and
+the cost of any other tour (cost at least |V| + |V|). Therefore, the cost
+of a tour that is not a hamiltonian cycle in G is at least a factor of + 1
+greater than the cost of a tour that is a hamiltonian cycle in G.
+
+What happens upon applying the approximation algorithm A to the
+traveling-salesperson problem (G, c)? Because A is guaranteed to
+
+return a tour of cost no more than times the cost of an optimal tour,
+
+if G contains a hamiltonian cycle, then A must return it. If G has no
+hamiltonian cycle, then A returns a tour of cost more than |V|.
+Therefore, using A solves the hamiltonian-cycle problem in polynomial
+
+time.
+
+The proof of Theorem 35.3 serves as an example of a general
+technique to prove that no good approximation algorithm exists for a
+
+particular problem. Given an NP-hard decision problem X, produce in
+polynomial time a minimization problem Y such that "yes" instances of
+X correspond to instances of Y with value at most k (for some k), but
+that "no" instances of X correspond to instances of Y with value
+greater than k. This technique shows that, unless P = NP, there is no
+polynomial-time -approximation algorithm for problem Y.
+
+Exercises
+
+35.2-1
+Let G = (V, E) be a complete undirected graph containing at least 3
+vertices, and let c be a cost function that satisfies the triangle inequality.
+Prove that c(u, v) 0 for all u, v V.
+
+35.2-2
+
+Show how in polynomial time to transform one instance of the
+traveling-salesperson problem into another instance whose cost
+function satisfies the triangle inequality. The two instances must have
+the same set of optimal tours. Explain why such a polynomial-time
+transformation does not contradict Theorem 35.3, assuming that P
+NP.
+
+35.2-3
+Consider the following closest-point heuristic for building an
+
+approximate traveling-salesperson tour whose cost function satisfies the
+triangle inequality. Begin with a trivial cycle consisting of a single
+
+arbitrarily chosen vertex. At each step, identify the vertex u that is not
+
+on the cycle but whose distance to any vertex on the cycle is minimum.
+
+Suppose that the vertex on the cycle that is nearest u is vertex v. Extend
+the cycle to include u by inserting u just after v. Repeat until all vertices
+
+are on the cycle. Prove that this heuristic returns a tour whose total cost
+is not more than twice the cost of an optimal tour.
+
+35.2-4
+A solution to the bottleneck traveling-salesperson problem is the
+
+hamiltonian cycle that minimizes the cost of the most costly edge in the
+cycle. Assuming that the cost function satisfies the triangle inequality,
+show that there exists a polynomial-time approximation algorithm with
+
+approximation ratio 3 for this problem. (Hint: Show recursively how to
+
+visit all the nodes in a bottleneck spanning tree, as discussed in Problem
+21-4 on page 601, exactly once by taking a full walk of the tree and
+skipping nodes, but without skipping more than two consecutive
+intermediate nodes. Show that the costliest edge in a bottleneck
+spanning tree has a cost bounded from above by the cost of the
+costliest edge in a bottleneck hamiltonian cycle.)
+
+35.2-5
+
+Suppose that the vertices for an instance of the traveling-salesperson
+
+problem are points in the plane and that the cost c(u, v) is the euclidean
+distance between points u and v. Show that an optimal tour never
+
+crosses itself.
+
+35.2-6
+Adapt the proof of Theorem 35.3 to show that for any constant c 0,
+
+there is no polynomial-time approximation algorithm with
+
+approximation ratio |V|c for the general traveling-salesperson problem.

@@ -1,0 +1,506 @@
+6.5 Priority queues
+
+In Chapter 8, we will see that any comparison-based sorting algorithm
+
+requires (n lg n) comparisons and hence (n lg n) time. Therefore,
+
+heapsort is asymptotically optimal among comparison-based sorting
+algorithms. Yet, a good implementation of quicksort, presented in
+Chapter 7, usually beats it in practice. Nevertheless, the heap data
+structure itself has many uses. In this section, we present one of the
+most popular applications of a heap: as an efficient priority queue. As
+with heaps, priority queues come in two forms: max-priority queues and
+min-priority queues. We'll focus here on how to implement max-priority
+
+queues, which are in turn based on max-heaps. Exercise 6.5-3 asks you
+to write the procedures for min-priority queues.
+
+A priority queue is a data structure for maintaining a set S of
+elements, each with an associated value called a key. A max-priority
+queue supports the following operations:
+
+INSERT(S, x, k) inserts the element x with key k into the set S, which is
+equivalent to the operation S = S {x}.
+
+MAXIMUM(S) returns the element of S with the largest key.
+
+EXTRACT-MAX(S) removes and returns the element of S with the
+
+largest key.
+
+INCREASE-KEY(S, x, k) increases the value of element x's key to the
+new value k, which is assumed to be at least as large as x's current key
+
+value.
+
+Among their other applications, you can use max-priority queues to
+schedule jobs on a computer shared among multiple users. The maxpriority queue keeps track of the jobs to be performed and their relative
+priorities. When a job is finished or interrupted, the scheduler selects
+the highest-priority job from among those pending by calling
+EXTRACT-MAX. The scheduler can add a new job to the queue at any
+time by calling INSERT.
+
+Alternatively, a min-priority queue supports the operations INSERT,
+
+MINIMUM, EXTRACT-MIN, and DECREASE-KEY. A min-priority
+queue can be used in an event-driven simulator. The items in the queue
+are events to be simulated, each with an associated time of occurrence
+that serves as its key. The events must be simulated in order of their
+time of occurrence, because the simulation of an event can cause other
+events to be simulated in the future. The simulation program calls
+EXTRACT-MIN at each step to choose the next event to simulate. As
+new events are produced, the simulator inserts them into the minpriority queue by calling INSERT. We'll see other uses for min-priority
+queues, highlighting the DECREASE-KEY operation, in Chapters 21
+and 22.
+
+When you use a heap to implement a priority queue within a given
+application, elements of the priority queue correspond to objects in the
+application. Each object contains a key. If the priority queue is
+implemented by a heap, you need to determine which application object
+corresponds to a given heap element, and vice versa. Because the heap
+elements are stored in an array, you need a way to map application
+objects to and from array indices.
+
+One way to map between application objects and heap elements uses
+
+handles, which are additional information stored in the objects and heap
+
+elements that give enough information to perform the mapping.
+Handles are often implemented to be opaque to the surrounding code,
+thereby maintaining an abstraction barrier between the application and
+the priority queue. For example, the handle within an application object
+might contain the corresponding index into the heap array. But since
+only the code for the priority queue accesses this index, the index is
+entirely hidden from the application code. Because heap elements
+change locations within the array during heap operations, an actual
+implementation of the priority queue, upon relocating a heap element,
+must also update the array indices in the corresponding handles.
+Conversely, each element in the heap might contain a pointer to the
+corresponding application object, but the heap element knows this
+pointer as only an opaque handle and the application maps this handle
+to an application object. Typically, the worst-case overhead for
+
+maintaining handles is O(1) per access.
+
+As an alternative to incorporating handles in application objects, you
+can store within the priority queue a mapping from application objects
+to array indices in the heap. The advantage of doing so is that the
+mapping is contained entirely within the priority queue, so that the
+application objects need no further embellishment. The disadvantage
+lies in the additional cost of establishing and maintaining the mapping.
+One option for the mapping is a hash table (see Chapter 11).1 The
+added expected time for a hash table to map an object to an array index
+
+is just O(1), though the worst-case time can be as bad as (n).
+
+Let's see how to implement the operations of a max-priority queue
+using a max-heap. In the previous sections, we treated the array
+
+elements as the keys to be sorted, implicitly assuming that any satellite
+data moved with the corresponding keys. When a heap implements a
+priority queue, we instead treat each array element as a pointer to an
+object in the priority queue, so that the object is analogous to the
+satellite data when sorting. We further assume that each such object has
+
+an attribute key, which determines where in the heap the object belongs.
+For a heap implemented by an array A, we refer to A[i].key.
+
+The procedure MAX-HEAP-MAXIMUM on the facing page
+implements the MAXIMUM operation in (1) time, and MAX-HEAPEXTRACT-MAX implements the operation EXTRACT-MAX. MAX-
+
+HEAP-EXTRACT-MAX is similar to the for loop body (lines 35) of
+the HEAPSORT procedure. We implicitly assume that MAX-HEAPIFY
+
+compares priority-queue objects based on their key attributes. We also
+
+assume that when MAX-HEAPIFY exchanges elements in the array, it
+is exchanging pointers and also that it updates the mapping between
+objects and array indices. The running time of MAX-HEAP-
+
+EXTRACT-MAX is O(lg n), since it performs only a constant amount
+of work on top of the O(lg n) time for MAX-HEAPIFY, plus whatever
+
+overhead is incurred within MAX-HEAPIFY for mapping priorityqueue objects to array indices.
+
+The procedure MAX-HEAP-INCREASE-KEY on page 176
+implements the INCREASE-KEY operation. It first verifies that the
+
+new key k will not cause the key in the object x to decrease, and if there
+is no problem, it gives x the new key value. The procedure then finds the
+index i in the array corresponding to object x, so that A[i] is x. Because
+increasing the key of A[i] might violate the max-heap property, the
+
+procedure then, in a manner reminiscent of the insertion loop (lines 5
+7) of INSERTION-SORT on page 19, traverses a simple path from this
+node toward the root to find a proper place for the newly increased key.
+As MAX-HEAP-INCREASE-KEY traverses this path, it repeatedly
+compares an element's key to that of its parent, exchanging pointers
+and continuing if the element's key is larger, and terminating if the
+element's key is smaller, since the max-heap property now holds. (See
+Exercise 6.5-7 for a precise loop invariant.) Like MAX-HEAPIFY when
+used in a priority queue, MAX-HEAP-INCREASE-KEY updates the
+
+information that maps objects to array indices when array elements are
+exchanged. Figure 6.5 shows an example of a MAX-HEAPINCREASE-KEY operation. In addition to the overhead for mapping
+priority queue objects to array indices, the running time of MAX-
+
+HEAP-INCREASE-KEY on an n-element heap is O(lg n), since the
+path traced from the node updated in line 3 to the root has length O(lg
+n).
+
+MAX-HEAP-MAXIMUM(A)
+1 if A.heap-size < 1
+
+2 error "heap underflow"
+
+3 return A[1]
+
+MAX-HEAP-EXTRACT-MAX(A)
+1 max = MAX-HEAP-MAXIMUM(A)
+2 A[1] = A[A.heap-size]
+3 A.heap-size = A.heap-size 1
+4 MAX-HEAPIFY(A, 1)
+5 return max
+
+The procedure MAX-HEAP-INSERT on the next page implements
+
+the INSERT operation. It takes as inputs the array A implementing the
+max-heap, the new object x to be inserted into the max-heap, and the
+size n of array A. The procedure first verifies that the array has room
+
+for the new element. It then expands the max-heap by adding to the
+tree a new leaf whose key is . Then it calls MAX-HEAPINCREASE-KEY to set the key of this new element to its correct value
+and maintain the max-heap property. The running time of MAX-
+
+HEAP-INSERT on an n-element heap is O(lg n) plus the overhead for
+
+mapping priority queue objects to indices.
+In summary, a heap can support any priority-queue operation on a
+
+set of size n in O(lg n) time, plus the overhead for mapping priority
+
+queue objects to array indices.
+
+MAX-HEAP-INCREASE-KEY(A, x, k)
+
+1 if k < x.key
+
+2 error "new key is smaller than current key"
+
+3 x.key = k
+4 find the index i in array A where object x occurs
+5 while i > 1 and A[PARENT(i)].key < A[i].key
+6 exchange A[i] with A[PARENT(i)], updating the information that
+
+maps priority queue objects to array indices
+
+7 i = PARENT(i)
+
+MAX-HEAP-INSERT(A, x, n)
+1 if A.heap-size == n
+
+2 error "heap overflow"
+
+3 A.heap-size = A.heap-size + 1
+4 k = x.key
+5 x.key =
+6 A[A.heap-size] = x
+7 map x to index heap-size in the array
+8 MAX-HEAP-INCREASE-KEY(A, x, k)
+
+Exercises
+
+6.5-1
+
+Suppose that the objects in a max-priority queue are just keys. Illustrate
+
+the operation of MAX-HEAP-EXTRACT-MAX on the heap A = 15,
+
+13, 9, 5, 12, 8, 7, 4, 0, 6, 2, 1.
+
+6.5-2
+
+Suppose that the objects in a max-priority queue are just keys. Illustrate
+
+the operation of MAX-HEAP-INSERT(A, 10) on the heap A = 15, 13,
+
+9, 5, 12, 8, 7, 4, 0, 6, 2, 1.
+
+6.5-3
+
+Write pseudocode to implement a min-priority queue with a min-heap
+by writing the procedures MIN-HEAP-MINIMUM, MIN-HEAPEXTRACT-MIN, MIN-HEAP-DECREASE-KEY, and MIN-HEAPINSERT.
+
+6.5-4
+
+Write pseudocode for the procedure MAX-HEAP-DECREASE-
+
+KEY(A, x, k) in a max-heap. What is the running time of your
+
+procedure?
+
+Figure 6.5 The operation of MAX-HEAP-INCREASE-KEY. Only the key of each element in
+
+the priority queue is shown. The node indexed by i in each iteration is shown in blue. (a) The
+max-heap of Figure 6.4(a) with i indexing the node whose key is about to be increased. (b)
+
+This node has its key increased to 15. (c) After one iteration of the while loop of lines 57, the
+
+node and its parent have exchanged keys, and the index i moves up to the parent. (d) The maxheap after one more iteration of the while loop. At this point, A[PARENT(i)] A[i]. The max-
+
+heap property now holds and the procedure terminates.
+
+6.5-5
+
+Why does MAX-HEAP-INSERT bother setting the key of the inserted
+object to in line 5 given that line 8 will set the object's key to the
+desired value?
+
+6.5-6
+
+Professor Uriah suggests replacing the while loop of lines 57 in MAXHEAP-INCREASE-KEY by a call to MAX-HEAPIFY. Explain the
+flaw in the professor's idea.
+
+6.5-7
+
+Argue the correctness of MAX-HEAP-INCREASE-KEY using the
+following loop invariant:
+
+At the start of each iteration of the while loop of lines 57:
+
+a. If both nodes PARENT(i) and LEFT(i) exist, then
+A[PARENT(i)].key A[LEFT(i)].key.
+
+b. If both nodes PARENT(i) and RIGHT(i) exist, then
+A[PARENT(i)].key A[RIGHT(i)].key.
+
+c. The subarray A[1 : A.heap-size] satisfies the max-heap property,
+except that there may be one violation, which is that A[i].key may
+be greater than A[PARENT(i)].key.
+
+You may assume that the subarray A[1 : A.heap-size] satisfies the max-
+
+heap property at the time MAX-HEAP-INCREASE-KEY is called.
+
+6.5-8
+
+Each exchange operation on line 6 of MAX-HEAP-INCREASE-KEY
+typically requires three assignments, not counting the updating of the
+mapping from objects to array indices. Show how to use the idea of the
+inner loop of INSERTION-SORT to reduce the three assignments to
+just one assignment.
+
+6.5-9
+
+Show how to implement a first-in, first-out queue with a priority queue.
+Show how to implement a stack with a priority queue. (Queues and
+stacks are defined in Section 10.1.3.)
+
+6.5-10
+The operation MAX-HEAP-DELETE(A, x) deletes the object x from
+max-heap A. Give an implementation of MAX-HEAP-DELETE for an
+
+n-element max-heap that runs in O(lg n) time plus the overhead for
+
+mapping priority queue objects to array indices.
+
+6.5-11
+Give an O(n lg k)-time algorithm to merge k sorted lists into one sorted
+list, where n is the total number of elements in all the input lists. (Hint:
+Use a min-heap for k-way merging.)
+
+Problems
+
+6-1 Building a heap using insertion
+
+One way to build a heap is by repeatedly calling MAX-HEAP-INSERT
+to insert the elements into the heap. Consider the procedure BUILDMAX-HEAP on the facing page. It assumes that the objects being
+inserted are just the heap elements.
+
+BUILD-MAX-HEAP (A, n)
+1 A.heap-size = 1
+2 for i = 2 to n
+3 MAX-HEAP-INSERT(A, A[i], n)
+
+a. Do the procedures BUILD-MAX-HEAP and BUILD-MAX-HEAP
+
+always create the same heap when run on the same input array? Prove
+that they do, or provide a counterexample.
+
+b. Show that in the worst case, BUILD-MAX-HEAP requires (n lg n)
+time to build an n-element heap.
+
+6-2 Analysis of d-ary heaps
+A d-ary heap is like a binary heap, but (with one possible exception)
+nonleaf nodes have d children instead of two children. In all parts of
+
+this problem, assume that the time to maintain the mapping between
+
+objects and heap elements is O(1) per operation.
+
+a. Describe how to represent a d-ary heap in an array.
+
+b. Using -notation, express the height of a d-ary heap of n elements in
+terms of n and d.
+
+c. Give an efficient implementation of EXTRACT-MAX in a d-ary max-
+heap. Analyze its running time in terms of d and n.
+
+d. Give an efficient implementation of INCREASE-KEY in a d-ary
+max-heap. Analyze its running time in terms of d and n.
+
+e. Give an efficient implementation of INSERT in a d-ary max-heap.
+Analyze its running time in terms of d and n.
+
+6-3 Young tableaus
+An m × n Young tableau is an m × n matrix such that the entries of each
+
+row are in sorted order from left to right and the entries of each column
+are in sorted order from top to bottom. Some of the entries of a Young
+tableau may be , which we treat as nonexistent elements. Thus, a
+
+Young tableau can be used to hold r mn finite numbers.
+
+a. Draw a 4 × 4 Young tableau containing the elements {9, 16, 3, 2, 4, 8,
+
+5, 14, 12}.
+
+b. Argue that an m × n Young tableau Y is empty if Y [1, 1] = . Argue
+that Y is full (contains mn elements) if Y [m, n] < .
+
+c. Give an algorithm to implement EXTRACT-MIN on a nonempty m
+× n Young tableau that runs in O(m + n) time. Your algorithm should
+use a recursive subroutine that solves an m × n problem by recursively
+solving either an (m 1) × n or an m × (n 1) subproblem. (Hint:
+
+Think about MAX-HEAPIFY.) Explain why your implementation of
+
+EXTRACT-MIN runs in O(m + n) time.
+
+d. Show how to insert a new element into a nonfull m × n Young tableau
+in O(m + n) time.
+
+e. Using no other sorting method as a subroutine, show how to use an n
+× n Young tableau to sort n2 numbers in O(n3) time.
+
+f. Give an O(m + n)-time algorithm to determine whether a given
+number is stored in a given m × n Young tableau.
+
+Chapter notes
+
+The heapsort algorithm was invented by Williams [456], who also
+
+described how to implement a priority queue with a heap. The BUILD-
+
+MAX-HEAP procedure was suggested by Floyd [145]. Schaffer and
+
+Sedgewick [395] showed that in the best case, the number of times
+
+elements move in the heap during heapsort is approximately (n/2) lg n
+and that the average number of moves is approximately n lg n.
+
+We use min-heaps to implement min-priority queues in Chapters 15,
+
+21, and 22. Other, more complicated, data structures give better time
+
+bounds for certain min-priority queue operations. Fredman and Tarjan
+
+[156] developed Fibonacci heaps, which support INSERT and
+
+DECREASE-KEY in O(1) amortized time (see Chapter 16). That is, the
+average worst-case running time for these operations is O(1). Brodal,
+
+Lagogiannis, and Tarjan [73] subsequently devised strict Fibonacci
+
+heaps, which make these time bounds the actual running times. If the
+
+keys are unique and drawn from the set {0, 1, ... , n 1} of nonnegative
+
+integers, van Emde Boas trees [440, 441] support the operations
+
+INSERT, DELETE, SEARCH, MINIMUM, MAXIMUM,
+
+PREDECESSOR, and SUCCESSOR in O(lg lg n) time.
+If the data are b-bit integers, and the computer memory consists of
+
+addressable b-bit words, Fredman and Willard [157] showed how to
+implement MINIMUM in O(1) time and INSERT and EXTRACT-
+
+MIN in time. Thorup [436] has improved the bound to
+
+O(lg lg n) time by using randomized hashing, requiring only linear
+
+space.
+
+An important special case of priority queues occurs when the
+
+sequence of EXTRACT-MIN operations is monotone, that is, the values
+
+returned by successive EXTRACT-MIN operations are monotonically
+
+increasing over time. This case arises in several important applications,
+
+such as Dijkstra's single-source shortest-paths algorithm, which we
+
+discuss in Chapter 22, and in discrete-event simulation. For Dijkstra's
+
+algorithm it is particularly important that the DECREASE-KEY
+
+operation be implemented efficiently. For the monotone case, if the data
+
+are integers in the range 1, 2, ... , C, Ahuja, Mehlhorn, Orlin, and
+
+Tarjan [8] describe how to implement EXTRACT-MIN and INSERT in
+
+O(lg C) amortized time (Chapter 16 presents amortized analysis) and
+
+DECREASE-KEY in O(1) time, using a data structure called a radix
+
+heap. The O(lg C) bound can be improved to using Fibonacci
+
+heaps in conjunction with radix heaps. Cherkassky, Goldberg, and
+
+Silverstein [90] further improved the bound to O(lg1/3+ C) expected
+
+time by combining the multilevel bucketing structure of Denardo and
+
+Fox [112] with the heap of Thorup mentioned earlier. Raman [375]
+
+further improved these results to obtain a bound of O(min {lg1/4+ C,
+
+lg1/3+ n}), for any fixed > 0.
+
+Many other variants of heaps have been proposed. Brodal [72]
+
+surveys some of these developments.
+
+1 In Python, dictionaries are implemented with hash tables.
+
+7 Quicksort
+
+The quicksort algorithm has a worst-case running time of (n2) on an
+input array of n numbers. Despite this slow worst-case running time,
+
+quicksort is often the best practical choice for sorting because it is
+
+remarkably efficient on average: its expected running time is (n lg n)
+
+when all numbers are distinct, and the constant factors hidden in the
+
+(n lg n) notation are small. Unlike merge sort, it also has the
+
+advantage of sorting in place (see page 158), and it works well even in
+virtual-memory environments.
+
+Our study of quicksort is broken into four sections. Section 7.1
+describes the algorithm and an important subroutine used by quicksort
+for partitioning. Because the behavior of quicksort is complex, we'll
+start with an intuitive discussion of its performance in Section 7.2 and
+analyze it precisely at the end of the chapter. Section 7.3 presents a
+randomized version of quicksort. When all elements are distinct,1 this
+randomized algorithm has a good expected running time and no
+particular input elicits its worst-case behavior. (See Problem 7-2 for the
+case in which elements may be equal.) Section 7.4 analyzes the
+
+randomized algorithm, showing that it runs in (n2) time in the worst
+case and, assuming distinct elements, in expected O(n lg n) time.

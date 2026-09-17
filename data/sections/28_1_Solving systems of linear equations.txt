@@ -1,0 +1,600 @@
+28.1 Solving systems of linear equations
+
+Numerous applications need to solve sets of simultaneous linear
+equations. A linear system can be cast as a matrix equation in which
+
+each matrix or vector element belongs to a field, typically the real
+numbers . This section discusses how to solve a system of linear
+equations using a method called LUP decomposition.
+
+The process starts with a set of linear equations in n unknowns x1,
+x2, ... , xn:
+
+A solution to the equations (28.1) is a set of values for x1, x2, ... , xn
+
+that satisfy all of the equations simultaneously. In this section, we treat
+
+only the case in which there are exactly n equations in n unknowns.
+
+Next, rewrite equations (28.1) as the matrix-vector equation
+
+or, equivalently, letting A = (aij), x = (xi), and b = (bi), as
+
+If A is nonsingular, it possesses an inverse A-1, and
+
+is the solution vector. We can prove that x is the unique solution to
+equation (28.2) as follows. If there are two solutions, x and x, then Ax
+= Ax = b and, letting I denote an identity matrix,
+x = Ix
+
+= (A-1A)x
+= A-1(Ax)
+= A-1(Ax)
+= (A-1A)x
+
+= Ix
+= x.
+
+This section focuses on the case in which A is nonsingular or,
+equivalently (by Theorem D.1 on page 1220), the rank of A equals the
+number n of unknowns. There are other possibilities, however, which
+
+merit a brief discussion. If the number of equations is less than the
+
+number n of unknowns--or, more generally, if the rank of A is less than
+n--then the system is underdetermined. An underdetermined system
+
+typically has infinitely many solutions, although it may have no
+solutions at all if the equations are inconsistent. If the number of
+
+equations exceeds the number n of unknowns, the system is
+overdetermined, and there may not exist any solutions. Section 28.3
+
+addresses the important problem of finding good approximate solutions
+to overdetermined systems of linear equations.
+
+Let's return to the problem of solving the system Ax = b of n
+equations in n unknowns. One option is to compute A-1 and then,
+using equation (28.3), multiply b by A-1, yielding x = A-1b. This
+
+approach suffers in practice from numerical instability. Fortunately,
+another approach--LUP decomposition--is numerically stable and has
+the further advantage of being faster in practice.
+
+Overview of LUP decomposition
+
+The idea behind LUP decomposition is to find three n × n matrices L,
+U, and P such that
+
+where
+
+L is a unit lower-triangular matrix,
+U is an upper-triangular matrix, and
+P is a permutation matrix.
+
+We call matrices L, U, and P satisfying equation (28.4) an LUP
+decomposition of the matrix A. We'll show that every nonsingular matrix
+
+A possesses such a decomposition.
+Computing an LUP decomposition for the matrix A has the
+
+advantage that linear systems can be efficiently solved when they are
+
+triangular, as is the case for both matrices L and U. If you have an LUP
+decomposition for A, you can solve equation (28.2), Ax = b, by solving
+only triangular linear systems, as follows. Multiply both sides of Ax = b
+by P, yielding the equivalent equation PAx = Pb. By Exercise D.1-4 on
+
+page 1219, multiplying both sides by a permutation matrix amounts to
+permuting the equations (28.1). By the decomposition (28.4),
+
+substituting LU for PA gives
+LUx = Pb.
+
+You can now solve this equation by solving two triangular linear
+
+systems. Define y = Ux, where x is the desired solution vector. First,
+
+solve the lower-triangular system
+
+for the unknown vector y by a method called "forward substitution."
+Having solved for y, solve the upper-triangular system
+
+for the unknown x by a method called "back substitution." Why does
+this process solve Ax = b? Because the permutation matrix P is
+
+invertible (see Exercise D.2-3 on page 1223), multiplying both sides of
+
+equation (28.4) by P -1 gives P-1PA = P-1LU, so that
+
+Hence, the vector x that satisfies Ux = y is the solution to Ax = b:
+
+Ax = P-1LUx (by equation (28.7))
+= P-1Ly (by equation (28.6))
+= P-1Pb (by equation (28.5))
+= b.
+
+The next step is to show how forward and back substitution work
+and then attack the problem of computing the LUP decomposition
+itself.
+
+Forward and back substitution
+
+Forward substitution can solve the lower-triangular system (28.5) in
+(n2) time, given L, P, and b. An array [1 : n] provides a more compact
+format to represent the permutation P than an n × n matrix that is
+mostly 0s. For i = 1, 2, ... , n, the entry [i] indicates that Pi,[i] = 1 and
+Pij = 0 for j [i]. Thus, PA has a[i],j in row i and column j, and Pb has
+b[i] as its ith element. Since L is unit lower-triangular, the matrix
+equation Ly = Pb is equivalent to the n equations
+
+y1 = b[1],
+
+l21y1 + y2 = b[2],
+
+l31y1 + l32y2 + y3 = b[3],
+
+ln1y1 + ln2y2 + ln3y3 + + yn = b[n].
+
+The first equation gives y1 = b[1] directly. Knowing the value of y1,
+
+you can substitute it into the second equation, yielding
+
+y2 = b[2] - l21y1.
+
+Next, you can substitute both y1 and y2 into the third equation,
+
+obtaining
+
+y3 = b[3] - (l31y1 + l32y2).
+
+In general, you substitute y1, y2, ... , yi-1 "forward" into the ith
+equation to solve for yi:
+
+Once you've solved for y, you can solve for x in equation (28.6) using
+back substitution, which is similar to forward substitution. This time,
+you solve the nth equation first and work backward to the first
+
+equation. Like forward substitution, this process runs in (n2) time.
+Since U is upper-triangular, the matrix equation Ux = y is equivalent to
+the n equations
+
+u11x1 + u12x2 + u1,n-2xn-2 + u1,n-1xn-1 + u1nxn = y1,
+
++
+
+u22x2 + + u2,n-2xn-2 + u2,n-1xn-1 + u2nxn = y2,
+
+un-2,n-2xn-2 un-2,n-1xn-1 un-2,nxn = yn-2,
+
++ +
+
+un-1,n-1xn-1 un-1,nxn = yn-1,
+
++
+
+un,nxn = yn.
+
+Thus, you can solve for xn, xn-1, ... , x1 successively as follows:
+
+xn = yn/un,n,
+xn-1 = (yn-1 - un-1,nxn)/un-1,n-1,
+xn-2 = (yn-2 - (un-2,n-1xn-1 + un-2,nxn))/un-2,n-2,
+
+or, in general,
+
+Given P, L, U, and b, the procedure LUP-SOLVE on the next page
+solves for x by combining forward and back substitution. The
+permutation matrix P is represented by the array . The procedure first
+solves for y using forward substitution in lines 23, and then it solves
+for x using backward substitution in lines 45. Since the summation
+
+within each of the for loops includes an implicit loop, the running time
+
+is (n2).
+
+As an example of these methods, consider the system of linear
+
+equations defined by Ax = b, where
+
+LUP-SOLVE(L, U, , b, n)
+1 let x and y be new vectors of length n
+2 for i = 1 to n
+
+3
+
+4 for i = n downto 1
+
+5
+
+6 return x
+and we want to solve for the unknown x. The LUP decomposition is
+
+(You might want to verify that PA = LU.) Using forward substitution,
+solve Ly = Pb for y:
+
+obtaining
+
+by computing first y1, then y2, and finally y3. Then, using back
+substitution, solve Ux = y for x:
+
+thereby obtaining the desired answer
+
+by computing first x3, then x2, and finally x1.
+
+Computing an LU decomposition
+
+Given an LUP decomposition for a nonsingular matrix A, you can use
+forward and back substitution to solve the system Ax = b of linear
+
+equations. Now let's see how to efficiently compute an LUP
+
+decomposition for A. We start with the simpler case in which A is an n ×
+n nonsingular matrix and P is absent (or, equivalently, P = In, the n × n
+identity matrix), so that A = LU. We call the two matrices L and U an
+LU decomposition of A.
+
+To create an LU decomposition, we'll use a process known as
+
+Gaussian elimination. Start by subtracting multiples of the first equation
+
+from the other equations in order to remove the first variable from
+those equations. Then subtract multiples of the second equation from
+the third and subsequent equations so that now the first and second
+variables are removed from them. Continue this process until the system
+
+that remains has an upper-triangular form--this is the matrix U. The
+matrix L comprises the row multipliers that cause variables to be
+
+eliminated.
+To implement this strategy, let's start with a recursive formulation.
+
+The input is an n × n nonsingular matrix A. If n = 1, then nothing needs
+to be done: just choose L = I1 and U = A. For n > 1, break A into four
+
+parts:
+
+where v = (a21, a31, ... , an1) is a column (n-1)-vector, wT = (a12, a13,
+... , a1n)T is a row (n - 1)-vector, and A is an (n - 1) × (n - 1) matrix.
+
+Then, using matrix algebra (verify the equations by simply multiplying
+
+through), factor A as
+
+The 0s in the first and second matrices of equation (28.9) are row and
+
+column (n - 1)-vectors, respectively. The term vwT/a11 is an (n - 1) ×
+(n - 1) matrix formed by taking the outer product of v and w and
+dividing each element of the result by a11. Thus it conforms in size to
+the matrix A from which it is subtracted. The resulting (n - 1) × (n - 1)
+
+matrix
+
+is called the Schur complement of A with respect to a11.
+We claim that if A is nonsingular, then the Schur complement is
+
+nonsingular, too. Why? Suppose that the Schur complement, which is (n
+- 1) × (n - 1), is singular. Then by Theorem D.1, it has row rank strictly
+less than n - 1. Because the bottom n - 1 entries in the first column of
+
+the matrix
+
+are all 0, the bottom n - 1 rows of this matrix must have row rank
+strictly less than n - 1. The row rank of the entire matrix, therefore, is
+strictly less than n. Applying Exercise D.2-8 on page 1223 to equation
+(28.9), A has rank strictly less than n, and from Theorem D.1, we derive
+the contradiction that A is singular.
+
+Because the Schur complement is nonsingular, it, too, has an LU
+decomposition, which we can find recursively. Let's say that
+
+A - vwT/a11 = LU,
+
+where L is unit lower-triangular and U is upper-triangular. The LU
+decomposition of A is then A = LU, with
+
+as shown by
+
+Because L is unit lower-triangular, so is L, and because U is uppertriangular, so is U.
+
+Of course, if a11 = 0, this method doesn't work, because it divides by
+
+0. It also doesn't work if the upper leftmost entry of the Schur
+
+complement A - vwT/a11 is 0, since the next step of the recursion will
+
+divide by it. The denominators in each step of LU decomposition are
+
+called pivots, and they occupy the diagonal elements of the matrix U.
+The permutation matrix P included in LUP decomposition provides a
+
+way to avoid dividing by 0, as we'll see below. Using permutations to
+avoid division by 0 (or by small numbers, which can contribute to
+
+numerical instability), is called pivoting.
+
+An important class of matrices for which LU decomposition always
+works correctly is the class of symmetric positive-definite matrices.
+Such matrices require no pivoting to avoid dividing by 0 in the recursive
+strategy outlined above. We will prove this result, as well as several
+others, in Section 28.3.
+
+The pseudocode in the procedure LU-DECOMPOSITION follows
+the recursive strategy, except that an iteration loop replaces the
+recursion. (This transformation is a standard optimization for a "tailrecursive" procedure--one whose last operation is a recursive call to
+itself. See Problem 7-5 on page 202.) The procedure initializes the
+
+matrix U with 0s below the diagonal and matrix L with 1s on its
+
+diagonal and 0s above the diagonal. Each iteration works on a square
+
+submatrix, using its upper leftmost element as the pivot to compute the
+
+v and w vectors and the Schur complement, which becomes the square
+
+submatrix worked on by the next iteration.
+
+LU-DECOMPOSITION(A, n)
+
+1let L and U be new n × n matrices
+
+2initialize U with 0s below the diagonal
+
+3initialize L with 1s on the diagonal and 0s above the diagonal
+
+4for k = 1 to n
+
+5 ukk = akk
+
+6 for i = k + 1 to n
+
+7 lik = aik/akk // aik holds vi
+
+8 uki = aki // aki holds wi
+
+9 for i = k + 1 to n // compute the Schur complement ...
+
+10 for j = k + 1 to n
+
+11 aij = aij - likukj // ... and store it back into A
+
+12return L and U
+
+Each recursive step in the description above takes place in one
+
+iteration of the outer for loop of lines 411. Within this loop, line 5
+
+determines the pivot to be ukk = akk. The for loop in lines 68 (which
+does not execute when k = n) uses the v and w vectors to update L and
+U. Line 7 determines the below-diagonal elements of L, storing vi/akk in
+lik, and line 8 computes the above-diagonal elements of U, storing wi in
+uki. Finally, lines 911 compute the elements of the Schur complement
+and store them back into the matrix A. (There is no need to divide by
+akk in line 11 because that already happened when line 7 computed lik.)
+
+Because line 11 is triply nested, LU-DECOMPOSITION runs in (n3)
+
+time.
+
+Figure 28.1 illustrates the operation of LU-DECOMPOSITION. It
+
+shows a standard optimization of the procedure that stores the
+
+significant elements of L and U in place in the matrix A. Each element
+aij corresponds to either lij (if i > j) or uij (if i j), so that the matrix A
+holds both L and U when the procedure terminates. To obtain the
+
+pseudocode for this optimization from the pseudocode for the LU-
+
+DECOMPOSITION procedure, just replace each reference to l or u by
+a. You can verify that this transformation preserves correctness.
+
+Figure 28.1 The operation of LU-DECOMPOSITION. (a) The matrix A. (b) The result of the
+first iteration of the outer for loop of lines 411. The element a11 = 2 highlighted in blue is the
+pivot, the tan column is v/a11, and the tan row is wT. The elements of U computed thus far are
+above the horizontal line, and the elements of L are to the left of the vertical line. The Schur
+complement matrix A - vwT/a11 occupies the lower right. (c) The result of the next iteration
+of the outer for loop, on the Schur complement matrix from part (b). The element a22 = 4
+highlighted in blue is the pivot, and the tan column and row are v/a22 and wT (in the
+
+partitioning of the Schur complement), respectively. Lines divide the matrix into the elements
+
+of U computed so far (above), the elements of L computed so far (left), and the new Schur
+complement (lower right). (d) After the next iteration, the matrix A is factored. The element 3
+in the new Schur complement becomes part of U when the recursion terminates.) (e) The
+factorization A = LU.
+
+Computing an LUP decomposition
+If the diagonal of the matrix given to LU-DECOMPOSITION contains
+any 0s, then the procedure will attempt to divide by 0, which would
+cause disaster. Even if the diagonal contains no 0s, but does have
+numbers with small absolute values, dividing by such numbers can cause
+
+numerical instabilities. Therefore, LUP decomposition pivots on entries
+with the largest absolute values that it can find.
+
+In LUP decomposition, the input is an n × n nonsingular matrix A,
+with a goal of finding a permutation matrix P, a unit lower-triangular
+matrix L, and an upper-triangular matrix U such that PA = LU. Before
+partitioning the matrix A, as LU decomposition does, LUP
+decomposition moves a nonzero element, say ak1, from somewhere in
+
+the first column to the (1, 1) position of the matrix. For the greatest
+numerical stability, LUP decomposition chooses the element in the first
+
+column with the greatest absolute value as ak1. (The first column
+cannot contain only 0s, for then A would be singular, because its
+
+determinant would be 0, by Theorems D.4 and D.5 on page 1221.) In
+order to preserve the set of equations, LUP decomposition exchanges
+
+row 1 with row k, which is equivalent to multiplying A by a permutation
+matrix Q on the left (Exercise D.1-4 on page 1219). Thus, the analog to
+equation (28.8) expresses QA as
+
+where v = (a21, a31, ... , an1), except that a11 replaces ak1; wT = (ak2,
+ak3, ... , akn)T; and A is an (n - 1) × (n - 1) matrix. Since ak1 0, the
+
+analog to equation (28.9) guarantees no division by 0:
+
+Just as in LU decomposition, if A is nonsingular, then the Schur
+complement A - vwT/ak1 is nonsingular, too. Therefore, you can
+
+recursively find an LUP decomposition for it, with unit lower-triangular
+
+matrix L, upper-triangular matrix U, and permutation matrix P, such
+
+that
+
+P(A - vwT/ak1) = LU.
+
+Define
+
+which is a permutation matrix, since it is the product of two
+
+permutation matrices (Exercise D.1-4 on page 1219). This definition of
+
+P gives
+
+which yields the LUP decomposition. Because L is unit lowertriangular, so is L, and because U is upper-triangular, so is U.
+
+Notice that in this derivation, unlike the one for LU decomposition,
+
+both the column vector v/ak1 and the Schur complement A - vwT/ak1
+are multiplied by the permutation matrix P. The procedure LUP-
+
+DECOMPOSITION gives the pseudocode for LUP decomposition.
+
+LUP-DECOMPOSITION(A, n)
+
+1let [1 : n] be a new array // initialize to the identity permutation
+2for i = 1 to n
+3 [i] = i // find largest absolute value in column
+
+4for k = 1 to n k
+5 p=0
+6 for i = k to n
+
+7 if |aik| > p
+
+8 p = |aik|
+
+9 k = i // row number of the largest found so
+
+far
+
+10 if p == 0
+
+11 error "singular matrix"
+
+12 exchange [k] with [k]
+
+13 for i = 1 to n
+
+14 exchange aki with// exchange rows k and k
+
+aki
+
+15 for i = k + 1 to n
+
+16 aik = aik/akk
+
+17 for j = k + 1 to n
+
+18 aij = aij - aikakj // compute L and U in place in A
+
+Like LU-DECOMPOSITION, the LUP-DECOMPOSITION
+
+procedure replaces the recursion with an iteration loop. As an
+
+improvement over a direct implementation of the recursion, the
+
+procedure dynamically maintains the permutation matrix P as an array
+, where [i] = j means that the ith row of P contains a 1 in column j.
+
+The LUP-DECOMPOSITION procedure also implements the
+
+improvement mentioned earlier, computing L and U in place in the
+matrix A. Thus, when the procedure terminates,
+
+Figure 28.2 illustrates how LUP-DECOMPOSITION factors a
+
+matrix. Lines 23 initialize the array to represent the identity
+
+permutation. The outer for loop of lines 418 implements the recursion,
+
+finding an LUP decomposition of the (n - k + 1) × (n - k + 1)
+submatrix whose upper left is in row k and column k. Each time
+through the outer loop, lines 59 determine the element akk with the
+largest absolute value of those in the current first column (column k) of
+the (n - k + 1) × (n - k + 1) submatrix that the procedure is currently
+
+working on. If all elements in the current first column are 0, lines 1011
+
+report that the matrix is singular. To pivot, line 12 exchanges [k] with
+[k], and lines 1314 exchange the kth and kth rows of A, thereby
+
+making the pivot element akk. (The entire rows are swapped because in
+the derivation of the method above, not only is A - vwT/ak1 multiplied
+by P, but so is v/ak1.) Finally, the Schur complement is computed by
+
+lines 1518 in much the same way as it is computed by lines 611 of LUDECOMPOSITION, except that here the operation is written to work
+in place.
+
+Figure 28.2 The operation of LUP-DECOMPOSITION. (a) The input matrix A with the
+
+identity permutation of the rows in yellow on the left. The first step of the algorithm
+determines that the element 5 highlighted in blue in the third row is the pivot for the first
+column. (b) Rows 1 and 3 are swapped and the permutation is updated. The tan column and
+
+row represent v and wT. (c) The vector v is replaced by v/5, and the lower right of the matrix is
+updated with the Schur complement. Lines divide the matrix into three regions: elements of U
+(above), elements of L (left), and elements of the Schur complement (lower right). (d)(f) The
+
+second step. (g)(i) The third step. No further changes occur on the fourth (final) step. (j) The
+
+LUP decomposition PA = LU.
+
+Because of its triply nested loop structure, LUP-
+
+DECOMPOSITION has a running time of (n3), which is the same as
+
+that of LU-DECOMPOSITION. Thus, pivoting costs at most a
+constant factor in time.
+Exercises
+
+28.1-1
+
+Solve the equation
+
+by using forward substitution.
+
+28.1-2
+
+Find an LU decomposition of the matrix
+
+28.1-3
+
+Solve the equation
+
+by using an LUP decomposition.
+
+28.1-4
+
+Describe the LUP decomposition of a diagonal matrix.
+
+28.1-5
+
+Describe the LUP decomposition of a permutation matrix, and prove
+that it is unique.
+
+28.1-6
+Show that for all n 1, there exists a singular n × n matrix that has an
+
+LU decomposition.
+
+28.1-7
+
+In LU-DECOMPOSITION, is it necessary to perform the outermost
+
+for loop iteration when k = n? How about in LUP-DECOMPOSITION?

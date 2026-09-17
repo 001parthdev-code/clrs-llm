@@ -1,0 +1,1136 @@
+26.1 The basics of fork-join parallelism
+
+Our exploration of parallel programming begins with the problem of
+computing Fibonacci numbers recursively in parallel. We'll look at a
+straightforward serial Fibonacci calculation, which, although inefficient,
+serves as a good illustration of how to express parallelism in
+pseudocode.
+
+Recall that the Fibonacci numbers are defined by equation (3.31) on
+page 69:
+
+To calculate the nth Fibonacci number recursively, you could use the
+
+ordinary serial algorithm in the procedure FIB on the facing page. You
+would not really want to compute large Fibonacci numbers this way,
+
+because this computation does needless repeated work, but parallelizing
+it can be instructive.
+
+FIB (n)
+1if n 1
+2 return n
+3else x = FIB (n - 1)
+4 y = FIB (n - 2)
+5 return x + y
+
+To analyze this algorithm, let T (n) denote the running time of FIB
+(n). Since FIB (n) contains two recursive calls plus a constant amount
+
+of extra work, we obtain the recurrence
+
+T (n) = T (n - 1) + T (n - 2) + (1).
+
+This recurrence has solution T (n) = (Fn), which we can establish by
+using the substitution method (see Section 4.3). To show that T (n) =
+O(Fn), we'll adopt the inductive hypothesis that T (n) aFn - b, where
+a > 1 and b > 0 are constants. Substituting, we obtain
+
+T (n) (aFn-1 - b) + (aFn-2 - b) + (1)
+= a(Fn-1 + Fn-2) - 2b + (1)
+aFn - b,
+
+if we choose b large enough to dominate the upper-bound constant in
+the (1) term. We can then choose a large enough to upper-bound the
+(1) base case for small n. To show that T (n) = (Fn), we use the
+inductive hypothesis T (n) aFn - b. Substituting and following
+
+reasoning similar to the asymptotic upper-bound argument, we
+
+establish this hypothesis by choosing b smaller than the lower-bound
+constant in the (1) term and a small enough to lower-bound the (1)
+base case for small n. Theorem 3.1 on page 56 then establishes that T
+
+(n) = (Fn), as desired. Since Fn = (n), where is the
+
+golden ratio, by equation (3.34) on page 69, it follows that
+
+Thus this procedure is a particularly slow way to compute Fibonacci
+numbers, since it runs in exponential time. (See Problem 31-3 on page
+954 for faster ways.)
+
+Let's see why the algorithm is inefficient. Figure 26.1 shows the tree
+
+of recursive procedure instances created when computing F6 with the
+
+FIB procedure. The call to FIB(6) recursively calls FIB(5) and then
+FIB(4). But, the call to FIB(5) also results in a call to FIB(4). Both
+
+instances of FIB(4) return the same result (F4 = 3). Since the FIB
+
+procedure does not memoize (recall the definition of "memoize" from
+page 368), the second call to FIB(4) replicates the work that the first
+call performs, which is wasteful.
+
+Figure 26.1 The invocation tree for FIB(6). Each node in the tree represents a procedure
+instance whose children are the procedure instances it calls during its execution. Since each
+instance of FIB with the same argument does the same work to produce the same result, the
+inefficiency of this algorithm for computing the Fibonacci numbers can be seen by the vast
+number of repeated calls to compute the same thing. The portion of the tree shaded blue
+appears in task-parallel form in Figure 26.2.
+
+Although the FIB procedure is a poor way to compute Fibonacci
+numbers, it can help us warm up to parallelism concepts. Perhaps the
+
+most basic concept is to understand is that if two parallel tasks operate
+
+on entirely different data, then--absent other interference--they each
+
+produce the same outcomes when executed at the same time as when
+
+they run serially one after the other. Within FIB (n), for example, the
+two recursive calls in line 3 to FIB (n - 1) and in line 4 to FIB (n - 2)
+
+can safely execute in parallel because the computation performed by
+
+one in no way affects the other.
+
+Parallel keywords
+
+The P-FIB procedure on the next page computes Fibonacci numbers,
+
+but using the parallel keywords spawn and sync to indicate parallelism in
+
+the pseudocode.
+If the keywords spawn and sync are deleted from P-FIB, the
+
+resulting pseudocode text is identical to FIB (other than renaming the
+procedure in the header and in the two recursive calls). We define the
+
+serial projection1 of a parallel algorithm to be the serial algorithm that
+
+results from ignoring the parallel directives, which in this case can be
+done by omitting the keywords spawn and sync. For parallel for loops,
+which we'll see later on, we omit the keyword parallel. Indeed, our
+parallel pseudocode possesses the elegant property that its serial
+projection is always ordinary serial pseudocode to solve the same
+problem.
+
+P-FIB (n)
+
+1 if n 1
+
+2 return n
+
+3 else x = spawn P-FIB (n - 1) // don't wait for subroutine to return
+
+4 y = P-FIB (n - 2) // in parallel with spawned subroutine
+
+5 sync // wait for spawned subroutine to finish
+
+6 return x + y
+
+Semantics of parallel keywords
+
+Spawning occurs when the keyword spawn precedes a procedure call, as
+
+in line 3 of P-FIB. The semantics of a spawn differs from an ordinary
+procedure call in that the procedure instance that executes the spawn--
+
+the parent--may continue to execute in parallel with the spawned
+subroutine--its child--instead of waiting for the child to finish, as
+
+would happen in a serial execution. In this case, while the spawned child
+
+is computing P-FIB (n - 1), the parent may go on to compute P-FIB
+(n-2) in line 4 in parallel with the spawned child. Since the P-FIB
+
+procedure is recursive, these two subroutine calls themselves create
+nested parallelism, as do their children, thereby creating a potentially
+vast tree of subcomputations, all executing in parallel.
+
+The keyword spawn does not say, however, that a procedure must
+execute in parallel with its spawned children, only that it may. The
+parallel keywords express the logical parallelism of the computation,
+
+indicating which parts of the computation may proceed in parallel. At
+
+runtime, it is up to a scheduler to determine which subcomputations
+
+actually run in parallel by assigning them to available processors as the
+computation unfolds. We'll discuss the theory behind task-parallel
+schedulers shortly (on page 759).
+
+A procedure cannot safely use the values returned by its spawned
+children until after it executes a sync statement, as in line 5. The
+keyword sync indicates that the procedure must wait as necessary for all
+its spawned children to finish before proceeding to the statement after
+the sync--the "join" of a fork-join parallel computation. The P-FIB
+procedure requires a sync before the return statement in line 6 to avoid
+
+the anomaly that would occur if x and y were summed before P-FIB (n
+- 1) had finished and its return value had been assigned to x. In
+
+addition to explicit join synchronization provided by the sync statement,
+it is convenient to assume that every procedure executes a sync
+implicitly before it returns, thus ensuring that all children finish before
+their parent finishes.
+
+A graph model for parallel execution
+
+It helps to view the execution of a parallel computation--the dynamic
+stream of runtime instructions executed by processors under the
+
+direction of a parallel program--as a directed acyclic graph G = (V, E),
+called a (parallel) trace.2 Conceptually, the vertices in V are executed
+instructions, and the edges in E represent dependencies between
+instructions, where (u, v) E means that the parallel program required
+instruction u to execute before instruction v.
+
+It's sometimes inconvenient, especially if we want to focus on the
+
+parallel structure of a computation, for a vertex of a trace to represent
+
+only one executed instruction. Consequently, if a chain of instructions
+
+contains no parallel or procedural control (no spawn, sync, procedure
+
+call, or return--via either an explicit return statement or the return that
+
+happens implicitly upon reaching the end of a procedure), we group the
+
+entire chain into a single strand. As an example, Figure 26.2 shows the
+
+trace that results from computing P-FIB(4) in the portion of Figure
+
+26.1 shaded blue. Strands do not include instructions that involve
+
+parallel or procedural control. These control dependencies must be
+
+represented as edges in the trace.
+
+When a parent procedure calls a child, the trace contains an edge (u,
+v) from the strand u in the parent that executes the call to the first
+strand v of the spawned child, as illustrated in Figure 26.2 by the edge
+
+from the orange strand in P-FIB(4) to the blue strand in P-FIB(2).
+
+When the last strand v in the child returns, the trace contains an edge
+(v, u) to the strand u, where u is the successor strand of u in the
+
+parent, as with the edge from the white strand in P-FIB(2) to the white
+
+strand in P-FIB(4).
+
+Figure 26.2 The trace of P-FIB(4) corresponding to the shaded portion of Figure 26.1. Each
+circle represents one strand, with blue circles representing any instructions executed in the
+
+part of the procedure (instance) up to the spawn of P-FIB (n - 1) in line 3; orange circles
+representing the instructions executed in the part of the procedure that calls P-FIB (n - 2) in
+line 4 up to the sync in line 5, where it suspends until the spawn of P-FIB (n - 1) returns; and
+
+white circles representing the instructions executed in the part of the procedure after the sync,
+
+where it sums x and y, up to the point where it returns the result. Strands belonging to the
+
+same procedure are grouped into a rounded rectangle, blue for spawned procedures and tan for
+called procedures. Assuming that each strand takes unit time, the work is 17 time units, since
+there are 17 strands, and the span is 8 time units, since the critical path--shown with blue
+edges--contains 8 strands.
+
+When the parent spawns a child, however, the trace is a little
+
+different. The edge (u, v) goes from parent to child as with a call, such
+
+as the edge from the blue strand in P-FIB(4) to the blue strand in P-
+
+FIB(3), but the trace contains another edge (u, u) as well, indicating
+that u's successor strand u can continue to execute while v is executing.
+
+The edge from the blue strand in P-FIB(4) to the orange strand in P-
+
+FIB(4) illustrates one such edge. As with a call, there is an edge from
+
+the last strand v in the child, but with a spawn, it no longer goes to u's
+successor. Instead, the edge is (v, x), where x is the strand immediately
+
+following the sync in the parent that ensures that the child has finished,
+
+as with the edge from the white strand in P-FIB(3) to the white strand
+
+in P-FIB(4).
+
+You can figure out what parallel control created a particular trace. If
+
+a strand has two successors, one of them must have been spawned, and
+
+if a strand has multiple predecessors, the predecessors joined because
+
+of a sync statement. Thus, in the general case, the set V forms the set of
+strands, and the set E of directed edges represents dependencies
+between strands induced by parallel and procedural control. If G
+contains a directed path from strand u to strand v, we say that the two
+strands are (logically) in series. If there is no path in G either from u to
+v or from v to u, the strands are (logically) in parallel.
+
+A fork-join parallel trace can be pictured as a dag of strands
+
+embedded in an invocation tree of procedure instances. For example,
+
+Figure 26.1 shows the invocation tree for FIB(6), which also serves as
+
+the invocation tree for P-FIB(6), the edges between procedure instances
+
+now representing either calls or spawns. Figure 26.2 zooms in on the
+
+subtree that is shaded blue, showing the strands that constitute each
+
+procedure instance in P-FIB(4). All directed edges connecting strands
+
+run either within a procedure or along undirected edges of the
+
+invocation tree in Figure 26.1. (More general task-parallel traces that
+
+are not fork-join traces may contain some directed edges that do not
+
+run along the undirected tree edges.)
+
+Our analyses generally assume that parallel algorithms execute on an
+
+ideal parallel computer, which consists of a set of processors and a
+sequentially consistent shared memory. To understand sequential
+consistency, you first need to know that memory is accessed by load
+instructions, which copy data from a location in the memory to a
+register within a processor, and by store instructions, which copy data
+
+from a processor register to a location in the memory. A single line of
+
+pseudocode can entail several such instructions. For example, the line x
+= y + z could result in load instructions to fetch each of y and z from
+
+memory into a processor, an instruction to add them together inside the
+
+processor, and a store instruction to place the result x back into
+
+memory. In a parallel computer, several processors might need to load
+
+or store at the same time. Sequential consistency means that even if
+
+multiple processors attempt to access the memory simultaneously, the
+
+shared memory behaves as if exactly one instruction from one of the
+
+processors is executed at a time, even though the actual transfer of data
+may happen at the same time. It is as if the instructions were executed
+one at a time sequentially according to some global linear order among
+all the processors that preserves the individual orders in which each
+processor executes its own instructions.
+
+For task-parallel computations, which are scheduled onto processors
+automatically by a runtime system, the sequentially consistent shared
+memory behaves as if a parallel computation's executed instructions
+were executed one by one in the order of a topological sort (see Section
+20.4) of its trace. That is, you can reason about the execution by
+imagining that the individual instructions (not generally the strands,
+which may aggregate many instructions) are interleaved in some linear
+order that preserves the partial order of the trace. Depending on
+scheduling, the linear order could vary from one run of the program to
+the next, but the behavior of any execution is always as if the
+instructions executed serially in a linear order consistent with the
+dependencies within the trace.
+
+In addition to making assumptions about semantics, the ideal
+parallel-computer model makes some performance assumptions.
+Specifically, it assumes that each processor in the machine has equal
+computing power, and it ignores the cost of scheduling. Although this
+last assumption may sound optimistic, it turns out that for algorithms
+with sufficient "parallelism" (a term we'll define precisely a little later),
+the overhead of scheduling is generally minimal in practice.
+
+Performance measures
+
+We can gauge the theoretical efficiency of a task-parallel algorithm
+
+using work/span analysis, which is based on two metrics: "work" and
+"span." The work of a task-parallel computation is the total time to
+
+execute the entire computation on one processor. In other words, the
+work is the sum of the times taken by each of the strands. If each
+strand takes unit time, the work is just the number of vertices in the
+
+trace. The span is the fastest possible time to execute the computation
+
+on an unlimited number of processors, which corresponds to the sum of
+the times taken by the strands along a longest path in the trace, where
+
+"longest" means that each strand is weighted by its execution time.
+
+Such a longest path is called the critical path of the trace, and thus the
+
+span is the weight of the longest (weighted) path in the trace. (Section
+
+22.2, pages 617619 shows how to find a critical path in a dag G = (V,
+E) in (V + E) time.) For a trace in which each strand takes unit time,
+
+the span equals the number of strands on the critical path. For example,
+the trace of Figure 26.2 has 17 vertices in all and 8 vertices on its
+critical path, so that if each strand takes unit time, its work is 17 time
+units and its span is 8 time units.
+
+The actual running time of a task-parallel computation depends not
+only on its work and its span, but also on how many processors are
+available and how the scheduler allocates strands to processors. To
+
+denote the running time of a task-parallel computation on P processors,
+we subscript by P. For example, we might denote the running time of an
+algorithm on P processors by TP. The work is the running time on a
+single processor, or T1. The span is the running time if we could run
+
+each strand on its own processor--in other words, if we had an
+
+unlimited number of processors--and so we denote the span by T.
+The work and span provide lower bounds on the running time TP of
+
+a task-parallel computation on P processors:
+
+In one step, an ideal parallel computer with P processors can do
+at most P units of work, and thus in TP time, it can perform at
+most P TP work. Since the total work to do is T1, we have P TP
+T1. Dividing by P yields the work law:
+
+A P-processor ideal parallel computer cannot run any faster than
+
+a machine with an unlimited number of processors. Looked at
+another way, a machine with an unlimited number of processors
+
+can emulate a P-processor machine by using just P of its
+processors. Thus, the span law follows:
+
+We define the speedup of a computation on P processors by the ratio
+T1/TP, which says how many times faster the computation runs on P
+processors than on one processor. By the work law, we have TP T1/P,
+which implies that T1/TP P. Thus, the speedup on a P-processor ideal
+parallel computer can be at most P. When the speedup is linear in the
+number of processors, that is, when T1/TP = (P), the computation
+exhibits linear speedup. Perfect linear speedup occurs when T1/TP = P.
+
+The ratio T1/T of the work to the span gives the parallelism of the
+
+parallel computation. We can view the parallelism from three
+
+perspectives. As a ratio, the parallelism denotes the average amount of
+
+work that can be performed in parallel for each step along the critical
+
+path. As an upper bound, the parallelism gives the maximum possible
+
+speedup that can be achieved on any number of processors. Perhaps
+
+most important, the parallelism provides a limit on the possibility of
+
+attaining perfect linear speedup. Specifically, once the number of
+
+processors exceeds the parallelism, the computation cannot possibly
+
+achieve perfect linear speedup. To see this last point, suppose that P >
+T1/T, in which case the span law implies that the speedup satisfies
+T1/TP T1/T < P. Moreover, if the number P of processors in the
+ideal parallel computer greatly exceeds the parallelism--that is, if P
+T1/T--then T1/TP P, so that the speedup is much less than the
+
+number of processors. In other words, if the number of processors
+
+exceeds the parallelism, adding even more processors makes the
+
+speedup less perfect.
+
+As an example, consider the computation P-FIB(4) in Figure 26.2,
+
+and assume that each strand takes unit time. Since the work is T1 = 17
+and the span is T = 8, the parallelism is T1/T = 17/8 = 2.125.
+
+Consequently, achieving much more than double the performance is
+
+impossible, no matter how many processors execute the computation.
+
+For larger input sizes, however, we'll see that P-FIB (n) exhibits
+
+substantial parallelism.
+
+We define the (parallel) slackness of a task-parallel computation
+executed on an ideal parallel computer with P processors to be the ratio
+
+(T1/T)/P = T1/(P T), which is the factor by which the parallelism of
+
+the computation exceeds the number of processors in the machine.
+Restating the bounds on speedup, if the slackness is less than 1, perfect
+
+linear speedup is impossible, because T1/(P T) < 1 and the span law
+imply that T1/TP T1/T < P. Indeed, as the slackness decreases from
+
+1 and approaches 0, the speedup of the computation diverges further
+and further from perfect linear speedup. If the slackness is less than 1,
+additional parallelism in an algorithm can have a great impact on its
+execution efficiency. If the slackness is greater than 1, however, the
+work per processor is the limiting constraint. We'll see that as the
+slackness increases from 1, a good scheduler can achieve closer and
+closer to perfect linear speedup. But once the slackness is much greater
+than 1, the advantage of additional parallelism shows diminishing
+returns.
+
+Scheduling
+
+Good performance depends on more than just minimizing the work and
+span. The strands must also be scheduled efficiently onto the processors
+of the parallel machine. Our fork-join parallel-programming model
+provides no way for a programmer to specify which strands to execute
+on which processors. Instead, we rely on the runtime system's scheduler
+to map the dynamically unfolding computation to individual processors.
+In practice, the scheduler maps the strands to static threads, and the
+operating system schedules the threads on the processors themselves.
+But this extra level of indirection is unnecessary for our understanding
+of scheduling. We can just imagine that the scheduler maps strands to
+processors directly.
+
+A task-parallel scheduler must schedule the computation without
+knowing in advance when procedures will be spawned or when they will
+
+finish--that is, it must operate online. Moreover, a good scheduler
+
+operates in a distributed fashion, where the threads implementing the
+scheduler cooperate to load-balance the computation. Provably good
+online, distributed schedulers exist, but analyzing them is complicated.
+
+Instead, to keep our analysis simple, we'll consider an online centralized
+
+scheduler that knows the global state of the computation at any
+moment.
+
+In particular, we'll analyze greedy schedulers, which assign as many
+
+strands to processors as possible in each time step, never leaving a
+processor idle if there is work that can be done. We'll classify each step
+of a greedy scheduler as follows:
+
+Complete step: At least P strands are ready to execute, meaning
+
+that all strands on which they depend have finished execution. A
+
+greedy scheduler assigns any P of the ready strands to the
+
+processors, completely utilizing all the processor resources.
+
+Incomplete step: Fewer than P strands are ready to execute. A
+
+greedy scheduler assigns each ready strand to its own processor,
+leaving some processors idle for the step, but executing all the
+ready strands.
+
+The work law tells us that the fastest running time TP that we can
+hope for on P processors must be at least T1/P. The span law tells us
+that the fastest possible running time must be at least T. The following
+
+theorem shows that greedy scheduling is provably good in that it
+achieves the sum of these two lower bounds as an upper bound.
+
+Theorem 26.1
+On an ideal parallel computer with P processors, a greedy scheduler
+executes a task-parallel computation with work T1 and span T in time
+
+Proof Without loss of generality, assume that each strand takes unit
+
+time. (If necessary, replace each longer strand by a chain of unit-time
+strands.) We'll consider complete and incomplete steps separately.
+
+In each complete step, the P processors together perform a total of
+P work. Thus, if the number of complete steps is k, the total work
+executing all the complete steps is kP. Since the greedy scheduler
+doesn't execute any strand more than once and only T1 work needs to
+
+be performed, it follows that kP T1, from which we can conclude that
+the number k of complete steps is at most T1/P.
+
+Now, let's consider an incomplete step. Let G be the trace for the
+entire computation, let G be the subtrace of G that has yet to be
+executed at the start of the incomplete step, and let G be the subtrace
+remaining to be executed after the incomplete step. Consider the set R
+
+of strands that are ready at the beginning of the incomplete step, where
+
+|R| < P. By definition, if a strand is ready, all its predecessors in trace G
+have executed. Thus the predecessors of strands in R do not belong to
+G. A longest path in G must necessarily start at a strand in R, since
+every other strand in G has a predecessor and thus could not start a
+
+longest path. Because the greedy scheduler executes all ready strands
+
+during the incomplete step, the strands of G are exactly those in G
+minus the strands in R. Consequently, the length of a longest path in G
+must be 1 less than the length of a longest path in G. In other words,
+
+every incomplete step decreases the span of the trace remaining to be
+
+executed by 1. Hence, the number of incomplete steps can be at most
+
+T.
+
+Since each step is either complete or incomplete, the theorem
+
+follows.
+
+The following corollary shows that a greedy scheduler always
+performs well.
+
+Corollary 26.2
+The running time TP of any task-parallel computation scheduled by a
+greedy scheduler on a P-processor ideal parallel computer is within a
+
+factor of 2 of optimal.
+
+Proof Let T*P be the running time produced by an optimal scheduler
+
+on a machine with P processors, and let T1 and T be the work and
+
+span of the computation, respectively. Since the work and span laws--
+
+inequalities (26.2) and (26.3)--give , Theorem 26.1
+
+implies that
+
+The next corollary shows that, in fact, a greedy scheduler achieves
+near-perfect linear speedup on any task-parallel computation as the
+slackness grows.
+
+Corollary 26.3
+Let TP be the running time of a task-parallel computation produced by
+a greedy scheduler on an ideal parallel computer with P processors, and
+let T1 and Tbe the work and span of the computation, respectively.
+Then, if P T1/T, or equivalently, the parallel slackness is much
+greater than 1, we have TP T1/P, a speedup of approximately P.
+
+Proof If we suppose that P T1/T, then it follows that T T1/P,
+and hence Theorem 26.1 gives TP T1/P + T T1/P. Since the work
+law (26.2) dictates that TP T1/P, we conclude that TP T1/P, which is
+a speedup of T1/TP P.
+
+The symbol denotes "much less," but how much is "much less"?
+As a rule of thumb, a slackness of at least 10--that is, 10 times more
+parallelism than processors--generally suffices to achieve good
+speedup. Then, the span term in the greedy bound, inequality (26.4), is
+less than 10% of the work-per-processor term, which is good enough
+for most engineering situations. For example, if a computation runs on
+only 10 or 100 processors, it doesn't make sense to value parallelism of,
+say 1,000,000, over parallelism of 10,000, even with the factor of 100
+difference. As Problem 26-2 shows, sometimes reducing extreme
+parallelism yields algorithms that are better with respect to other
+concerns and which still scale up well on reasonable numbers of
+processors.
+
+Analyzing parallel algorithms
+
+We now have all the tools we need to analyze parallel algorithms using
+work/span analysis, allowing us to bound an algorithm's running time
+on any number of processors. Analyzing the work is relatively
+straightforward, since it amounts to nothing more than analyzing the
+running time of an ordinary serial algorithm, namely, the serial
+projection of the parallel algorithm. You should already be familiar with
+analyzing work, since that is what most of this textbook is about!
+Analyzing the span is the new thing that parallelism engenders, but it's
+generally no harder once you get the hang of it. Let's investigate the
+basic ideas using the P-FIB program.
+
+Analyzing the work T1(n) of P-FIB (n) poses no hurdles, because
+
+we've already done it. The serial projection of P-FIB is effectively the
+
+original FIB procedure, and hence, we have T1(n) = T (n) = (n) from
+
+equation (26.1).
+Figure 26.3 illustrates how to analyze the span. If two traces are
+
+joined in series, their spans add to form the span of their composition,
+whereas if they are joined in parallel, the span of their composition is
+the maximum of the spans of the two traces. As it turns out, the trace
+of any fork-join parallel computation can be built up from single
+strands by series-parallel composition.
+
+Figure 26.3 Series-parallel composition of parallel traces. (a) When two traces are joined in
+series, the work of the composition is the sum of their work, and the span of the composition is
+the sum of their spans. (b) When two traces are joined in parallel, the work of the composition
+remains the sum of their work, but the span of the composition is only the maximum of their
+spans.
+
+Armed with an understanding of series-parallel composition, we can
+
+analyze the span of P-FIB (n). The spawned call to P-FIB (n - 1) in line
+3 runs in parallel with the call to P-FIB (n - 2) in line 4. Hence, we can
+express the span of P-FIB (n) as the recurrence
+
+T(n) = max {T(n - 1), T(n - 2)} + (1)
+= T(n - 1) + (1),
+
+which has solution T(n) = (n). (The second equality above follows
+from the first because P-FIB (n - 1) uses P-FIB (n - 2) in its
+computation, so that the span of P-FIB (n - 1) must be at least as large
+as the span of P-FIB (n - 2).)
+
+The parallelism of P-FIB (n) is T1(n)/T(n) = (n/n), which grows
+dramatically as n gets large. Thus, Corollary 26.3 tells us that on even
+the largest parallel computers, a modest value for n suffices to achieve
+near perfect linear speedup for P-FIB (n), because this procedure
+
+exhibits considerable parallel slackness.
+
+Parallel loops
+
+Many algorithms contain loops for which all the iterations can operate
+
+in parallel. Although the spawn and sync keywords can be used to
+parallelize such loops, it is more convenient to specify directly that the
+iterations of such loops can run in parallel. Our pseudocode provides
+
+this functionality via the parallel keyword, which precedes the for
+
+keyword in a for loop statement.
+
+As an example, consider the problem of multiplying a square n × n
+matrix A = (aij) by an n-vector x = (xj). The resulting n-vector y = (yi)
+
+is given by the equation
+
+for i = 1, 2, ... , n. The P-MAT-VEC procedure performs matrix-vector
+multiplication (actually, y = y + Ax) by computing all the entries of y in
+
+parallel. The parallel for keywords in line 1 of P-MAT-VEC indicate
+
+that the n iterations of the loop body, which includes a serial for loop,
+may be run in parallel. The initialization y = 0, if desired, should be
+
+performed before calling the procedure (and can be done with a parallel
+
+for loop).
+
+P-MAT-VEC (A, x, y, n)
+
+1 parallel for i = 1 to n // parallel loop
+// serial loop
+2 for j = 1 to n
+
+3 yi = yi + aij xj
+
+Compilers for fork-join parallel programs can implement parallel for
+
+loops in terms of spawn and sync by using recursive spawning. For
+
+example, for the parallel for loop in lines 13, a compiler can generate
+the auxiliary subroutine P-MAT-VEC-RECURSIVE and call P-MAT-
+
+VEC-RECURSIVE (A, x, y, n, 1, n) in the place where the loop would
+
+be in the compiled code. As Figure 26.4 illustrates, this procedure
+recursively spawns the first half of the iterations of the loop to execute
+in parallel (line 5) with the second half of the iterations (line 6) and then
+
+executes a sync (line 7), thereby creating a binary tree of parallel
+execution. Each leaf represents a base case, which is the serial for loop
+of lines 23.
+
+P-MAT-VEC-RECURSIVE (A, x, y, n, i, i)
+
+1 if i == i // just one iteration to do?
+
+2 for j = 1 to n // mimic P-MAT-VEC serial loop
+
+3 yi = yi + aij xj
+
+4 else mid = (i + i)/2 // parallel divide-and-conquer
+
+5 spawn P-MAT-VEC-RECURSIVE (A, x, y, n, i, mid)
+
+6 P-MAT-VEC-RECURSIVE (A, x, y, n, mid + 1, i)
+
+7 sync
+
+To calculate the work T1(n) of P-MAT-VEC on an n×n matrix,
+
+simply compute the running time of its serial projection, which comes
+
+from replacing the parallel for loop in line 1 with an ordinary for loop.
+
+The running time of the resulting serial pseudocode is (n2), which
+means that T1(n) = (n2). This analysis seems to ignore the overhead
+
+for recursive spawning in implementing the parallel loops, however.
+Indeed, the overhead of recursive spawning does increase the work of a
+parallel loop compared with that of its serial projection, but not
+asymptotically. To see why, observe that since the tree of recursive
+procedure instances is a full binary tree, the number of internal nodes is
+one less than the number of leaves (see Exercise B.5-3 on page 1175).
+Each internal node performs constant work to divide the iteration
+range, and each leaf corresponds to a base case, which takes at least
+
+constant time ((n) time in this case). Thus, by amortizing the overhead
+
+of recursive spawning over the work of the iterations in the leaves, we
+see that the overall work increases by at most a constant factor.
+
+Figure 26.4 A trace for the computation of P-MAT-VEC-RECURSIVE (A, x, y, 8, 1, 8). The
+two numbers within each rounded rectangle give the values of the last two parameters (i and i
+
+in the procedure header) in the invocation (spawn, in blue, or call, in tan) of the procedure. The
+blue circles represent strands corresponding to the part of the procedure up to the spawn of PMAT-VEC-RECURSIVE in line 5. The orange circles represent strands corresponding to the
+part of the procedure that calls P-MAT-VEC-RECURSIVE in line 6 up to the sync in line 7,
+where it suspends until the spawned subroutine in line 5 returns. The white circles represent
+strands corresponding to the (negligible) part of the procedure after the sync up to the point
+where it returns.
+
+To reduce the overhead of recursive spawning, task-parallel
+
+platforms sometimes coarsen the leaves of the recursion by executing
+
+several iterations in a single leaf, either automatically or under
+programmer control. This optimization comes at the expense of
+reducing the parallelism. If the computation has sufficient parallel
+slackness, however, near-perfect linear speedup won't be sacrificed.
+
+Although recursive spawning doesn't affect the work of a parallel
+loop asymptotically, we must take it into account when analyzing the
+
+span. Consider a parallel loop with n iterations in which the ith iteration
+has span iter(i). Since the depth of recursion is logarithmic in the
+
+number of iterations, the parallel loop's span is
+
+T(n) = (lg n) + max {iter(i) : 1 i n}.
+
+For example, let's compute the span of the doubly nested loops in
+lines 13 of P-MAT-VEC. The span for the parallel for loop control is
+
+(lg n). For each iteration of the outer parallel loop, the inner serial for
+loop contains n iterations of line 3. Since each iteration takes constant
+time, the total span for the inner serial for loop is (n), no matter which
+
+iteration of the outer parallel for loop it's in. Thus, taking the maximum
+
+over all iterations of the outer loop and adding in the (lg n) for loop
+control yields an overall span of Tn = (n) + (lg n) = (n) for the
+procedure. Since the work is (n2), the parallelism is (n2)/(n) = (n).
+
+(Exercise 26.1-7 asks you to provide an implementation with even more
+parallelism.)
+
+Race conditions
+
+A parallel algorithm is deterministic if it always does the same thing on
+
+the same input, no matter how the instructions are scheduled on the
+
+multicore computer. It is nondeterministic if its behavior might vary
+
+from run to run when the input is the same. A parallel algorithm that is
+intended to be deterministic may nevertheless act nondeterministically,
+however, if it contains a difficult-to-diagnose bug called a "determinacy
+race."
+
+Famous race bugs include the Therac-25 radiation therapy machine,
+which killed three people and injured several others, and the Northeast
+Blackout of 2003, which left over 50 million people in the United States
+without power. These pernicious bugs are notoriously hard to find. You
+can run tests in the lab for days without a failure, only to discover that
+your software sporadically crashes in the field, sometimes with dire
+consequences.
+
+A determinacy race occurs when two logically parallel instructions
+
+access the same memory location and at least one of the instructions
+modifies the value stored in the location. The toy procedure RACEEXAMPLE on the following page illustrates a determinacy race. After
+
+initializing x to 0 in line 1, RACE-EXAMPLE creates two parallel
+strands, each of which increments x in line 3. Although it might seem
+
+that a call of RACE-EXAMPLE should always print the value 2 (its
+serial projection certainly does), it could instead print the value 1. Let's
+see how this anomaly might occur.
+
+When a processor increments x, the operation is not indivisible, but
+
+is composed of a sequence of instructions:
+
+Figure 26.5 Illustration of the determinacy race in RACE-EXAMPLE. (a) A trace showing
+
+the dependencies among individual instructions. The processor registers are r1 and r2.
+
+Instructions unrelated to the race, such as the implementation of loop control, are omitted. (b)
+
+An execution sequence that elicits the bug, showing the values of x in memory and registers r1
+and r2 for each step in the execution sequence.
+
+RACE-EXAMPLE ( ) // determinacy race
+
+1 x=0
+2 parallel for i = 1 to 2
+3 x=x+1
+4 print x
+
+Load x from memory into one of the processor's registers.
+
+Increment the value in the register.
+
+Store the value in the register back into x in memory.
+
+Figure 26.5(a) illustrates a trace representing the execution of RACEEXAMPLE, with the strands broken down to individual instructions.
+Recall that since an ideal parallel computer supports sequential
+consistency, you can view the parallel execution of a parallel algorithm
+as an interleaving of instructions that respects the dependencies in the
+
+trace. Part (b) of the figure shows the values in an execution of the
+
+computation that elicits the anomaly. The value x is kept in memory,
+and r1 and r2 are processor registers. In step 1, one of the processors
+sets x to 0. In steps 2 and 3, processor 1 loads x from memory into its
+register r1 and increments it, producing the value 1 in r1. At that point,
+
+processor 2 comes into the picture, executing instructions 46.
+
+Processor 2 loads x from memory into register r2; increments it,
+producing the value 1 in r2; and then stores this value into x, setting x
+to 1. Now, processor 1 resumes with step 7, storing the value 1 in r1 into
+x, which leaves the value of x unchanged. Therefore, step 8 prints the
+
+value 1, rather than the value 2 that the serial projection would print.
+Let's recap what happened. By sequential consistency, the effect of
+
+the parallel execution is as if the executed instructions of the two
+processors are interleaved. If processor 1 executes all its instructions
+before processor 2, a trivial interleaving, the value 2 is printed.
+Conversely, if processor 2 executes all its instructions before processor
+1, the value 2 is still printed. When the instructions of the two
+processors interleave nontrivially, however, it is possible, as in this
+
+example execution, that one of the updates to x is lost, resulting in the
+
+value 1 being printed.
+Of course, many executions do not elicit the bug. That's the problem
+
+with determinacy races. Generally, most instruction orderings produce
+correct results, such as any where the instructions on the left branch
+execute before the instructions on the right branch, or vice versa. But
+some orderings generate improper results when the instructions
+interleave. Consequently, races can be extremely hard to test for. Your
+program may fail, but you may be unable to reliably reproduce the
+failure in subsequent tests, confounding your attempts to locate the bug
+in your code and fix it. Task-parallel programming environments often
+provide race-detection productivity tools to help you isolate race bugs.
+
+Many parallel programs in the real world are intentionally
+nondeterministic. They contain determinacy races, but they mitigate the
+dangers of nondeterminism through the use of mutual-exclusion locks
+and other methods of synchronization. For our purposes, however, we'll
+
+insist on an absence of determinacy races in the algorithms we develop.
+Nondeterministic programs are indeed interesting, but nondeterministic
+programming is a more advanced topic and unnecessary for a wide
+swath of interesting parallel algorithms.
+
+To ensure that algorithms are deterministic, any two strands that
+
+operate in parallel should be mutually noninterfering: they only read,
+
+and do not modify, any memory locations accessed by both of them.
+
+Consequently, in a parallel for construct, such as the outer loop of PMAT-VEC, we want all the iterations of the body, including any code
+an iteration executes in subroutines, to be mutually noninterfering. And
+
+between a spawn and its corresponding sync, we want the code executed
+by the spawned child and the code executed by the parent to be
+mutually noninterfering, once again including invoked subroutines.
+
+As an example of how easy it is to write code with unintentional
+races, the P-MAT-VEC-WRONG procedure on the next page is a
+faulty parallel implementation of matrix-vector multiplication that
+
+achieves a span of (lg n) by parallelizing the inner for loop. This
+
+procedure is incorrect, unfortunately, due to determinacy races when
+
+updating yi in line 3, which executes in parallel for all n values of j.
+Index variables of parallel for loops, such as i in line 1 and j in line 2,
+
+do not cause races between iterations. Conceptually, each iteration of
+the loop creates an independent variable to hold the index of that
+iteration during that iteration's execution of the loop body. Even if two
+parallel iterations both access the same index variable, they really are
+accessing different variable instances--hence different memory
+locations--and no race occurs.
+
+P-MAT-VEC-WRONG (A, x, y, n)
+
+1 parallel for i = 1 to n
+
+2 parallel for j = 1 to n
+
+3 yi = yi + aijxj // determinacy race
+
+A parallel algorithm with races can sometimes be deterministic. As
+an example, two parallel threads might store the same value into a
+
+shared variable, and it wouldn't matter which stored the value first. For
+simplicity, however, we generally prefer code without determinacy races,
+even if the races are benign. And good parallel programmers frown on
+code with determinacy races that cause nondeterministic behavior, if
+deterministic code that performs comparably is an option.
+
+But nondeterministic code does have its place. For example, you
+can't implement a parallel hash table, a highly practical data structure,
+without writing code containing determinacy races. Much research has
+centered around how to extend the fork-join model to incorporate
+limited "structured" nondeterminism while avoiding the full measure of
+complications that arise when nondeterminism is completely
+unrestricted.
+
+A chess lesson
+
+To illustrate the power of work/span analysis, this section closes with a
+
+true story that occurred during the development of one of the first
+
+world-class parallel chess-playing programs [106] many years ago. The
+
+timings below have been simplified for exposition.
+
+The chess program was developed and tested on a 32-processor
+
+computer, but it was designed to run on a supercomputer with 512
+
+processors. Since the supercomputer availability was limited and
+
+expensive, the developers ran benchmarks on the small computer and
+
+extrapolated performance to the large computer.
+
+At one point, the developers incorporated an optimization into the
+
+program that reduced its running time on an important benchmark on
+
+the small machine from T32 = 65 seconds to seconds. Yet, the
+
+developers used the work and span performance measures to conclude
+
+that the optimized version, which was faster on 32 processors, would
+
+actually be slower than the original version on the 512 processors of the
+
+large machine. As a result, they abandoned the "optimization."
+
+Here is their work/span analysis. The original version of the program
+
+had work T1 = 2048 seconds and span T= 1 second. Let's treat
+
+inequality (26.4) on page 760 as the equation TP = T1/P + T, which
+
+we can use as an approximation to the running time on P processors.
+
+Then indeed we have T32 = 2048/32 + 1 = 65. With the optimization,
+
+the work becomes T1 = 1024 seconds, and the span becomes T = 8
+
+seconds. Our approximation gives T32 = 1024/32 + 8 = 40.
+
+The relative speeds of the two versions switch when we estimate their
+
+running times on 512 processors, however. The first version has a
+
+running time of T512 = 2048/512+1 = 5 seconds, and the second
+
+version runs in seconds. The optimization that
+
+speeds up the program on 32 processors makes the program run for
+
+twice as long on 512 processors! The optimized version's span of 8,
+
+which is not the dominant term in the running time on 32 processors,
+
+becomes the dominant term on 512 processors, nullifying the advantage
+
+from using more processors. The optimization does not scale up.
+
+The moral of the story is that work/span analysis, and measurements
+
+of work and span, can be superior to measured running times alone in
+
+extrapolating an algorithm's scalability.
+
+Exercises
+
+26.1-1
+
+What does a trace for the execution of a serial algorithm look like?
+
+26.1-2
+Suppose that line 4 of P-FIB spawns P-FIB (n - 2), rather than calling
+
+it as is done in the pseudocode. How would the trace of P-FIB(4) in
+Figure 26.2 change? What is the impact on the asymptotic work, span,
+and parallelism?
+
+26.1-3
+
+Draw the trace that results from executing P-FIB(5). Assuming that
+each strand in the computation takes unit time, what are the work,
+span, and parallelism of the computation? Show how to schedule the
+trace on 3 processors using greedy scheduling by labeling each strand
+with the time step in which it is executed.
+
+26.1-4
+
+Prove that a greedy scheduler achieves the following time bound, which
+is slightly stronger than the bound proved in Theorem 26.1:
+
+26.1-5
+
+Construct a trace for which one execution by a greedy scheduler can
+take nearly twice the time of another execution by a greedy scheduler
+on the same number of processors. Describe how the two executions
+would proceed.
+
+26.1-6
+
+Professor Karan measures her deterministic task-parallel algorithm on
+4, 10, and 64 processors of an ideal parallel computer using a greedy
+
+scheduler. She claims that the three runs yielded T4 = 80 seconds, T10 =
+42 seconds, and T64 = 10 seconds. Argue that the professor is either
+lying or incompetent. (Hint: Use the work law (26.2), the span law
+
+(26.3), and inequality (26.5) from Exercise 26.1-4.)
+
+26.1-7
+Give a parallel algorithm to multiply an n × n matrix by an n-vector that
+achieves (n2/lg n) parallelism while maintaining (n2) work.
+
+26.1-8
+
+Analyze the work, span, and parallelism of the procedure P-
+
+TRANSPOSE, which transposes an n × n matrix A in place.
+
+P-TRANSPOSE (A, n)
+
+1 parallel for j = 2 to n
+
+2 parallel for i = 1 to j - 1
+
+3 exchange aij with aji
+
+26.1-9
+
+Suppose that instead of a parallel for loop in line 2, the P-TRANSPOSE
+procedure in Exercise 26.1-8 had an ordinary for loop. Analyze the
+
+work, span, and parallelism of the resulting algorithm.
+
+26.1-10
+
+For what number of processors do the two versions of the chess
+
+program run equally fast, assuming that TP = T1/P + T?

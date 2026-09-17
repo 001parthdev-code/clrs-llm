@@ -1,0 +1,522 @@
+3.2 Asymptotic notation: formal definitions
+
+Having seen asymptotic notation informally, let's get more formal. The
+notations we use to describe the asymptotic running time of an
+algorithm are defined in terms of functions whose domains are typically
+the set N of natural numbers or the set R of real numbers. Such
+
+notations are convenient for describing a running-time function T (n).
+
+This section defines the basic asymptotic notations and also introduces
+some common "proper" notational abuses.
+
+Figure 3.2 Graphic examples of the O, , and notations. In each part, the value of n0 shown
+is the minimum possible value, but any greater value also works. (a) O-notation gives an upper
+bound for a function to within a constant factor. We write f (n) = O(g(n)) if there are positive
+constants n0 and c such that at and to the right of n0, the value of f (n) always lies on or below
+cg(n). (b) -notation gives a lower bound for a function to within a constant factor. We write f
+(n) = (g(n)) if there are positive constants n0 and c such that at and to the right of n0, the
+value of f (n) always lies on or above cg(n). (c) -notation bounds a function to within
+constant factors. We write f (n) = (g(n)) if there exist positive constants n0, c1, and c2 such
+that at and to the right of n0, the value of f (n) always lies between c1g(n) and c2g(n) inclusive.
+
+O-notation
+As we saw in Section 3.1, O-notation describes an asymptotic upper
+bound. We use O-notation to give an upper bound on a function, to
+
+within a constant factor.
+
+Here is the formal definition of O-notation. For a given function
+g(n), we denote by O(g(n)) (pronounced "big-oh of g of n" or
+sometimes just "oh of g of n") the set of functions
+
+O(g(n)) : there exist positive constants c and n0 such
+= {f (n) that 0 f (n) cg(n) for all n n0}.1
+
+A function f (n) belongs to the set O(g(n)) if there exists a positive
+constant c such that f (n) cg(n) for sufficiently large n. Figure 3.2(a)
+shows the intuition behind O-notation. For all values n at and to the
+right of n0, the value of the function f (n) is on or below cg(n).
+
+The definition of O(g(n)) requires that every function f (n) in the set
+O(g(n)) be asymptotically nonnegative: f (n) must be nonnegative
+whenever n is sufficiently large. (An asymptotically positive function is
+one that is positive for all sufficiently large n.) Consequently, the
+function g(n) itself must be asymptotically nonnegative, or else the set
+O(g(n)) is empty. We therefore assume that every function used within
+O-notation is asymptotically nonnegative. This assumption holds for
+
+the other asymptotic notations defined in this chapter as well.
+
+You might be surprised that we define O-notation in terms of sets.
+Indeed, you might expect that we would write "f (n) O(g(n))" to
+indicate that f (n) belongs to the set O(g(n)). Instead, we usually write "f
+(n) = O(g(n))" and say "f (n) is big-oh of g(n)" to express the same
+
+notion. Although it may seem confusing at first to abuse equality in this
+
+way, we'll see later in this section that doing so has its advantages.
+
+Let's explore an example of how to use the formal definition of O-
+
+notation to justify our practice of discarding lower-order terms and
+
+ignoring the constant coefficient of the highest-order term. We'll show
+
+that 4n2 + 100n + 500 = O(n2), even though the lower-order terms have
+
+much larger coefficients than the leading term. We need to find positive
+
+constants c and n0 such that 4n2 + 100n + 500 cn2 for all n n0.
+
+Dividing both sides by n2 gives 4 + 100/n + 500/n2 c. This inequality is
+satisfied for many choices of c and n0. For example, if we choose n0 = 1,
+
+then this inequality holds for c = 604. If we choose n0 = 10, then c = 19
+works, and choosing n0 = 100 allows us to use c = 5.05.
+
+We can also use the formal definition of O-notation to show that the
+function n3 100n2 does not belong to the set O(n2), even though the
+coefficient of n2 is a large negative number. If we had n3 100n2 =
+O(n2), then there would be positive constants c and n0 such that n3
+100n2 cn2 for all n n0. Again, we divide both sides by n2, giving n
+100 c. Regardless of what value we choose for the constant c, this
+inequality does not hold for any value of n > c + 100.
+
+-notation
+
+Just as O-notation provides an asymptotic upper bound on a function,
+-notation provides an asymptotic lower bound. For a given function
+g(n), we denote by (g(n)) (pronounced "big-omega of g of n" or
+sometimes just "omega of g of n") the set of functions
+
+(g(n)) : there exist positive constants c and n0 such
+= {f (n) that 0 cg(n) f (n) for all n n0}.
+
+Figure 3.2(b) shows the intuition behind -notation. For all values n at
+or to the right of n0, the value of f (n) is on or above cg(n).
+
+We've already shown that 4n2 + 100n + 500 = O(n2). Now let's show
+that 4n2 + 100n + 500 = (n2). We need to find positive constants c and
+n0 such that 4n2 + 100n + 500 cn2 for all n n0. As before, we divide
+both sides by n2, giving 4 + 100/n + 500/n2 c. This inequality holds
+when n0 is any positive integer and c = 4.
+
+What if we had subtracted the lower-order terms from the 4n2 term
+instead of adding them? What if we had a small coefficient for the n2
+term? The function would still be (n2). For example, let's show that
+n2/100 100n 500 = (n2). Dividing by n2 gives 1/100 100/n 500/n2
+
+c. We can choose any value for n0 that is at least 10,005 and find a
+positive value for c. For example, when n0 = 10,005, we can choose c =
+2.49 × 109. Yes, that's a tiny value for c, but it is positive. If we select a
+larger value for n0, we can also increase c. For example, if n0 = 100,000,
+then we can choose c = 0.0089. The higher the value of n0, the closer to
+the coefficient 1/100 we can choose c.
+
+-notation
+
+We use -notation for asymptotically tight bounds. For a given function
+g(n), we denote by (g(n)) ("theta of g of n") the set of functions
+
+(g(n)) : there exist positive constants c1, c2, and n0
+= {f (n) such that 0 c1g(n) f (n) c2g(n) for all n
+
+n0}.
+
+Figure 3.2(c) shows the intuition behind -notation. For all values of n
+at and to the right of n0, the value of f (n) lies at or above c1g(n) and at
+or below c2g(n). In other words, for all n n0, the function f (n) is equal
+to g(n) to within constant factors.
+
+The definitions of O-, -, and -notations lead to the following
+
+theorem, whose proof we leave as Exercise 3.2-4.
+
+Theorem 3.1
+For any two functions f (n) and g(n), we have f (n) = (g(n)) if and only
+if f (n) = O(g(n)) and f (n) = (g(n)).
+
+We typically apply Theorem 3.1 to prove asymptotically tight bounds
+from asymptotic upper and lower bounds.
+
+Asymptotic notation and running times
+
+When you use asymptotic notation to characterize an algorithm's
+running time, make sure that the asymptotic notation you use is as
+precise as possible without overstating which running time it applies to.
+
+Here are some examples of using asymptotic notation properly and
+
+improperly to characterize running times.
+
+Let's start with insertion sort. We can correctly say that insertion
+
+sort's worst-case running time is O(n2), (n2), and--due to Theorem
+3.1--(n2). Although all three ways to characterize the worst-case
+running times are correct, the (n2) bound is the most precise and
+
+hence the most preferred. We can also correctly say that insertion sort's
+
+best-case running time is O(n), (n), and (n), again with (n) the most
+
+precise and therefore the most preferred.
+
+Here is what we cannot correctly say: insertion sort's running time is
+(n2). That is an overstatement because by omitting "worst-case" from
+
+the statement, we're left with a blanket statement covering all cases. The
+
+error here is that insertion sort does not run in (n2) time in all cases
+since, as we've seen, it runs in (n) time in the best case. We can
+correctly say that insertion sort's running time is O(n2), however,
+because in all cases, its running time grows no faster than n2. When we
+say O(n2) instead of (n2), there is no problem in having cases whose
+running time grows more slowly than n2. Likewise, we cannot correctly
+say that insertion sort's running time is (n), but we can say that its
+running time is (n).
+
+How about merge sort? Since merge sort runs in (n lg n) time in all
+cases, we can just say that its running time is (n lg n) without
+
+specifying worst-case, best-case, or any other case.
+
+People occasionally conflate O-notation with -notation by
+mistakenly using O-notation to indicate an asymptotically tight bound.
+They say things like "an O(n lg n)-time algorithm runs faster than an
+O(n2)-time algorithm." Maybe it does, maybe it doesn't. Since Onotation denotes only an asymptotic upper bound, that so-called O(n2)-
+time algorithm might actually run in (n) time. You should be careful to
+
+choose the appropriate asymptotic notation. If you want to indicate an
+
+asymptotically tight bound, use -notation.
+
+We typically use asymptotic notation to provide the simplest and
+most precise bounds possible. For example, if an algorithm has a
+
+running time of 3n2 + 20n in all cases, we use asymptotic notation to
+write that its running time is (n2). Strictly speaking, we are also
+correct in writing that the running time is O(n3) or (3n2 + 20n).
+Neither of these expressions is as useful as writing (n2) in this case,
+however: O(n3) is less precise than (n2) if the running time is 3n2 +
+20n, and (3n2 + 20n) introduces complexity that obscures the order of
+growth. By writing the simplest and most precise bound, such as (n2),
+
+we can categorize and compare different algorithms. Throughout the
+book, you will see asymptotic running times that are almost always
+
+based on polynomials and logarithms: functions such as n, n lg2 n, n2 lg
+n, or n1/2. You will also see some other functions, such as exponentials,
+lg lg n, and lg*n (see Section 3.3). It is usually fairly easy to compare the
+
+rates of growth of these functions. Problem 3-3 gives you good practice.
+
+Asymptotic notation in equations and inequalities
+
+Although we formally define asymptotic notation in terms of sets, we
+use the equal sign (=) instead of the set membership sign () within
+
+formulas. For example, we wrote that 4n2 + 100n + 500 = O(n2). We
+might also write 2n2 + 3n + 1 = 2n2 + (n). How do we interpret such
+
+formulas?
+When the asymptotic notation stands alone (that is, not within a
+
+larger formula) on the right-hand side of an equation (or inequality), as
+
+in 4n2 + 100n + 500 = O(n2), the equal sign means set membership: 4n2
++ 100n + 500 O(n2). In general, however, when asymptotic notation
+
+appears in a formula, we interpret it as standing for some anonymous
+
+function that we do not care to name. For example, the formula 2n2 +
+3n + 1 = 2n2 + (n) means that 2n2 + 3n + 1 = 2n2 + f (n), where f (n)
+(n). In this case, we let f (n) = 3n + 1, which indeed belongs to (n).
+
+Using asymptotic notation in this manner can help eliminate
+inessential detail and clutter in an equation. For example, in Chapter 2
+we expressed the worst-case running time of merge sort as the
+recurrence
+
+T (n) = 2T (n/2) + (n).
+
+If we are interested only in the asymptotic behavior of T (n), there is no
+
+point in specifying all the lower-order terms exactly, because they are all
+understood to be included in the anonymous function denoted by the
+
+term (n).
+
+The number of anonymous functions in an expression is understood
+to be equal to the number of times the asymptotic notation appears.
+For example, in the expression
+
+there is only a single anonymous function (a function of i). This
+expression is thus not the same as O(1) + O(2) + + O(n), which
+
+doesn't really have a clean interpretation.
+In some cases, asymptotic notation appears on the left-hand side of
+
+an equation, as in
+
+2n2 + (n) = (n2).
+
+Interpret such equations using the following rule: No matter how the
+anonymous functions are chosen on the left of the equal sign, there is a
+way to choose the anonymous functions on the right of the equal sign to
+make the equation valid. Thus, our example means that for any function
+f (n) (n), there is some function g(n) (n2) such that 2n2 + f (n) =
+g(n) for all n. In other words, the right-hand side of an equation
+
+provides a coarser level of detail than the left-hand side.
+We can chain together a number of such relationships, as in
+
+2n2 + 3n + 1 = 2n2 + (n)
+= (n2).
+
+By the rules above, interpret each equation separately. The first
+
+equation says that there is some function f (n) (n) such that 2n2 + 3n
++ 1 = 2n2 + f (n) for all n. The second equation says that for any
+function g(n) (n) (such as the f (n) just mentioned), there is some
+function h(n) (n2) such that 2n2 + g(n) = h(n) for all n. This
+interpretation implies that 2n2 + 3n + 1 = (n2), which is what the
+
+chaining of equations intuitively says.
+
+Proper abuses of asymptotic notation
+
+Besides the abuse of equality to mean set membership, which we now
+see has a precise mathematical interpretation, another abuse of
+asymptotic notation occurs when the variable tending toward must
+
+be inferred from context. For example, when we say O(g(n)), we can
+assume that we're interested in the growth of g(n) as n grows, and if we
+say O(g(m)) we're talking about the growth of g(m) as m grows. The free
+
+variable in the expression indicates what variable is going to .
+The most common situation requiring contextual knowledge of
+
+which variable tends to occurs when the function inside the
+
+asymptotic notation is a constant, as in the expression O(1). We cannot
+
+infer from the expression which variable is going to , because no
+variable appears there. The context must disambiguate. For example, if
+
+the equation using asymptotic notation is f (n) = O(1), it's apparent that
+the variable we're interested in is n. Knowing from context that the
+variable of interest is n, however, allows us to make perfect sense of the
+expression by using the formal definition of O-notation: the expression
+f (n) = O(1) means that the function f (n) is bounded from above by a
+constant as n goes to . Technically, it might be less ambiguous if we
+
+explicitly indicated the variable tending to in the asymptotic notation
+itself, but that would clutter the notation. Instead, we simply ensure
+that the context makes it clear which variable (or variables) tend to .
+
+When the function inside the asymptotic notation is bounded by a
+
+positive constant, as in T (n) = O(1), we often abuse asymptotic
+
+notation in yet another way, especially when stating recurrences. We
+
+may write something like T (n) = O(1) for n < 3. According to the
+
+formal definition of O-notation, this statement is meaningless, because
+the definition only says that T (n) is bounded above by a positive
+constant c for n n0 for some n0 > 0. The value of T (n) for n < n0 need
+not be so bounded. Thus, in the example T (n) = O(1) for n < 3, we
+cannot infer any constraint on T (n) when n < 3, because it might be
+that n0 > 3.
+
+What is conventionally meant when we say T (n) = O(1) for n < 3 is
+that there exists a positive constant c such that T (n) c for n < 3. This
+
+convention saves us the trouble of naming the bounding constant,
+allowing it to remain anonymous while we focus on more important
+variables in an analysis. Similar abuses occur with the other asymptotic
+
+notations. For example, T (n) = (1) for n < 3 means that T (n) is
+bounded above and below by positive constants when n < 3.
+
+Occasionally, the function describing an algorithm's running time
+may not be defined for certain input sizes, for example, when an
+algorithm assumes that the input size is an exact power of 2. We still use
+asymptotic notation to describe the growth of the running time,
+understanding that any constraints apply only when the function is
+
+defined. For example, suppose that f (n) is defined only on a subset of
+the natural or nonnegative real numbers. Then f (n) = O(g(n)) means
+that the bound 0 T (n) cg(n) in the definition of O-notation holds for
+all n n0 over the domain of f (n), that is, where f (n) is defined. This
+
+abuse is rarely pointed out, since what is meant is generally clear from
+context.
+
+In mathematics, it's okay -- and often desirable -- to abuse a
+notation, as long as we don't misuse it. If we understand precisely what
+is meant by the abuse and don't draw incorrect conclusions, it can
+simplify our mathematical language, contribute to our higher-level
+understanding, and help us focus on what really matters.
+
+o-notation
+
+The asymptotic upper bound provided by O-notation may or may not
+be asymptotically tight. The bound 2n2 = O(n2) is asymptotically tight,
+but the bound 2n = O(n2) is not. We use o-notation to denote an upper
+
+bound that is not asymptotically tight. We formally define o(g(n))
+("little-oh of g of n") as the set
+
+o(g(n)) = : for any positive constant c > 0, there exists a constant n0 > 0
+{f (n) such that 0 f (n) < cg(n) for all n n0}.
+
+For example, 2n = o(n2), but 2n2 o(n2).
+The definitions of O-notation and o-notation are similar. The main
+
+difference is that in f (n) = O(g(n)), the bound 0 f (n) cg(n) holds for
+some constant c > 0, but in f (n) = o(g(n)), the bound 0 f (n) < cg(n)
+holds for all constants c > 0. Intuitively, in o-notation, the function f (n)
+becomes insignificant relative to g(n) as n gets large:
+
+Some authors use this limit as a definition of the o-notation, but the
+
+definition in this book also restricts the anonymous functions to be
+asymptotically nonnegative.
+
+-notation
+
+By analogy, -notation is to -notation as o-notation is to O-notation.
+
+We use -notation to denote a lower bound that is not asymptotically
+tight. One way to define it is by
+
+f (n) (g(n)) if and only if g(n) o(f (n)).
+
+Formally, however, we define (g(n)) ("little-omega of g of n") as the set
+
+(g(n)) : for any positive constant c > 0, there exists a constant n0 > 0
+= {f (n) such that 0 cg(n) < f (n) for all n n0}.
+
+Where the definition of o-notation says that f (n) < cg(n), the definition
+of -notation says the opposite: that cg(n) < f (n). For examples of -
+notation, we have n2/2 = (n), but n2/2 (n2). The relation f (n) =
+(g(n)) implies that
+
+if the limit exists. That is, f (n) becomes arbitrarily large relative to g(n)
+as n gets large.
+
+Comparing functions
+
+Many of the relational properties of real numbers apply to asymptotic
+
+comparisons as well. For the following, assume that f (n) and g(n) are
+
+asymptotically positive.
+
+Transitivity:
+
+f (n) = and g(n) = imply f (n) =
+(g(n)) (h(n)) (h(n)),
+
+f (n) = and g(n) = imply f (n) =
+O(g(n)) O(h(n)) O(h(n)),
+
+f (n) = and g(n) = imply f (n) =
+(g(n)) (h(n)) (h(n)),
+
+f (n) = and g(n) = imply f (n) =
+o(g(n)) o(h(n)) o(h(n)),
+
+f (n) = and g(n) = imply f (n) =
+(g(n)) (h(n)) (h(n)).
+
+Reflexivity:
+
+f (n) = (f (n)),
+f (n) = O(f (n)),
+f (n) = (f (n)).
+
+Symmetry:
+
+f (n) = (g(n)) if and only if g(n) = (f (n)).
+
+Transpose symmetry:
+
+f (n) = if and only g(n) = (f
+
+O(g(n)) if (n)),
+
+f (n) = o(g(n)) if and only g(n) = (f
+
+if (n)).
+
+Because these properties hold for asymptotic notations, we can draw
+
+an analogy between the asymptotic comparison of two functions f and
+g and the comparison of two real numbers a and b:
+
+f (n) = O(g(n)) is like a b,
+f (n) = (g(n)) is like a b,
+f (n) = (g(n)) is like a = b,
+f (n) = o(g(n)) is like a < b,
+f (n) = (g(n)) is like a > b.
+
+We say that f (n) is asymptotically smaller than g(n) if f (n) = o(g(n)),
+and f (n) is asymptotically larger than g(n) if f (n) = (g(n)).
+
+One property of real numbers, however, does not carry over to
+
+asymptotic notation:
+
+Trichotomy: For any two real numbers a and b, exactly one of the
+following must hold: a < b, a = b, or a > b.
+
+Although any two real numbers can be compared, not all functions are
+
+asymptotically comparable. That is, for two functions f (n) and g(n), it
+may be the case that neither f (n) = O(g(n)) nor f (n) = (g(n)) holds.
+For example, we cannot compare the functions n and n1 + sin n using
+asymptotic notation, since the value of the exponent in n1 + sin n
+
+oscillates between 0 and 2, taking on all values in between.
+
+Exercises
+
+3.2-1
+Let f (n) and g(n) be asymptotically nonnegative functions. Using the
+basic definition of -notation, prove that max {f (n), g(n)} = (f (n) +
+g(n)).
+
+3.2-2
+
+Explain why the statement, "The running time of algorithm A is at least
+O(n2)," is meaningless.
+
+3.2-3
+Is 2n + 1 = O(2n)? Is 22n = O(2n)?
+
+3.2-4
+
+Prove Theorem 3.1.
+
+3.2-5
+Prove that the running time of an algorithm is (g(n)) if and only if its
+worst-case running time is O(g(n)) and its best-case running time is
+(g(n)).
+
+3.2-6
+Prove that o(g(n)) (g(n)) is the empty set.
+
+3.2-7
+We can extend our notation to the case of two parameters n and m that
+can go to independently at different rates. For a given function g(n,
+m), we denote by O(g(n, m)) the set of functions
+
+O(g(n, : there exist positive constants c, n0, and m0
+m)) = {f
+(n, m) such that 0 f (n, m) cg(n, m) for all n n0
+or m m0}.
+
+Give corresponding definitions for (g(n, m)) and (g(n, m)).

@@ -1,0 +1,392 @@
+4.5 The master method for solving recurrences
+
+The master method provides a "cookbook" method for solving
+algorithmic recurrences of the form
+
+where a > 0 and b > 1 are constants. We call f (n) a driving function, and
+we call a recurrence of this general form a master recurrence. To use the
+
+master method, you need to memorize three cases, but then you'll be
+able to solve many master recurrences quite easily.
+
+A master recurrence describes the running time of a divide-and-
+
+conquer algorithm that divides a problem of size n into a subproblems,
+each of size n/b < n. The algorithm solves the a subproblems recursively,
+each in T (n/b) time. The driving function f (n) encompasses the cost of
+
+dividing the problem before the recursion, as well as the cost of
+combining the results of the recursive solutions to subproblems. For
+example, the recurrence arising from Strassen's algorithm is a master
+
+recurrence with a = 7, b = 2, and driving function f (n) = (n2).
+
+As we have mentioned, in solving a recurrence that describes the
+running time of an algorithm, one technicality that we'd often prefer to
+
+ignore is the requirement that the input size n be an integer. For
+
+example, we saw that the running time of merge sort can be described
+
+by recurrence (2.3), T (n) = 2T (n/2) + (n), on page 41. But if n is an
+
+odd number, we really don't have two problems of exactly half the size.
+Rather, to ensure that the problem sizes are integers, we round one
+
+subproblem down to size n/2 and the other up to size n/2, so the
+true recurrence is T (n) = T (n/2 + T (n/2) + (n). But this floors-
+
+and-ceilings recurrence is longer to write and messier to deal with than
+recurrence (2.3), which is defined on the reals. We'd rather not worry
+about floors and ceilings, if we don't have to, especially since the two
+
+recurrences have the same (n lg n) solution.
+
+The master method allows you to state a master recurrence without
+floors and ceilings and implicitly infer them. No matter how the
+arguments are rounded up or down to the nearest integer, the
+asymptotic bounds that it provides remain the same. Moreover, as we'll
+see in Section 4.6, if you define your master recurrence on the reals,
+without implicit floors and ceilings, the asymptotic bounds still don't
+change. Thus you can ignore floors and ceilings for master recurrences.
+Section 4.7 gives sufficient conditions for ignoring floors and ceilings in
+more general divide-and-conquer recurrences.
+
+The master theorem
+
+The master method depends upon the following theorem.
+
+Theorem 4.1 (Master theorem)
+Let a > 0 and b > 1 be constants, and let f (n) be a driving function that
+
+is defined and nonnegative on all sufficiently large reals. Define the
+
+recurrence T (n) on n N by
+
+where aT (n/b) actually means aT (n/b) + aT (n/b) for some
+
+constants a 0 and a 0 satisfying a = a + a. Then the asymptotic
+behavior of T (n) can be characterized as follows:
+
+1. If there exists a constant > 0 such that , then
+.
+
+2. If there exists a constant k 0 such that ,
+
+then .
+
+3. If there exists a constant > 0 such that , and if
+
+f (n) additionally satisfies the regularity condition af (n/b) cf (n)
+
+for some constant c < 1 and all sufficiently large n, then T (n) =
+
+(f (n)).
+
+Before applying the master theorem to some examples, let's spend a
+
+few moments to understand broadly what it says. The function is
+
+called the watershed function. In each of the three cases, we compare
+
+the driving function f (n) to the watershed function . Intuitively, if
+
+the watershed function grows asymptotically faster than the driving
+
+function, then case 1 applies. Case 2 applies if the two functions grow at
+
+nearly the same asymptotic rate. Case 3 is the "opposite" of case 1,
+
+where the driving function grows asymptotically faster than the
+
+watershed function. But the technical details matter.
+
+In case 1, not only must the watershed function grow asymptotically
+
+faster than the driving function, it must grow polynomially faster. That
+
+is, the watershed function must be asymptotically larger than the
+
+driving function f (n) by at least a factor of (n) for some constant
+
+> 0. The master theorem then says that the solution is .
+
+In this case, if we look at the recursion tree for the recurrence, the cost
+
+per level grows at least geometrically from root to leaves, and the total
+
+cost of leaves dominates the total cost of the internal nodes.
+
+In case 2, the watershed and driving functions grow at nearly the
+
+same asymptotic rate. But more specifically, the driving function grows
+
+faster than the watershed function by a factor of (lgk n), where k 0.
+The master theorem says that we tack on an extra lg n factor to f (n),
+
+yielding the solution . In this case, each level of
+
+the recursion tree costs approximately the same-- --and
+
+there are (lg n) levels. In practice, the most common situation for case
+
+2 occurs when k = 0, in which case the watershed and driving functions
+
+have the same asymptotic growth, and the solution is
+
+.
+
+Case 3 mirrors case 1. Not only must the driving function grow
+
+asymptotically faster than the watershed function, it must grow
+
+polynomially faster. That is, the driving function f (n) must be
+
+asymptotically larger than the watershed function by at least a
+
+factor of (n) for some constant > 0. Moreover, the driving function
+
+must satisfy the regularity condition that af (n/b) cf (n). This
+
+condition is satisfied by most of the polynomially bounded functions
+
+that you're likely to encounter when applying case 3. The regularity
+
+condition might not be satisfied if the driving function grows slowly in
+
+local areas, yet relatively quickly overall. (Exercise 4.5-5 gives an
+
+example of such a function.) For case 3, the master theorem says that
+
+the solution is T (n) = (f (n)). If we look at the recursion tree, the cost
+
+per level drops at least geometrically from the root to the leaves, and the
+
+root cost dominates the cost of all other nodes.
+
+It's worth looking again at the requirement that there be polynomial
+
+separation between the watershed function and the driving function for
+
+either case 1 or case 3 to apply. The separation doesn't need to be much,
+
+but it must be there, and it must grow polynomially. For example, for
+
+the recurrence T (n) = 4T (n/2) + n1.99 (admittedly not a recurrence
+
+you're likely to see when analyzing an algorithm), the watershed
+
+function is . Hence the driving function f (n) = n1.99 is
+
+polynomially smaller by a factor of n0.01. Thus case 1 applies with =
+
+0.01.
+
+Using the master method
+
+To use the master method, you determine which case (if any) of the
+master theorem applies and write down the answer.
+
+As a first example, consider the recurrence T (n) = 9T (n/3) + n. For
+this recurrence, we have a = 9 and b = 3, which implies that
+
+. Since f (n) = n = O(n2) for any constant 1,
+
+we can apply case 1 of the master theorem to conclude that the solution
+
+is T (n) = (n2).
+
+Now consider the recurrence T (n) = T (2n/3) + 1, which has a = 1
+
+and b = 3/2, which means that the watershed function is
+
+. Case 2 applies since
+
+. The solution to the recurrence is T (n)
+
+= (lg n).
+
+For the recurrence T (n) = 3T (n/4) + n lg n, we have a = 3 and b = 4,
+
+which means that . Since
+
+, where can be as large as approximately 0.2,
+
+case 3 applies as long as the regularity condition holds for f (n). It does,
+
+because for sufficiently large n, we have that af (n/b) = 3(n/4) lg(n/4)
+
+(3/4)n lg n = cf (n) for c = 3/4. By case 3, the solution to the recurrence
+
+is T (n) = (n lg n).
+
+Next, let's look at the recurrence T (n) = 2T (n/2) + n lg n, where we
+
+have a = 2, b = 2, and . Case 2 applies since
+
+. We conclude that the solution is T (n) = (n
+
+lg2 n).
+
+We can use the master method to solve the recurrences we saw in
+
+Sections 2.3.2, 4.1, and 4.2.
+
+Recurrence (2.3), T (n) = 2T (n/2) + (n), on page 41, characterizes
+
+the running time of merge sort. Since a = 2 and b = 2, the watershed
+
+function is . Case 2 applies because f (n) = (n), and
+
+the solution is T (n) = (n lg n).
+
+Recurrence (4.9), T (n) = 8T (n/2) + (1), on page 84, describes the
+
+running time of the simple recursive algorithm for matrix multiplication.
+
+We have a = 8 and b = 2, which means that the watershed function is
+
+. Since n3 is polynomially larger than the driving
+
+function f (n) = (1)--indeed, we have f (n) = O(n3) for any positive
+
+< 3--case 1 applies. We conclude that T (n) = (n3).
+
+Finally, recurrence (4.10), T (n) = 7T (n/2) + (n2), on page 87, arose
+
+from the analysis of Strassen's algorithm for matrix multiplication. For
+
+this recurrence, we have a = 7 and b = 2, and the watershed function is
+
+. Observing that lg 7 = 2.807355 ..., we can let = 0.8 and
+
+bound the driving function f (n) = (n2) = O(nlg 7). Case 1 applies
+with solution T (n) = (nlg 7).
+
+When the master method doesn't apply
+
+There are situations where you can't use the master theorem. For
+
+example, it can be that the watershed function and the driving function
+
+cannot be asymptotically compared. We might have that
+
+for an infinite number of values of n but also that for an
+
+infinite number of different values of n. As a practical matter, however,
+
+most of the driving functions that arise in the study of algorithms can
+
+be meaningfully compared with the watershed function. If you
+
+encounter a master recurrence for which that's not the case, you'll have
+
+to resort to substitution or other methods.
+
+Even when the relative growths of the driving and watershed
+
+functions can be compared, the master theorem does not cover all the
+
+possibilities. There is a gap between cases 1 and 2 when ,
+
+yet the watershed function does not grow polynomially faster than the
+
+driving function. Similarly, there is a gap between cases 2 and 3 when
+
+and the driving function grows more than
+
+polylogarithmically faster than the watershed function, but it does not
+
+grow polynomially faster. If the driving function falls into one of these
+
+gaps, or if the regularity condition in case 3 fails to hold, you'll need to
+
+use something other than the master method to solve the recurrence.
+
+As an example of a driving function falling into a gap, consider the
+
+recurrence T (n) = 2T (n/2) + n/lg n. Since a = 2 and b = 2, the
+
+watershed function is . The driving function is
+
+n/lg n = o(n), which means that it grows asymptotically more slowly
+
+than the watershed function n. But n/lg n grows only logarithmically
+
+slower than n, not polynomially slower. More precisely, equation (3.24)
+
+on page 67 says that lg n = o(n) for any constant > 0, which means
+
+that 1/lg n = (n) and . Thus no constant
+
+> 0 exists such that , which is required for case 1 to
+
+apply. Case 2 fails to apply as well, since , where k
+
+= 1, but k must be nonnegative for case 2 to apply.
+
+To solve this kind of recurrence, you must use another method, such
+
+as the substitution method (Section 4.3) or the Akra-Bazzi method
+
+(Section 4.7). (Exercise 4.6-3 asks you to show that the answer is (n lg
+lg n).) Although the master theorem doesn't handle this particular
+
+recurrence, it does handle the overwhelming majority of recurrences
+
+that tend to arise in practice.
+
+Exercises
+
+4.5-1
+
+Use the master method to give tight asymptotic bounds for the
+following recurrences.
+
+a. T (n) = 2T (n/4) + 1.
+b. T (n) = 2T (n/4) + .
+
+c. T (n) = 2T (n/4) + .
+
+d. T (n) = 2T (n/4) + n.
+
+e. T (n) = 2T (n/4) + n2.
+
+4.5-2
+
+Professor Caesar wants to develop a matrix-multiplication algorithm
+
+that is asymptotically faster than Strassen's algorithm. His algorithm
+
+will use the divide-and-conquer method, dividing each matrix into n/4 ×
+n/4 submatrices, and the divide and combine steps together will take
+
+(n2) time. Suppose that the professor's algorithm creates a recursive
+subproblems of size n/4. What is the largest integer value of a for which
+
+his algorithm could possibly run asymptotically faster than Strassen's?
+
+4.5-3
+
+Use the master method to show that the solution to the binary-search
+
+recurrence T (n) = T (n/2) + (1) is T (n) = (lg n). (See Exercise 2.3-6
+
+for a description of binary search.)
+
+4.5-4
+
+Consider the function f (n) = lg n. Argue that although f (n/2) < f (n),
+
+the regularity condition af (n/b) cf (n) with a = 1 and b = 2 does not
+
+hold for any constant c < 1. Argue further that for any > 0, the
+
+condition in case 3 that does not hold.
+
+4.5-5
+Show that for suitable constants a, b, and , the function f (n) = 2lg n
+
+satisfies all the conditions in case 3 of the master theorem except the
+
+regularity condition.

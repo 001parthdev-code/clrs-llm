@@ -1,0 +1,782 @@
+3.3 Standard notations and common functions
+
+This section reviews some standard mathematical functions and
+notations and explores the relationships among them. It also illustrates
+the use of the asymptotic notations.
+
+Monotonicity
+
+A function f (n) is monotonically increasing if m n implies f (m) f (n).
+Similarly, it is monotonically decreasing if m n implies f (m) f (n). A
+function f (n) is strictly increasing if m < n implies f (m) < f (n) and
+strictly decreasing if m < n implies f (m) > f (n).
+
+Floors and ceilings
+
+For any real number x, we denote the greatest integer less than or equal
+to x by x (read "the floor of x") and the least integer greater than or
+equal to x by x (read "the ceiling of x"). The floor function is
+
+monotonically increasing, as is the ceiling function.
+
+Floors and ceilings obey the following properties. For any integer n,
+
+we have
+
+For all real x, we have
+
+We also have
+
+or equivalently,
+
+For any real number x 0 and integers a, b > 0, we have
+
+For any integer n and real number x, we have
+
+Modular arithmetic
+
+For any integer a and any positive integer n, the value a mod n is the
+remainder (or residue) of the quotient a/n:
+
+It follows that
+
+even when a is negative.
+
+Given a well-defined notion of the remainder of one integer when
+divided by another, it is convenient to provide special notation to
+
+indicate equality of remainders. If (a mod n) = (b mod n), we write a = b
+(mod n) and say that a is equivalent to b, modulo n. In other words, a =
+b (mod n) if a and b have the same remainder when divided by n.
+Equivalently, a = b (mod n) if and only if n is a divisor of b a. We write
+a b (mod n) if a is not equivalent to b, modulo n.
+
+Polynomials
+
+Given a nonnegative integer d, a polynomial in n of degree d is a function
+p(n) of the form
+
+where the constants a0, a1, ... , ad are the coefficients of the polynomial
+and ad 0. A polynomial is asymptotically positive if and only if ad > 0.
+For an asymptotically positive polynomial p(n) of degree d, we have p(n)
+= (nd). For any real constant a 0, the function na is monotonically
+increasing, and for any real constant a 0, the function na is
+monotonically decreasing. We say that a function f (n) is polynomially
+bounded if f (n) = O(nk) for some constant k.
+
+Exponentials
+
+For all real a > 0, m, and n, we have the following identities:
+a0 = 1,
+a1 = a,
+a1 = 1/a,
+
+(am)n = amn,
+(am)n = (an)m,
+aman = am+n.
+For all n and a 1, the function an is monotonically increasing in n.
+
+When convenient, we assume that 00 = 1.
+We can relate the rates of growth of polynomials and exponentials
+
+by the following fact. For all real constants a > 1 and b, we have
+
+from which we can conclude that
+
+Thus, any exponential function with a base strictly greater than 1 grows
+faster than any polynomial function.
+
+Using e to denote 2.71828 ..., the base of the natural-logarithm
+function, we have for all real x,
+
+where "!" denotes the factorial function defined later in this section. For
+
+all real x, we have the inequality
+
+where equality holds only when x = 0. When |x| 1, we have the
+
+approximation
+
+When x 0, the approximation of ex by 1 + x is quite good:
+ex = 1 + x + (x2).
+
+(In this equation, the asymptotic notation is used to describe the
+
+limiting behavior as x 0 rather than as x .) We have for all x,
+
+Logarithms
+We use the following notations:
+
+lg n = log2 n (binary logarithm),
+ln n = loge n (natural logarithm),
+lgk n = (lg n)k (exponentiation),
+lg lg n = lg(lg n) (composition).
+
+We adopt the following notational convention: in the absence of
+
+parentheses, a logarithm function applies only to the next term in the
+formula, so that lg n + 1 means (lg n) + 1 and not lg(n + 1).
+
+For any constant b > 1, the function logb n is undefined if n 0,
+strictly increasing if n > 0, negative if 0 < n < 1, positive if n > 1, and 0 if
+n = 1. For all real a > 0, b > 0, c > 0, and n, we have
+
+where, in each equation above, logarithm bases are not 1.
+By equation (3.19), changing the base of a logarithm from one
+
+constant to another changes the value of the logarithm by only a
+
+constant factor. Consequently, we often use the notation "lg n" when
+we don't care about constant factors, such as in O-notation. Computer
+
+scientists find 2 to be the most natural base for logarithms because so
+many algorithms and data structures involve splitting a problem into
+two parts.
+
+There is a simple series expansion for ln(1 + x) when |x| < 1:
+
+We also have the following inequalities for x > 1:
+
+where equality holds only for x = 0.
+We say that a function f (n) is polylogarithmically bounded if f (n) =
+
+O(lgk n) for some constant k. We can relate the growth of polynomials
+and polylogarithms by substituting lg n for n and 2a for a in equation
+(3.13). For all real constants a > 0 and b, we have
+
+Thus, any positive polynomial function grows faster than any
+polylogarithmic function.
+
+Factorials
+
+The notation n! (read "n factorial") is defined for integers n 0 as
+
+Thus, n! = 1 · 2 · 3 n.
+A weak upper bound on the factorial function is n! nn, since each
+
+of the n terms in the factorial product is at most n. Stirling's
+
+approximation,
+
+where e is the base of the natural logarithm, gives us a tighter upper
+
+bound, and a lower bound as well. Exercise 3.3-4 asks you to prove the
+three facts
+
+where Stirling's approximation is helpful in proving equation (3.28). The
+
+following equation also holds for all n 1:
+
+where
+
+Functional iteration
+
+We use the notation f(i) (n) to denote the function f (n) iteratively
+applied i times to an initial value of n. Formally, let f (n) be a function
+over the reals. For nonnegative integers i, we recursively define
+
+For example, if f (n) = 2n, then f(i) (n) = 2in.
+
+The iterated logarithm function
+
+We use the notation lg*n (read "log star of n") to denote the iterated
+logarithm, defined as follows. Let lg(i) n be as defined above, with f (n) =
+lg n. Because the logarithm of a nonpositive number is undefined, lg(i)
+
+n is defined only if lg(i1) n > 0. Be sure to distinguish lg(i) n (the
+logarithm function applied i times in succession, starting with argument
+n) from lgi n (the logarithm of n raised to the ith power). Then we define
+
+the iterated logarithm function as
+
+lg*n = min {i 0 : lg(i) n 1}.
+The iterated logarithm is a very slowly growing function:
+
+lg* 2 = 1,
+lg* 4 = 2,
+lg* 16 = 3,
+lg* 65536 = 4,
+lg* (265536) = 5.
+
+Since the number of atoms in the observable universe is estimated to be
+about 1080, which is much less than 265536 = 1065536/lg 10 1019,728,
+
+we rarely encounter an input size n for which lg* n > 5.
+
+Fibonacci numbers
+
+We define the Fibonacci numbers Fi, for i 0, as follows:
+
+Thus, after the first two, each Fibonacci number is the sum of the two
+previous ones, yielding the sequence
+0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, ....
+
+Fibonacci numbers are related to the golden ratio and its conjugate ,
+
+which are the two roots of the equation
+
+x2 = x + 1.
+
+As Exercise 3.3-7 asks you to prove, the golden ratio is given by
+
+and its conjugate, by
+
+Specifically, we have
+
+which can be proved by induction (Exercise 3.3-8). Since , we have
+
+which implies that
+
+which is to say that the ith Fibonacci number Fi is equal to
+
+rounded to the nearest integer. Thus, Fibonacci numbers grow
+exponentially.
+
+Exercises
+
+3.3-1
+Show that if f (n) and g(n) are monotonically increasing functions, then
+so are the functions f (n) + g(n) and f (g(n)), and if f (n) and g(n) are in
+addition nonnegative, then f (n) · g(n) is monotonically increasing.
+3.3-2
+
+Prove that n + (1 )n = n for any integer n and real number in
+
+the range 0 1.
+
+3.3-3
+Use equation (3.14) or other means to show that (n + o(n))k = (nk) for
+any real constant k. Conclude that nk = (nk) and nk = (nk).
+
+3.3-4
+
+Prove the following:
+
+a. Equation (3.21).
+b. Equations (3.26)(3.28).
+c. lg((n)) = (lg n).
+
+3.3-5
+Is the function lg n! polynomially bounded? Is the function lg lg n!
+
+polynomially bounded?
+
+3.3-6
+Which is asymptotically larger: lg(lg* n) or lg*(lg n)?
+
+3.3-7 both satisfy the
+
+Show that the golden ratio and its conjugate
+
+equation x2 = x + 1.
+
+3.3-8
+Prove by induction that the ith Fibonacci number satisfies the equation
+
+where is the golden ratio and is its conjugate.
+
+3.3-9
+Show that k lg k = (n) implies k = (n/lg n).
+
+Problems
+
+3-1 Asymptotic behavior of polynomials
+
+Let
+
+where ad > 0, be a degree-d polynomial in n, and let k be a constant.
+
+Use the definitions of the asymptotic notations to prove the following
+properties.
+
+a. If k d, then p(n) = O(nk).
+b. If k d, then p(n) = (nk).
+c. If k = d, then p(n) = (nk).
+d. If k > d, then p(n) = o(nk).
+e. If k < d, then p(n) = (nk).
+3-2 Relative asymptotic growths
+Indicate, for each pair of expressions (A, B) in the table below whether
+A is O, o, , , or of B. Assume that k 1, > 0, and c > 1 are
+
+constants. Write your answer in the form of the table with "yes" or
+"no" written in each box.
+
+3-3 Ordering by asymptotic growth rates
+
+a. Rank the following functions by order of growth. That is, find an
+arrangement g1, g2, ... , g30 of the functions satisfying g1 = (g2), g2
+
+= (g3), ... , g29 = (g30). Partition your list into equivalence classes
+
+such that functions f (n) and g(n) belong to the same class if and only
+if f (n) = (g(n)).
+
+lg(lg* n) 2lg* n n2 n! (lg
+n)!
+
+(3/2)n n3 lg2 n lg(n!) n1/lg
+
+n
+
+ln ln n lg* n n · 2n nlg lg ln n 1
+n
+
+2lg n (lg n)lg en 4lg n (n +
+1)!
+n
+
+lg*(lg n) n 2n n lg n
+
+b. Give an example of a single nonnegative function f (n) such that for
+all functions gi(n) in part (a), f (n) is neither O(gi(n)) nor (gi(n)).
+
+3-4 Asymptotic notation properties
+Let f (n) and g(n) be asymptotically positive functions. Prove or
+
+disprove each of the following conjectures.
+
+a. f (n) = O(g(n)) implies g(n) = O(f (n)).
+b. f (n) + g(n) = (min {f (n), g(n)}).
+c. f (n) = O(g(n)) implies lg f (n) = O(lg g(n)), where lg g(n) 1 and f (n)
+
+1 for all sufficiently large n.
+d. f (n) = O(g(n)) implies 2f(n) = O (2g(n)).
+
+e. f (n) = O ((f (n))2).
+f. f (n) = O(g(n)) implies g(n) = (f (n)).
+
+g. f (n) = (f (n/2)).
+h. f (n) + o(f (n)) = (f (n)).
+3-5 Manipulating asymptotic notation
+Let f (n) and g(n) be asymptotically positive functions. Prove the
+
+following identities:
+
+a. ((f (n))) = (f (n)).
+b. (f (n)) + O(f (n)) = (f (n)).
+c. (f (n)) + (g(n)) = (f (n) + g(n)).
+d. (f (n)) · (g(n)) = (f (n) · g(n)).
+e. Argue that for any real constants a1, b1 > 0 and integer constants k1,
+
+k2, the following asymptotic bound holds:
+
+f. Prove that for S Z, we have
+
+assuming that both sums converge.
+
+g. Show that for S Z, the following asymptotic bound does not
+
+necessarily hold, even assuming that both products converge, by
+giving a counterexample:
+
+3-6 Variations on O and
+
+Some authors define -notation in a slightly different way than this
+textbook does. We'll use the nomenclature (read "omega infinity") for
+
+this alternative definition. We say that if there exists a
+
+positive constant c such that f (n) cg(n) 0 for infinitely many integers
+n.
+
+a. Show that for any two asymptotically nonnegative functions f (n) and
+
+g(n), we have f (n) = O(g(n)) or (or both).
+
+b. Show that there exist two asymptotically nonnegative functions f (n)
+and g(n) for which neither f (n) = O(g(n)) nor f (n) = (g(n)) holds.
+
+c. Describe the potential advantages and disadvantages of using -
+
+notation instead of -notation to characterize the running times of
+programs.
+
+Some authors also define O in a slightly different manner. We'll use O
+for the alternative definition: f (n) = O(g(n)) if and only if |f (n)| =
+O(g(n)).
+
+d. What happens to each direction of the "if and only if " in Theorem
+3.1 on page 56 if we substitute O for O but still use ?
+
+Some authors define (read "soft-oh") to mean O with logarithmic
+
+factors ignored:
+
+: there exist positive constants c, k, and n0
+
+such that 0 f (n) cg(n) lgk(n) for all n
+n0}.
+
+e. Define and in a similar manner. Prove the corresponding analog
+
+to Theorem 3.1.
+
+3-7 Iterated functions
+
+We can apply the iteration operator * used in the lg* function to any
+
+monotonically increasing function f (n) over the reals. For a given
+constant c R, we define the iterated function by
+
+which need not be well defined in all cases. In other words, the quantity
+
+is the minimum number of iterated applications of the function f
+
+required to reduce its argument down to c or less.
+
+For each of the functions f (n) and constants c in the table below,
+
+give as tight a bound as possible on . If there is no i such that f(i)
+
+(n) c, write "undefined" as your answer.
+
+f (n) c
+
+a. n 1 0
+
+b. lg n 1
+
+c. n/2 1
+
+d. n/2 2
+
+e. 2
+
+f. 1
+
+g. n1/3 2
+
+Chapter notes
+
+Knuth [259] traces the origin of the O-notation to a number-theory text
+by P. Bachmann in 1892. The o-notation was invented by E. Landau in
+
+1909 for his discussion of the distribution of prime numbers. The and
+
+notations were advocated by Knuth [265] to correct the popular, but
+
+technically sloppy, practice in the literature of using O-notation for
+
+both upper and lower bounds. As noted earlier in this chapter, many
+
+people continue to use the O-notation where the -notation is more
+
+technically precise. The soft-oh notation in Problem 3-6 was
+
+introduced by Babai, Luks, and Seress [31], although it was originally
+
+written as O~. Some authors now define as ignoring factors that
+
+are logarithmic in g(n), rather than in n. With this definition, we can say
+
+that , but with the definition in Problem 3-6, this statement
+
+is not true. Further discussion of the history and development of
+
+asymptotic notations appears in works by Knuth [259, 265] and
+
+Brassard and Bratley [70].
+
+Not all authors define the asymptotic notations in the same way,
+although the various definitions agree in most common situations.
+Some of the alternative definitions encompass functions that are not
+asymptotically nonnegative, as long as their absolute values are
+appropriately bounded.
+
+Equation (3.29) is due to Robbins [381]. Other properties of
+elementary mathematical functions can be found in any good
+mathematical reference, such as Abramowitz and Stegun [1] or
+Zwillinger [468], or in a calculus book, such as Apostol [19] or Thomas
+et al. [433]. Knuth [259] and Graham, Knuth, and Patashnik [199]
+contain a wealth of material on discrete mathematics as used in
+computer science.
+
+1 Within set notation, a colon means "such that."
+
+4 Divide-and-Conquer
+
+The divide-and-conquer method is a powerful strategy for designing
+asymptotically efficient algorithms. We saw an example of divide-andconquer in Section 2.3.1 when learning about merge sort. In this
+chapter, we'll explore applications of the divide-and-conquer method
+and acquire valuable mathematical tools that you can use to solve the
+recurrences that arise when analyzing divide-and-conquer algorithms.
+
+Recall that for divide-and-conquer, you solve a given problem
+
+(instance) recursively. If the problem is small enough--the base case--
+you just solve it directly without recursing. Otherwise--the recursive
+case--you perform three characteristic steps:
+
+Divide the problem into one or more subproblems that are smaller
+instances of the same problem.
+
+Conquer the subproblems by solving them recursively.
+Combine the subproblem solutions to form a solution to the original
+
+problem.
+
+A divide-and-conquer algorithm breaks down a large problem into
+smaller subproblems, which themselves may be broken down into even
+
+smaller subproblems, and so forth. The recursion bottoms out when it
+
+reaches a base case and the subproblem is small enough to solve
+directly without further recursing.
+
+Recurrences
+
+To analyze recursive divide-and-conquer algorithms, we'll need some
+
+mathematical tools. A recurrence is an equation that describes a
+
+function in terms of its value on other, typically smaller, arguments.
+Recurrences go hand in hand with the divide-and-conquer method
+because they give us a natural way to characterize the running times of
+recursive algorithms mathematically. You saw an example of a
+recurrence in Section 2.3.2 when we analyzed the worst-case running
+time of merge sort.
+
+For the divide-and-conquer matrix-multiplication algorithms
+presented in Sections 4.1 and 4.2, we'll derive recurrences that describe
+their worst-case running times. To understand why these two divideand-conquer algorithms perform the way they do, you'll need to learn
+how to solve the recurrences that describe their running times. Sections
+4.34.7 teach several methods for solving recurrences. These sections
+also explore the mathematics behind recurrences, which can give you
+stronger intuition for designing your own divide-and-conquer
+algorithms.
+
+We want to get to the algorithms as soon as possible. So, let's just
+cover a few recurrence basics now, and then we'll look more deeply at
+recurrences, especially how to solve them, after we see the matrixmultiplication examples.
+
+The general form of a recurrence is an equation or inequality that
+describes a function over the integers or reals using the function itself.
+It contains two or more cases, depending on the argument. If a case
+involves the recursive invocation of the function on different (usually
+
+smaller) inputs, it is a recursive case. If a case does not involve a
+recursive invocation, it is a base case. There may be zero, one, or many
+
+functions that satisfy the statement of the recurrence. The recurrence is
+
+well defined if there is at least one function that satisfies it, and ill defined
+
+otherwise.
+
+Algorithmic recurrences
+
+We'll be particularly interested in recurrences that describe the running
+
+times of divide-and-conquer algorithms. A recurrence T (n) is
+
+algorithmic if, for every sufficiently large threshold constant n0 > 0, the
+
+following two properties hold:
+
+1. For all n < n0, we have T (n) = (1).
+
+2. For all n n0, every path of recursion terminates in a defined base
+
+case within a finite number of recursive invocations.
+
+Similar to how we sometimes abuse asymptotic notation (see page 60),
+when a function is not defined for all arguments, we understand that
+
+this definition is constrained to values of n for which T (n) is defined.
+Why would a recurrence T (n) that represents a (correct) divide-and-
+
+conquer algorithm's worst-case running time satisfy these properties for
+all sufficiently large threshold constants? The first property says that
+
+there exist constants c1, c2 such that 0 < c1 T (n) c2 for n < n0. For
+
+every legal input, the algorithm must output the solution to the
+
+problem it's solving in finite time (see Section 1.1). Thus we can let c1 be
+
+the minimum amount of time to call and return from a procedure,
+which must be positive, because machine instructions need to be
+executed to invoke a procedure. The running time of the algorithm may
+
+not be defined for some values of n if there are no legal inputs of that
+
+size, but it must be defined for at least one, or else the "algorithm"
+
+doesn't solve any problem. Thus we can let c2 be the algorithm's
+maximum running time on any input of size n < n0, where n0 is
+
+sufficiently large that the algorithm solves at least one problem of size
+
+less than n0. The maximum is well defined, since there are at most a
+finite number of inputs of size less than n0, and there is at least one if n0
+is sufficiently large. Consequently, T (n) satisfies the first property. If the
+second property fails to hold for T (n), then the algorithm isn't correct,
+
+because it would end up in an infinite recursive loop or otherwise fail to
+compute a solution. Thus, it stands to reason that a recurrence for the
+worst-case running time of a correct divide-and-conquer algorithm
+would be algorithmic.
+
+Conventions for recurrences
+
+We adopt the following convention:
+
+Whenever a recurrence is stated without an explicit base case, we
+assume that the recurrence is algorithmic.
+
+That means you're free to pick any sufficiently large threshold constant
+
+n0 for the range of base cases where T (n) = (1). Interestingly, the
+
+asymptotic solutions of most algorithmic recurrences you're likely to
+see when analyzing algorithms don't depend on the choice of threshold
+constant, as long as it's large enough to make the recurrence well
+defined.
+
+Asymptotic solutions of algorithmic divide-and-conquer recurrences
+also don't tend to change when we drop any floors or ceilings in a
+recurrence defined on the integers to convert it to a recurrence defined
+on the reals. Section 4.7 gives a sufficient condition for ignoring floors
+and ceilings that applies to most of the divide-and-conquer recurrences
+you're likely to see. Consequently, we'll frequently state algorithmic
+recurrences without floors and ceilings. Doing so generally simplifies the
+statement of the recurrences, as well as any math that we do with them.
+
+You may sometimes see recurrences that are not equations, but
+
+rather inequalities, such as T (n) 2T (n/2) + (n). Because such a
+recurrence states only an upper bound on T (n), we express its solution
+using O-notation rather than -notation. Similarly, if the inequality is
+reversed to T (n) 2T (n/2) + (n), then, because the recurrence gives
+only a lower bound on T (n), we use -notation in its solution.
+
+Divide-and-conquer and recurrences
+
+This chapter illustrates the divide-and-conquer method by presenting
+and using recurrences to analyze two divide-and-conquer algorithms
+
+for multiplying n × n matrices. Section 4.1 presents a simple divide-andconquer algorithm that solves a matrix-multiplication problem of size n
+by breaking it into four subproblems of size n/2, which it then solves
+
+recursively. The running time of the algorithm can be characterized by
+the recurrence
+
+T (n) = 8T (n/2) + (1),
+
+which turns out to have the solution T (n) = (n3). Although this
+
+divide-and-conquer algorithm is no faster than the straightforward
+method that uses a triply nested loop, it leads to an asymptotically
+faster divide-and-conquer algorithm due to V. Strassen, which we'll
+explore in Section 4.2. Strassen's remarkable algorithm divides a
+
+problem of size n into seven subproblems of size n/2 which it solves
+
+recursively. The running time of Strassen's algorithm can be described
+by the recurrence
+
+T (n) = 7T (n/2) + (n2),
+
+which has the solution T (n) = (nlg 7) = O(n2.81). Strassen's algorithm
+
+beats the straightforward looping method asymptotically.
+These two divide-and-conquer algorithms both break a problem of
+
+size n into several subproblems of size n/2. Although it is common when
+
+using divide-and-conquer for all the subproblems to have the same size,
+that isn't always the case. Sometimes it's productive to divide a problem
+
+of size n into subproblems of different sizes, and then the recurrence
+
+describing the running time reflects the irregularity. For example,
+consider a divide-and-conquer algorithm that divides a problem of size
+
+n into one subproblem of size n/3 and another of size 2n/3, taking (n)
+
+time to divide the problem and combine the solutions to the
+subproblems. Then the algorithm's running time can be described by the
+recurrence
+
+T (n) = T (n/3) + T (2n/3) + (n),
+
+which turns out to have solution T (n) = (n lg n). We'll even see an
+algorithm in Chapter 9 that solves a problem of size n by recursively
+solving a subproblem of size n/5 and another of size 7n/10, taking (n)
+
+time for the divide and combine steps. Its performance satisfies the
+recurrence
+
+T (n) = T (n/5) + T (7n/10) + (n),
+
+which has solution T (n) = (n).
+
+Although divide-and-conquer algorithms usually create subproblems
+with sizes a constant fraction of the original problem size, that's not
+
+always the case. For example, a recursive version of linear search (see
+Exercise 2.1-4) creates just one subproblem, with one element less than
+the original problem. Each recursive call takes constant time plus the
+time to recursively solve a subproblem with one less element, leading to
+the recurrence
+
+T (n) = T (n 1) + (1),
+
+which has solution T (n) = (n). Nevertheless, the vast majority of
+
+efficient divide-and-conquer algorithms solve subproblems that are a
+constant fraction of the size of the original problem, which is where
+we'll focus our efforts.
+
+Solving recurrences
+
+After learning about divide-and-conquer algorithms for matrix
+multiplication in Sections 4.1 and 4.2, we'll explore several mathematical
+
+tools for solving recurrences--that is, for obtaining asymptotic -, O-,
+
+or -bounds on their solutions. We want simple-to-use tools that can
+handle the most commonly occurring situations. But we also want
+general tools that work, perhaps with a little more effort, for less
+common cases. This chapter offers four methods for solving
+recurrences:
+
+In the substitution method (Section 4.3), you guess the form of a
+
+bound and then use mathematical induction to prove your guess
+correct and solve for constants. This method is perhaps the most
+robust method for solving recurrences, but it also requires you to
+make a good guess and to produce an inductive proof.
+
+The recursion-tree method (Section 4.4) models the recurrence as
+
+a tree whose nodes represent the costs incurred at various levels
+of the recursion. To solve the recurrence, you determine the costs
+at each level and add them up, perhaps using techniques for
+bounding summations from Section A.2. Even if you don't use this
+method to formally prove a bound, it can be helpful in guessing
+the form of the bound for use in the substitution method.
+
+The master method (Sections 4.5 and 4.6) is the easiest method,
+
+when it applies. It provides bounds for recurrences of the form
+
+T (n) = aT (n/b) + f (n),
+where a > 0 and b > 1 are constants and f (n) is a given "driving"
+
+function. This type of recurrence tends to arise more frequently
+in the study of algorithms than any other. It characterizes a
+
+divide-and-conquer algorithm that creates a subproblems, each of
+which is 1/b times the size of the original problem, using f (n) time
+
+for the divide and combine steps. To apply the master method,
+you need to memorize three cases, but once you do, you can easily
+determine asymptotic bounds on running times for many divide-
+and-conquer algorithms.
+
+The Akra-Bazzi method (Section 4.7) is a general method for
+
+solving divide-and-conquer recurrences. Although it involves
+calculus, it can be used to attack more complicated recurrences
+than those addressed by the master method.

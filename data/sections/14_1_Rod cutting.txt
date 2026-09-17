@@ -1,0 +1,579 @@
+14.1 Rod cutting
+
+Our first example uses dynamic programming to solve a simple problem
+in deciding where to cut steel rods. Serling Enterprises buys long steel
+rods and cuts them into shorter rods, which it then sells. Each cut is
+free. The management of Serling Enterprises wants to know the best
+way to cut up the rods.
+
+Serling Enterprises has a table giving, for i = 1, 2, ..., the price pi in
+dollars that they charge for a rod of length i inches. The length of each
+
+rod in inches is always an integer. Figure 14.1 gives a sample price table.
+
+The rod-cutting problem is the following. Given a rod of length n
+inches and a table of prices pi for i = 1, 2, ..., n, determine the maximum
+
+revenue rn obtainable by cutting up the rod and selling the pieces. If the
+price pn for a rod of length n is large enough, an optimal solution might
+
+require no cutting at all.
+
+Consider the case when n = 4. Figure 14.2 shows all the ways to cut
+
+up a rod of 4 inches in length, including the way with no cuts at all.
+
+Cutting a 4-inch rod into two 2-inch pieces produces revenue p2 + p2 =
+
+5 + 5 = 10, which is optimal.
+
+Serling Enterprises can cut up a rod of length n in 2n-1 different
+
+ways, since they have an independent option of cutting, or not cutting,
+
+at distance i inches from the left end, for i = 1, 2, ..., n - 1.1 We denote
+
+a decomposition into pieces using ordinary additive notation, so that 7
+= 2 + 2 + 3 indicates that a rod of length 7 is cut into three pieces--two
+of length 2 and one of length 3. If an optimal solution cuts the rod into
+
+k pieces, for some 1 k n, then an optimal decomposition
+n = i1 + i2 + + ik
+
+Figure 14.1 A sample price table for rods. Each rod of length i inches earns the company pi
+
+dollars of revenue.
+
+Figure 14.2 The 8 possible ways of cutting up a rod of length 4. Above each piece is the value
+of that piece, according to the sample price chart of Figure 14.1. The optimal strategy is part
+(c)--cutting the rod into two pieces of length 2--which has total value 10.
+
+of the rod into pieces of lengths i1, i2, ..., ik provides maximum
+
+corresponding revenue
+
+For the sample problem in Figure 14.1, you can determine the
+
+optimal revenue figures ri, for i = 1, 2, ..., 10, by inspection, with the
+
+corresponding optimal decompositions
+
+r1 = 1 from solution 1 = 1 (no cuts),
+
+r2 = 5 from solution 2 = 2 (no cuts),
+
+r3 = 8 from solution 3 = 3 (no cuts),
+
+r4 = 10 from solution 4 = 2 + 2,
+
+r5 = 13 from solution 5 = 2 + 3,
+
+r6 = 17 from solution 6 = 6 (no cuts),
+
+r7 = 18 from solution 7 = 1 + 6 or 7 = 2 + 2 + 3,
+
+r8 = 22 from solution 8 = 2 + 6,
+
+r9 = 25 from solution 9 = 3 + 6,
+
+r10 = 30 from solution 10 = 10 (no cuts).
+
+More generally, we can express the values rn for n 1 in terms of
+
+optimal revenues from shorter rods:
+
+The first argument, pn, corresponds to making no cuts at all and selling
+the rod of length n as is. The other n - 1 arguments to max correspond
+
+to the maximum revenue obtained by making an initial cut of the rod
+
+into two pieces of size i and n - i, for each i = 1, 2, ..., n - 1, and then
+optimally cutting up those pieces further, obtaining revenues ri and rn-i
+
+from those two pieces. Since you don't know ahead of time which value
+
+of i optimizes revenue, you have to consider all possible values for i and
+
+pick the one that maximizes revenue. You also have the option of
+
+picking no i at all if the greatest revenue comes from selling the rod
+
+uncut.
+
+To solve the original problem of size n, you solve smaller problems of
+
+the same type. Once you make the first cut, the two resulting pieces
+form independent instances of the rod-cutting problem. The overall
+optimal solution incorporates optimal solutions to the two resulting
+subproblems, maximizing revenue from each of those two pieces. We say
+
+that the rod-cutting problem exhibits optimal substructure: optimal
+
+solutions to a problem incorporate optimal solutions to related
+subproblems, which you may solve independently.
+
+In a related, but slightly simpler, way to arrange a recursive structure
+for the rod-cutting problem, let's view a decomposition as consisting of
+
+a first piece of length i cut off the left-hand end, and then a right-hand
+remainder of length n - i. Only the remainder, and not the first piece,
+may be further divided. Think of every decomposition of a length-n rod
+
+in this way: as a first piece followed by some decomposition of the
+remainder. Then we can express the solution with no cuts at all by
+
+saying that the first piece has size i = n and revenue pn and that the
+remainder has size 0 with corresponding revenue r0 = 0. We thus obtain
+
+the following simpler version of equation (14.1):
+
+In this formulation, an optimal solution embodies the solution to only
+
+one related subproblem--the remainder--rather than two.
+
+Recursive top-down implementation
+
+The CUT-ROD procedure on the following page implements the
+computation implicit in equation (14.2) in a straightforward, top-down,
+
+recursive manner. It takes as input an array p[1 : n] of prices and an
+integer n, and it returns the maximum revenue possible for a rod of
+length n. For length n = 0, no revenue is possible, and so CUT-ROD
+returns 0 in line 2. Line 3 initializes the maximum revenue q to -, so
+that the for loop in lines 45 correctly computes q = max {pi + CUTROD(p, n - i) : 1 i n}. Line 6 then returns this value. A simple
+
+induction on n proves that this answer is equal to the desired answer rn,
+
+using equation (14.2).
+
+CUT-ROD(p, n)
+
+1 if n == 0
+
+2 return 0
+
+3 q = -
+4 for i = 1 to n
+5 q = max {q, p[i] + CUT-ROD(p, n - i)}
+6 return q
+
+If you code up CUT-ROD in your favorite programming language
+and run it on your computer, you'll find that once the input size
+
+becomes moderately large, your program takes a long time to run. For n
+
+= 40, your program may take several minutes and possibly more than
+
+an hour. For large values of n, you'll also discover that each time you
+increase n by 1, your program's running time approximately doubles.
+
+Why is CUT-ROD so inefficient? The problem is that CUT-ROD
+calls itself recursively over and over again with the same parameter
+values, which means that it solves the same subproblems repeatedly.
+
+Figure 14.3 shows a recursion tree demonstrating what happens for n =
+4: CUT-ROD(p, n) calls CUT-ROD(p, n - i) for i = 1, 2, ..., n.
+Equivalently, CUT-ROD(p, n) calls CUT-ROD(p, j) for each j = 0, 1, ...,
+n - 1. When this process unfolds recursively, the amount of work done,
+as a function of n, grows explosively.
+
+To analyze the running time of CUT-ROD, let T(n) denote the total
+number of calls made to CUT-ROD(p, n) for a particular value of n.
+
+This expression equals the number of nodes in a subtree whose root is
+
+labeled n in the recursion tree. The count includes the initial call at its
+root. Thus, T(0) = 1 and
+
+The initial 1 is for the call at the root, and the term T(j) counts the
+number of calls (including recursive calls) due to the call CUT-ROD(p,
+n - i), where j = n - i. As Exercise 14.1-1 asks you to show,
+
+and so the running time of CUT-ROD is exponential in n.
+
+In retrospect, this exponential running time is not so surprising.
+CUT-ROD explicitly considers all possible ways of cutting up a rod of
+
+length n. How many ways are there? A rod of length n has n - 1
+
+potential locations to cut. Each possible way to cut up the rod makes a
+
+cut at some subset of these n - 1 locations, including the empty set,
+
+which makes for no cuts. Viewing each cut location as a distinct member
+
+of a set of n - 1 elements, you can see that there are 2n-1 subsets. Each
+
+leaf in the recursion tree of Figure 14.3 corresponds to one possible
+
+way to cut up the rod. Hence, the recursion tree has 2n-1 leaves. The
+
+labels on the simple path from the root to a leaf give the sizes of each
+remaining right-hand piece before making each cut. That is, the labels
+give the corresponding cut points, measured from the right-hand end of
+the rod.
+
+Figure 14.3 The recursion tree showing recursive calls resulting from a call CUT-ROD(p, n)
+for n = 4. Each node label gives the size n of the corresponding subproblem, so that an edge
+from a parent with label s to a child with label t corresponds to cutting off an initial piece of
+size s - t and leaving a remaining subproblem of size t. A path from the root to a leaf
+corresponds to one of the 2n-1 ways of cutting up a rod of length n. In general, this recursion
+tree has 2n nodes and 2n-1 leaves.
+
+Using dynamic programming for optimal rod cutting
+
+Now, let's see how to use dynamic programming to convert CUT-ROD
+into an efficient algorithm.
+
+The dynamic-programming method works as follows. Instead of
+solving the same subproblems repeatedly, as in the naive recursion
+
+solution, arrange for each subproblem to be solved only once. There's
+
+actually an obvious way to do so: the first time you solve a subproblem,
+
+save its solution. If you need to refer to this subproblem's solution again
+
+later, just look it up, rather than recomputing it.
+Saving subproblem solutions comes with a cost: the additional
+
+memory needed to store solutions. Dynamic programming thus serves
+
+as an example of a time-memory trade-off. The savings may be dramatic.
+
+For example, we're about to use dynamic programming to go from the
+
+exponential-time algorithm for rod cutting down to a (n2)-time
+
+algorithm. A dynamic-programming approach runs in polynomial time
+
+when the number of distinct subproblems involved is polynomial in the
+
+input size and you can solve each such subproblem in polynomial time.
+There are usually two equivalent ways to implement a dynamic-
+
+programming approach. Solutions to the rod-cutting problem illustrate
+both of them.
+
+The first approach is top-down with memoization.2 In this approach,
+
+you write the procedure recursively in a natural manner, but modified to
+save the result of each subproblem (usually in an array or hash table).
+The procedure now first checks to see whether it has previously solved
+this subproblem. If so, it returns the saved value, saving further
+computation at this level. If not, the procedure computes the value in
+the usual manner but also saves it. We say that the recursive procedure
+
+has been memoized: it "remembers" what results it has computed
+
+previously.
+
+The second approach is the bottom-up method. This approach
+
+typically depends on some natural notion of the "size" of a subproblem,
+such that solving any particular subproblem depends only on solving
+"smaller" subproblems. Solve the subproblems in size order, smallest
+first, storing the solution to each subproblem when it is first solved. In
+
+this way, when solving a particular subproblem, there are already saved
+solutions for all of the smaller subproblems its solution depends upon.
+You need to solve each subproblem only once, and when you first see it,
+you have already solved all of its prerequisite subproblems.
+
+These two approaches yield algorithms with the same asymptotic
+running time, except in unusual circumstances where the top-down
+approach does not actually recurse to examine all possible subproblems.
+The bottom-up approach often has much better constant factors, since
+it has lower overhead for procedure calls.
+
+The procedures MEMOIZED-CUT-ROD and MEMOIZED-CUTROD-AUX on the facing page demonstrate how to memoize the topdown CUT-ROD procedure. The main procedure MEMOIZED-CUT-
+
+ROD initializes a new auxiliary array r[0 : n] with the value - which,
+
+since known revenue values are always nonnegative, is a convenient
+choice for denoting "unknown." MEMOIZED-CUT-ROD then calls its
+helper procedure, MEMOIZED-CUT-ROD-AUX, which is just the
+memoized version of the exponential-time procedure, CUT-ROD. It
+first checks in line 1 to see whether the desired value is already known
+and, if it is, then line 2 returns it. Otherwise, lines 37 compute the
+
+desired value q in the usual manner, line 8 saves it in r[n], and line 9
+
+returns it.
+The bottom-up version, BOTTOM-UP-CUT-ROD on the next page,
+
+is even simpler. Using the bottom-up dynamic-programming approach,
+BOTTOM-UP-CUT-ROD takes advantage of the natural ordering of
+
+the subproblems: a subproblem of size i is "smaller" than a subproblem
+of size j if i < j. Thus, the procedure solves subproblems of sizes j = 0, 1,
+..., n, in that order.
+
+MEMOIZED-CUT-ROD(p, n)
+1 let r[0 : n] be a new array // will remember solution values in r
+2 for i = 0 to n
+3 r[i] = -
+4 return MEMOIZED-CUT-ROD-AUX(p, n, r)
+
+MEMOIZED-CUT-ROD-AUX(p, n, r)
+
+1 if r[n] 0 // already have a solution for length n?
+
+2 return r[n]
+
+3 if n == 0
+
+4 q=0
+
+5 else q = -
+
+6 for i = 1 to n // i is the position of the first cut
+
+7 q = max {q, p[i] + MEMOIZED-CUT-ROD-AUX(p, n - i,
+
+r)}
+
+8 r[n] = q // remember the solution value for length n
+
+9 return q
+
+BOTTOM-UP-CUT-ROD(p, n)
+
+1 let r[0 : n] be a new array // will remember solution values in r
+
+2 r[0] = 0
+
+3 for j = 1 to n // for increasing rod length j
+
+4 q = -
+
+5 for i = 1 to j // i is the position of the first cut
+
+6 q = max {q, p[i] + r[j - i]}
+
+7 r[j] = q // remember the solution value for length j
+
+8 return r[n]
+
+Line 1 of BOTTOM-UP-CUT-ROD creates a new array r[0 : n] in
+which to save the results of the subproblems, and line 2 initializes r[0] to
+
+0, since a rod of length 0 earns no revenue. Lines 36 solve each
+
+subproblem of size j, for j = 1, 2, ..., n, in order of increasing size. The
+approach used to solve a problem of a particular size j is the same as
+
+that used by CUT-ROD, except that line 6 now directly references array
+
+entry r[j - i] instead of making a recursive call to solve the subproblem
+of size j - i. Line 7 saves in r[j] the solution to the subproblem of size j.
+Finally, line 8 returns r[n], which equals the optimal value rn.
+
+The bottom-up and top-down versions have the same asymptotic
+
+running time. The running time of BOTTOM-UP-CUT-ROD is (n2),
+
+due to its doubly nested loop structure. The number of iterations of its
+
+inner for loop, in lines 56, forms an arithmetic series. The running time
+
+of its top-down counterpart, MEMOIZEDCUT-ROD, is also (n2),
+
+although this running time may be a little harder to see. Because a
+recursive call to solve a previously solved subproblem returns
+immediately, MEMOIZED-CUT-ROD solves each subproblem just
+
+once. It solves subproblems for sizes 0, 1, ..., n. To solve a subproblem
+of size n, the for loop of lines 67 iterates n times. Thus, the total
+
+number of iterations of this for loop, over all recursive calls of
+MEMOIZED-CUT-ROD, forms an arithmetic series, giving a total of
+
+(n2) iterations, just like the inner for loop of BOTTOM-UP-CUT-
+
+ROD. (We actually are using a form of aggregate analysis here. We'll
+see aggregate analysis in detail in Section 16.1.)
+
+Figure 14.4 The subproblem graph for the rod-cutting problem with n = 4. The vertex labels
+give the sizes of the corresponding subproblems. A directed edge (x, y) indicates that solving
+subproblem x requires a solution to subproblem y. This graph is a reduced version of the
+
+recursion tree of Figure 14.3, in which all nodes with the same label are collapsed into a single
+vertex and all edges go from parent to child.
+
+Subproblem graphs
+When you think about a dynamic-programming problem, you need to
+understand the set of subproblems involved and how subproblems
+depend on one another.
+
+The subproblem graph for the problem embodies exactly this
+
+information. Figure 14.4 shows the subproblem graph for the rod-
+
+cutting problem with n = 4. It is a directed graph, containing one vertex
+
+for each distinct subproblem. The subproblem graph has a directed
+
+edge from the vertex for subproblem x to the vertex for subproblem y if
+determining an optimal solution for subproblem x involves directly
+considering an optimal solution for subproblem y. For example, the
+subproblem graph contains an edge from x to y if a top-down recursive
+procedure for solving x directly calls itself to solve y. You can think of
+
+the subproblem graph as a "reduced" or "collapsed" version of the
+recursion tree for the top-down recursive method, with all nodes for the
+same subproblem coalesced into a single vertex and all edges directed
+from parent to child.
+
+The bottom-up method for dynamic programming considers the
+vertices of the subproblem graph in such an order that you solve the
+
+subproblems y adjacent to a given subproblem x before you solve
+subproblem x. (As Section B.4 notes, the adjacency relation in a
+
+directed graph is not necessarily symmetric.) Using terminology that
+we'll see in Section 20.4, in a bottom-up dynamic-programming
+algorithm, you consider the vertices of the subproblem graph in an
+order that is a "reverse topological sort," or a "topological sort of the
+transpose" of the subproblem graph. In other words, no subproblem is
+considered until all of the subproblems it depends upon have been
+solved. Similarly, using notions that we'll visit in Section 20.3, you can
+view the top-down method (with memoization) for dynamic
+programming as a "depth-first search" of the subproblem graph.
+
+The size of the subproblem graph G = (V, E) can help you determine
+
+the running time of the dynamic-programming algorithm. Since you
+solve each subproblem just once, the running time is the sum of the
+times needed to solve each subproblem. Typically, the time to compute
+the solution to a subproblem is proportional to the degree (number of
+outgoing edges) of the corresponding vertex in the subproblem graph,
+and the number of subproblems is equal to the number of vertices in the
+subproblem graph. In this common case, the running time of dynamic
+programming is linear in the number of vertices and edges.
+
+Reconstructing a solution
+
+The procedures MEMOIZED-CUT-ROD and BOTTOM-UP-CUT-
+
+ROD return the value of an optimal solution to the rod-cutting
+
+problem, but they do not return the solution itself: a list of piece sizes.
+
+Let's see how to extend the dynamic-programming approach to
+
+record not only the optimal value computed for each subproblem, but
+also a choice that led to the optimal value. With this information, you
+
+can readily print an optimal solution. The procedure EXTENDED-
+
+BOTTOM-UP-CUT-ROD on the next page computes, for each rod size
+
+j, not only the maximum revenue rj, but also sj, the optimal size of the
+
+first piece to cut off. It's similar to BOTTOM-UP-CUT-ROD, except
+
+that it creates the array s in line 1, and it updates s[j] in line 8 to hold the
+optimal size i of the first piece to cut off when solving a subproblem of
+size j.
+
+The procedure PRINT-CUT-ROD-SOLUTION on the following
+
+page takes as input an array p[1 : n] of prices and a rod size n. It calls
+EXTENDED-BOTTOM-UP-CUT-ROD to compute the array s[1 : n]
+
+of optimal first-piece sizes. Then it prints out the complete list of piece
+
+sizes in an optimal decomposition of a rod of length n. For the sample
+
+price chart appearing in Figure 14.1, the call EXTENDED-BOTTOM-
+
+UP-CUT-ROD(p, 10) returns the following arrays:
+
+i 0 1 2 3 4 5 6 7 8 9 10
+r[i] 0 1 5 8 10 13 17 18 22 25 30
+s[i] 1 2 3 2 2 6 1 2 3 10
+A call to PRINT-CUT-ROD-SOLUTION(p, 10) prints just 10, but a
+call with n = 7 prints the cuts 1 and 6, which correspond to the first
+optimal decomposition for r7 given earlier.
+
+EXTENDED-BOTTOM-UP-CUT-ROD(p, n)
+
+1let r[0 : n] and s[1 : n] be new arrays
+
+2r[0] = 0
+
+3for j = 1 to n // for increasing rod length j
+
+4 q = -
+
+5 for i = 1 to j // i is the position of the first cut
+
+6 if q < p[i] + r[j - i]
+
+7 q = p[i] + r[j - i]
+
+8 s[j] = i // best cut location so far for length j
+
+9 r[j] = q // remember the solution value for length j
+10return r and s
+
+PRINT-CUT-ROD-SOLUTION(p, n)
+
+1 (r, s) = EXTENDED-BOTTOM-UP-CUT-ROD(p, n)
+
+2 while n > 0
+
+3 print s[n] // cut location for length n
+
+4 n = n - s[n] // length of the remainder of the rod
+
+Exercises
+
+14.1-1
+
+Show that equation (14.4) follows from equation (14.3) and the initial
+
+condition T(0) = 1.
+
+14.1-2
+
+Show, by means of a counterexample, that the following "greedy"
+strategy does not always determine an optimal way to cut rods. Define
+
+the density of a rod of length i to be pi/i, that is, its value per inch. The
+greedy strategy for a rod of length n cuts off a first piece of length i,
+where 1 i n, having maximum density. It then continues by applying
+the greedy strategy to the remaining piece of length n - i.
+
+14.1-3
+
+Consider a modification of the rod-cutting problem in which, in
+
+addition to a price pi for each rod, each cut incurs a fixed cost of c. The
+
+revenue associated with a solution is now the sum of the prices of the
+pieces minus the costs of making the cuts. Give a dynamicprogramming algorithm to solve this modified problem.
+
+14.1-4
+
+Modify CUT-ROD and MEMOIZED-CUT-ROD-AUX so that their
+
+for loops go up to only n/2, rather than up to n. What other changes
+
+to the procedures do you need to make? How are their running times
+affected?
+
+14.1-5
+
+Modify MEMOIZED-CUT-ROD to return not only the value but the
+actual solution.
+
+14.1-6
+
+The Fibonacci numbers are defined by recurrence (3.31) on page 69.
+
+Give an O(n)-time dynamic-programming algorithm to compute the nth
+
+Fibonacci number. Draw the subproblem graph. How many vertices and
+edges does the graph contain?

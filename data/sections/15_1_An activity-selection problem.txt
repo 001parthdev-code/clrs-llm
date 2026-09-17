@@ -1,0 +1,408 @@
+15.1 An activity-selection problem
+
+Our first example is the problem of scheduling several competing
+activities that require exclusive use of a common resource, with a goal
+of selecting a maximum-size set of mutually compatible activities.
+Imagine that you are in charge of scheduling a conference room. You
+
+are presented with a set S = {a1, a2, ... , an} of n proposed activities
+
+that wish to reserve the conference room, and the room can serve only
+
+one activity at a time. Each activity ai has a start time si and a finish
+time fi, where 0 si < fi < . If selected, activity ai takes place during
+the half-open time interval [si, fi). Activities ai and aj are compatible if
+the intervals [si, fi) and [sj, fj) do not overlap. That is, ai and aj are
+compatible if si fj or sj fi. (Assume that if your staff needs time to
+
+change over the room from one activity to the next, the changeover
+
+time is built into the intervals.) In the activity-selection problem, your
+
+goal is to select a maximum-size subset of mutually compatible
+activities. Assume that the activities are sorted in monotonically
+increasing order of finish time:
+
+(We'll see later the advantage that this assumption provides.) For
+
+example, consider the set of activities in Figure 15.1. The subset {a3, a9,
+a11} consists of mutually compatible activities. It is not a maximum
+
+subset, however, since the subset {a1, a4, a8, a11} is larger. In fact, {a1,
+a4, a8, a11} is a largest subset of mutually compatible activities, and
+another largest subset is {a2, a4, a9, a11}.
+
+We'll see how to solve this problem, proceeding in several steps. First
+we'll explore a dynamic-programming solution, in which you consider
+several choices when determining which subproblems to use in an
+optimal solution. We'll then observe that you need to consider only one
+choice--the greedy choice--and that when you make the greedy choice,
+only one subproblem remains. Based on these observations, we'll
+develop a recursive greedy algorithm to solve the activity-selection
+problem. Finally, we'll complete the process of developing a greedy
+solution by converting the recursive algorithm to an iterative one.
+Although the steps we go through in this section are slightly more
+involved than is typical when developing a greedy algorithm, they
+illustrate the relationship between greedy algorithms and dynamic
+programming.
+
+Figure 15.1 A set {a1, a2, ... , a11} of activities. Activity ai has start time si and finish time fi.
+
+The optimal substructure of the activity-selection problem
+
+Let's verify that the activity-selection problem exhibits optimal
+
+substructure. Denote by Sij the set of activities that start after activity
+ai finishes and that finish before activity aj starts. Suppose that you
+want to find a maximum set of mutually compatible activities in Sij, and
+suppose further that such a maximum set is Aij, which includes some
+activity ak. By including ak in an optimal solution, you are left with two
+subproblems: finding mutually compatible activities in the set Sik
+(activities that start after activity ai finishes and that finish before
+activity ak starts) and finding mutually compatible activities in the set
+
+Skj (activities that start after activity ak finishes and that finish before
+
+activity aj starts). Let Aik = Aij Sik and Akj = Aij Skj, so that Aik
+
+contains the activities in Aij that finish before ak starts and Akj
+
+contains the activities in Aij that start after ak finishes. Thus, we have
+
+Aij = Aik {ak} Akj, and so the maximum-size set Aij of mutually
+
+compatible activities in Sij consists of |Aij | = |Aik| + |Akj | + 1 activities.
+
+The usual cut-and-paste argument shows that an optimal solution
+
+Aij must also include optimal solutions to the two subproblems for Sik
+
+and Skj. If you could find a set of mutually compatible activities in
+
+Skj where , then you could use , rather than Akj, in a
+
+solution to the subproblem for Sij. You would have constructed a set of
+
+mutually compatible activities,
+
+which contradicts the assumption that Aij is an optimal solution. A
+
+symmetric argument applies to the activities in Sik.
+
+This way of characterizing optimal substructure suggests that you
+
+can solve the activity-selection problem by dynamic programming. Let's
+
+denote the size of an optimal solution for the set Sij by c[i, j]. Then, the
+
+dynamic-programming approach gives the recurrence
+
+c[i, j] = c[i, k] + c[k, j] + 1.
+
+Of course, if you do not know that an optimal solution for the set Sij
+includes activity ak, you must examine all activities in Sij to find which
+
+one to choose, so that
+
+You can then develop a recursive algorithm and memoize it, or you can
+work bottom-up and fill in table entries as you go along. But you would
+be overlooking another important characteristic of the activityselection problem that you can use to great advantage.
+
+Making the greedy choice
+
+What if you could choose an activity to add to an optimal solution
+
+without having to first solve all the subproblems? That could save you
+
+from having to consider all the choices inherent in recurrence (15.2). In
+
+fact, for the activity-selection problem, you need to consider only one
+
+choice: the greedy choice.
+
+What is the greedy choice for the activity-selection problem?
+
+Intuition suggests that you should choose an activity that leaves the
+
+resource available for as many other activities as possible. Of the
+
+activities you end up choosing, one of them must be the first one to
+
+finish. Intuition says, therefore, choose the activity in S with the earliest
+
+finish time, since that leaves the resource available for as many of the
+
+activities that follow it as possible. (If more than one activity in S has
+
+the earliest finish time, then choose any such activity.) In other words,
+
+since the activities are sorted in monotonically increasing order by
+
+finish time, the greedy choice is activity a1. Choosing the first activity to
+
+finish is not the only way to think of making a greedy choice for this
+
+problem. Exercise 15.1-3 asks you to explore other possibilities.
+
+Once you make the greedy choice, you have only one remaining
+
+subproblem to solve: finding activities that start after a1 finishes. Why
+don't you have to consider activities that finish before a1 starts?
+Because s1 < f1, and because f1 is the earliest finish time of any activity,
+no activity can have a finish time less than or equal to s1. Thus, all
+activities that are compatible with activity a1 must start after a1
+
+finishes.
+
+Furthermore, we have already established that the activity-selection
+
+problem exhibits optimal substructure. Let Sk = {ai S : si fk} be the
+set of activities that start after activity ak finishes. If you make the
+greedy choice of activity a1, then S1 remains as the only subproblem to
+
+solve.1 Optimal substructure says that if a1 belongs to an optimal
+
+solution, then an optimal solution to the original problem consists of
+
+activity a1 and all the activities in an optimal solution to the
+subproblem S1.
+
+One big question remains: Is this intuition correct? Is the greedy
+choice--in which you choose the first activity to finish--always part of
+some optimal solution? The following theorem shows that it is.
+
+Theorem 15.1
+Consider any nonempty subproblem Sk, and let am be an activity in Sk
+with the earliest finish time. Then am is included in some maximum-size
+subset of mutually compatible activities of Sk.
+
+Proof Let Ak be a maximum-size subset of mutually compatible
+
+activities in Sk, and let aj be the activity in Ak with the earliest finish
+
+time. If aj = am, we are done, since we have shown that am belongs to
+
+some maximum-size subset of mutually compatible activities of Sk. If aj
+
+am, let the set be Ak but substituting am for aj.
+
+The activities in are compatible, which follows because the activities
+
+in Ak are compatible, aj is the first activity in Ak to finish, and fm fj.
+
+Since , we conclude that is a maximum-size subset of
+
+mutually compatible activities of Sk, and it includes am.
+
+Although you might be able to solve the activity-selection problem
+with dynamic programming, Theorem 15.1 says that you don't need to.
+Instead, you can repeatedly choose the activity that finishes first, keep
+only the activities compatible with this activity, and repeat until no
+activities remain. Moreover, because you always choose the activity
+with the earliest finish time, the finish times of the activities that you
+choose must strictly increase. You can consider each activity just once
+overall, in monotonically increasing order of finish times.
+
+An algorithm to solve the activity-selection problem does not need
+to work bottom-up, like a table-based dynamic-programming algorithm.
+Instead, it can work top-down, choosing an activity to put into the
+optimal solution that it constructs and then solving the subproblem of
+choosing activities from those that are compatible with those already
+chosen. Greedy algorithms typically have this top-down design: make a
+
+choice and then solve a subproblem, rather than the bottom-up
+technique of solving subproblems before making a choice.
+
+A recursive greedy algorithm
+
+Now that you know you can bypass the dynamic-programming
+approach and instead use a top-down, greedy algorithm, let's see a
+straightforward, recursive procedure to solve the activity-selection
+problem. The procedure RECURSIVE-ACTIVITY-SELECTOR on the
+following page takes the start and finish times of the activities,
+
+represented as arrays s and f,2 the index k that defines the subproblem
+Sk it is to solve, and the size n of the original problem. It returns a
+maximum-size set of mutually compatible activities in Sk. The
+procedure assumes that the n input activities are already ordered by
+
+monotonically increasing finish time, according to equation (15.1). If
+
+not, you can first sort them into this order in O(n lg n) time, breaking
+ties arbitrarily. In order to start, add the fictitious activity a0 with f0 =
+0, so that subproblem S0 is the entire set of activities S. The initial call,
+
+which solves the entire problem, is RECURSIVE-ACTIVITY-
+
+SELECTOR (s, f, 0, n).
+
+RECURSIVE-ACTIVITY-SELECTOR (s, f, k, n)
+1 m=k+1
+2 while m n and s[m] < f [k] // find the first activity in Sk to finish
+3 m=m+1
+4 if m n
+5 return {am} RECURSIVE-ACTIVITY-SELECTOR (s, f, m,
+
+n)
+
+6 else return
+
+Figure 15.2 shows how the algorithm operates on the activities in
+Figure 15.1. In a given recursive call RECURSIVE-ACTIVITY-
+
+SELECTOR (s, f, k, n), the while loop of lines 23 looks for the first
+activity in Sk to finish. The loop examines ak+1, ak+2, ... , an, until it
+
+finds the first activity am that is compatible with ak, which means that
+sm fk. If the loop terminates because it finds such an activity, line 5
+returns the union of {am} and the maximum-size subset of Sm returned
+by the recursive call RECURSIVE-ACTIVITY-SELECTOR (s, f, m, n).
+Alternatively, the loop may terminate because m > n, in which case the
+procedure has examined all activities in Sk without finding one that is
+compatible with ak. In this case, Sk = , and so line 6 returns .
+
+Assuming that the activities have already been sorted by finish times,
+
+the running time of the call RECURSIVE-ACTIVITY-SELECTOR (s,
+f, 0, n) is (n). To see why, observe that over all recursive calls, each
+
+activity is examined exactly once in the while loop test of line 2. In
+
+particular, activity ai is examined in the last call made in which k < i.
+
+An iterative greedy algorithm
+
+The recursive procedure can be converted to an iterative one because
+the procedure RECURSIVE-ACTIVITY-SELECTOR is almost "tail
+recursive" (see Problem 7-5): it ends with a recursive call to itself
+followed by a union operation. It is usually a straightforward task to
+transform a tail-recursive procedure to an iterative form. In fact, some
+compilers for certain programming languages perform this task
+automatically.
+
+Figure 15.2 The operation of RECURSIVE-ACTIVITY-SELECTOR on the 11 activities
+
+from Figure 15.1. Activities considered in each recursive call appear between horizontal lines.
+
+The fictitious activity a0 finishes at time 0, and the initial call RECURSIVE-ACTIVITYSELECTOR (s, f, 0, 11), selects activity a1. In each recursive call, the activities that have
+
+already been selected are blue, and the activity shown in tan is being considered. If the
+
+starting time of an activity occurs before the finish time of the most recently added activity
+
+(the arrow between them points left), it is rejected. Otherwise (the arrow points directly up or
+
+to the right), it is selected. The last recursive call, RECURSIVE-ACTIVITY-SELECTOR (s,
+f, 11, 11), returns . The resulting set of selected activities is {a1, a4, a8, a11}.
+
+The procedure GREEDY-ACTIVITY-SELECTOR is an iterative
+version of the procedure RECURSIVE-ACTIVITY-SELECTOR. It,
+too, assumes that the input activities are ordered by monotonically
+
+increasing finish time. It collects selected activities into a set A and
+
+returns this set when it is done.
+
+GREEDY-ACTIVITY-SELECTOR (s, f, n)
+
+1 A = {a1} // is am in Sk?
+2 k=1
+3 for m = 2 to n // yes, so choose it
+4 if s[m] f [k]
+// and continue from there
+5 A = A {am}
+
+6 k=m
+
+7 return A
+
+The procedure works as follows. The variable k indexes the most
+recent addition to A, corresponding to the activity ak in the recursive
+
+version. Since the procedure considers the activities in order of
+
+monotonically increasing finish time, fk is always the maximum finish
+time of any activity in A. That is,
+
+Lines 12 select activity a1, initialize A to contain just this activity, and
+
+initialize k to index this activity. The for loop of lines 36 finds the
+earliest activity in Sk to finish. The loop considers each activity am in
+turn and adds am to A if it is compatible with all previously selected
+activities. Such an activity is the earliest in Sk to finish. To see whether
+activity am is compatible with every activity currently in A, it suffices by
+equation (15.3) to check (in line 4) that its start time sm is not earlier
+than the finish time fk of the activity most recently added to A. If
+activity am is compatible, then lines 56 add activity am to A and set k
+to m. The set A returned by the call GREEDY-ACTIVITY-
+
+SELECTOR (s, f) is precisely the set returned by the initial call
+RECURSIVE-ACTIVITY-SELECTOR (s, f, 0, n).
+
+Like the recursive version, GREEDY-ACTIVITY-SELECTOR
+
+schedules a set of n activities in (n) time, assuming that the activities
+
+were already sorted initially by their finish times.
+
+Exercises
+
+15.1-1
+
+Give a dynamic-programming algorithm for the activity-selection
+problem, based on recurrence (15.2). Have your algorithm compute the
+
+sizes c[i, j] as defined above and also produce the maximum-size subset
+
+of mutually compatible activities. Assume that the inputs have been
+sorted as in equation (15.1). Compare the running time of your solution
+to the running time of GREEDY-ACTIVITY-SELECTOR.
+
+15.1-2
+
+Suppose that instead of always selecting the first activity to finish, you
+instead select the last activity to start that is compatible with all
+previously selected activities. Describe how this approach is a greedy
+algorithm, and prove that it yields an optimal solution.
+
+15.1-3
+
+Not just any greedy approach to the activity-selection problem
+produces a maximum-size set of mutually compatible activities. Give an
+example to show that the approach of selecting the activity of least
+duration from among those that are compatible with previously selected
+activities does not work. Do the same for the approaches of always
+selecting the compatible activity that overlaps the fewest other
+remaining activities and always selecting the compatible remaining
+activity with the earliest start time.
+
+15.1-4
+
+You are given a set of activities to schedule among a large number of
+lecture halls, where any activity can take place in any lecture hall. You
+wish to schedule all the activities using as few lecture halls as possible.
+
+Give an efficient greedy algorithm to determine which activity should
+use which lecture hall.
+
+(This problem is also known as the interval-graph coloring problem. It
+
+is modeled by an interval graph whose vertices are the given activities
+and whose edges connect incompatible activities. The smallest number
+of colors required to color every vertex so that no two adjacent vertices
+have the same color corresponds to finding the fewest lecture halls
+needed to schedule all of the given activities.)
+
+15.1-5
+
+Consider a modification to the activity-selection problem in which each
+
+activity ai has, in addition to a start and finish time, a value vi. The
+
+objective is no longer to maximize the number of activities scheduled,
+but instead to maximize the total value of the activities scheduled. That
+
+is, the goal is to choose a set A of compatible activities such that
+
+is maximized. Give a polynomial-time algorithm for this
+problem.

@@ -1,0 +1,307 @@
+4.4 The recursion-tree method for solving recurrences
+
+Although you can use the substitution method to prove that a solution
+to a recurrence is correct, you might have trouble coming up with a
+good guess. Drawing out a recursion tree, as we did in our analysis of
+
+the merge-sort recurrence in Section 2.3.2, can help. In a recursion tree,
+
+each node represents the cost of a single subproblem somewhere in the
+set of recursive function invocations. You typically sum the costs within
+each level of the tree to obtain the per-level costs, and then you sum all
+the per-level costs to determine the total cost of all levels of the
+
+recursion. Sometimes, however, adding up the total cost takes more
+creativity.
+
+A recursion tree is best used to generate intuition for a good guess,
+which you can then verify by the substitution method. If you are
+meticulous when drawing out a recursion tree and summing the costs,
+however, you can use a recursion tree as a direct proof of a solution to a
+recurrence. But if you use it only to generate a good guess, you can
+often tolerate a small amount of "sloppiness," which can simplify the
+math. When you verify your guess with the substitution method later
+on, your math should be precise. This section demonstrates how you
+can use recursion trees to solve recurrences, generate good guesses, and
+gain intuition for recurrences.
+
+An illustrative example
+
+Let's see how a recursion tree can provide a good guess for an upperbound solution to the recurrence
+
+Figure 4.1 shows how to derive the recursion tree for T (n) = 3T (n/4) +
+cn2, where the constant c > 0 is the upper-bound constant in the (n2)
+term. Part (a) of the figure shows T (n), which part (b) expands into an
+equivalent tree representing the recurrence. The cn2 term at the root
+
+represents the cost at the top level of recursion, and the three subtrees
+
+of the root represent the costs incurred by the subproblems of size n/4.
+
+Part (c) shows this process carried one step further by expanding each
+
+node with cost T (n/4) from part (b). The cost for each of the three
+children of the root is c(n/4)2. We continue expanding each node in the
+
+tree by breaking it into its constituent parts as determined by the
+recurrence.
+
+Figure 4.1 Constructing a recursion tree for the recurrence T (n) = 3T (n/4) + cn2. Part (a)
+shows T (n), which progressively expands in (b)(d) to form the recursion tree. The fully
+expanded tree in (d) has height log4 n.
+
+Because subproblem sizes decrease by a factor of 4 every time we go
+down one level, the recursion must eventually bottom out in a base case
+
+where n < n0. By convention, the base case is T (n) = (1) for n < n0,
+where n0 > 0 is any threshold constant sufficiently large that the
+
+recurrence is well defined. For the purpose of intuition, however, let's
+
+simplify the math a little. Let's assume that n is an exact power of 4 and
+
+that the base case is T (1) = (1). As it turns out, these assumptions
+
+don't affect the asymptotic solution.
+
+What's the height of the recursion tree? The subproblem size for a
+
+node at depth i is n/4i. As we descend the tree from the root, the
+
+subproblem size hits n = 1 when n/4i = 1 or, equivalently, when i =
+
+log4 n. Thus, the tree has internal nodes at depths 0, 1, 2, ... , log4 n 1
+
+and leaves at depth log4 n.
+
+Part (d) of Figure 4.1 shows the cost at each level of the tree. Each
+
+level has three times as many nodes as the level above, and so the
+
+number of nodes at depth i is 3i. Because subproblem sizes reduce by a
+
+factor of 4 for each level further from the root, each internal node at
+
+depth i = 0, 1, 2, ... , log4 n 1 has a cost of c(n/4i)2. Multiplying, we
+
+see that the total cost of all nodes at a given depth i is 3ic(n/4i)2 =
+
+(3/16)icn2. The bottom level, at depth log4 n, contains
+
+leaves (using equation (3.21) on page 66). Each leaf contributes (1),
+
+leading to a total leaf cost of .
+
+Now we add up the costs over all levels to determine the cost for the
+
+entire tree:
+
+We've derived the guess of T (n) = O(n2) for the original recurrence. In
+this example, the coefficients of cn2 form a decreasing geometric series.
+
+By equation (A.7), the sum of these coefficients is bounded from above
+by the constant 16/13. Since the root's contribution to the total cost is
+
+cn2, the cost of the root dominates the total cost of the tree.
+In fact, if O(n2) is indeed an upper bound for the recurrence (as we'll
+
+verify in a moment), then it must be a tight bound. Why? The first
+
+recursive call contributes a cost of (n2), and so (n2) must be a lower
+
+bound for the recurrence.
+Let's now use the substitution method to verify that our guess is
+
+correct, namely, that T (n) = O(n2) is an upper bound for the recurrence
+T (n) = 3T (n/4)+(n2). We want to show that T (n) dn2 for some
+constant d > 0. Using the same constant c > 0 as before, we have
+
+T (n) 3T (n/4) + cn2
+
+3d(n/4)2 + cn2
+
+=
+
+dn2,
+
+where the last step holds if we choose d (16/13)c.
+For the base case of the induction, let n0 > 0 be a sufficiently large
+
+threshold constant that the recurrence is well defined when T (n) = (1)
+for n < n0. We can pick d large enough that d dominates the constant
+hidden by the , in which case dn2 d T (n) for 1 n < n0, completing
+
+the proof of the base case.
+
+The substitution proof we just saw involves two named constants, c
+and d. We named c and used it to stand for the upper-bound constant
+hidden and guaranteed to exist by the -notation. We cannot pick c
+arbitrarily--it's given to us--although, for any such c, any constant c
+c also suffices. We also named d, but we were free to choose any value
+for it that fit our needs. In this example, the value of d happened to
+
+depend on the value of c, which is fine, since d is constant if c is
+
+constant.
+
+An irregular example
+
+Let's find an asymptotic upper bound for another, more irregular,
+example. Figure 4.2 shows the recursion tree for the recurrence
+
+This recursion tree is unbalanced, with different root-to-leaf paths
+having different lengths. Going left at any node produces a subproblem
+of one-third the size, and going right produces a subproblem of two-
+
+thirds the size. Let n0 > 0 be the implicit threshold constant such that T
+(n) = (1) for 0 < n < n0, and let c represent the upper-bound constant
+hidden by the (n) term for n n0. There are actually two n0 constants
+
+here--one for the threshold in the recurrence, and the other for the
+
+threshold in the -notation, so we'll let n0 be the larger of the two
+
+constants.
+
+Figure 4.2 A recursion tree for the recurrence T (n) = T (n/3) + T (2n/3) + cn.
+
+The height of the tree runs down the right edge of the tree,
+
+corresponding to subproblems of sizes n, (2/3)n, (4/9)n, ... , (1) with
+costs bounded by cn, c(2n/3), c(4n/9), ... , (1), respectively. We hit the
+rightmost leaf when (2/3)hn < n0 (2/3)h1n, which happens when h =
+log3/2(n/n0) + 1 since, applying the floor bounds in equation (3.2) on
+page 64 with x = log3/2 (n/n0), we have (2/3)hn = (2/3)x+1n < (2/3)xn
+= (n0/n)n = n0 and (2/3)h1n = (2/3)xn > (2/3)xn = (n0/n)n = n0. Thus,
+the height of the tree is h = (lg n).
+
+We're now in a position to understand the upper bound. Let's
+postpone dealing with the leaves for a moment. Summing the costs of
+
+internal nodes across each level, we have at most cn per level times the
+(lg n) tree height for a total cost of O(n lg n) for all internal nodes.
+
+It remains to deal with the leaves of the recursion tree, which
+represent base cases, each costing (1). How many leaves are there? It's
+
+tempting to upper-bound their number by the number of leaves in a
+
+complete binary tree of height h = log3/2(n/n0) + 1, since the
+
+recursion tree is contained within such a complete binary tree. But this
+
+approach turns out to give us a poor bound. The complete binary tree
+
+has 1 node at the root, 2 nodes at depth 1, and generally 2k nodes at
+
+depth k. Since the height is h = log3/2 n + 1, there are
+
+leaves in the complete binary tree, which is
+
+an upper bound on the number of leaves in the recursion tree. Because
+
+the cost of each leaf is (1), this analysis says that the total cost of all
+
+leaves in the recursion tree is , which is an
+
+asymptotically greater bound than the O(n lg n) cost of all internal
+
+nodes. In fact, as we're about to see, this bound is not tight. The cost of
+
+all leaves in the recursion tree is O(n)--asymptotically less than O(n lg
+
+n). In other words, the cost of the internal nodes dominates the cost of
+
+the leaves, not vice versa.
+
+Rather than analyzing the leaves, we could quit right now and prove
+
+by substitution that T (n) = (n lg n). This approach works (see
+
+Exercise 4.4-3), but it's instructive to understand how many leaves this
+
+recursion tree has. You may see recurrences for which the cost of leaves
+
+dominates the cost of internal nodes, and then you'll be in better shape
+
+if you've had some experience analyzing the number of leaves.
+
+To figure out how many leaves there really are, let's write a
+
+recurrence L(n) for the number of leaves in the recursion tree for T (n).
+
+Since all the leaves in T (n) belong either to the left subtree or the right
+
+subtree of the root, we have
+
+This recurrence is similar to recurrence (4.14), but it's missing the (n)
+
+term, and it contains an explicit base case. Because this recurrence
+
+omits the (n) term, it is much easier to solve. Let's apply the
+substitution method to show that it has solution L(n) = O(n). Using the
+inductive hypothesis L(n) dn for some constant d > 0, and assuming
+that the inductive hypothesis holds for all values less than n, we have
+
+L(n) = L(n/3) + L(2n/3)
+dn/3 + 2(dn)/3
+dn,
+
+which holds for any d > 0. We can now choose d large enough to handle
+the base case L(n) = 1 for 0 < n < n0, for which d = 1 suffices, thereby
+
+completing the substitution method for the upper bound on leaves.
+
+(Exercise 4.4-2 asks you to prove that L(n) = (n).)
+Returning to recurrence (4.14) for T (n), it now becomes apparent
+
+that the total cost of leaves over all levels must be L(n) · (1) = (n).
+Since we have derived the bound of O(n lg n) on the cost of the internal
+nodes, it follows that the solution to recurrence (4.14) is T (n) = O(n lg
+n) + (n) = O(n lg n). (Exercise 4.4-3 asks you to prove that T (n) = (n
+lg n).)
+
+It's wise to verify any bound obtained with a recursion tree by using
+the substitution method, especially if you've made simplifying
+assumptions. But another strategy altogether is to use more-powerful
+mathematics, typically in the form of the master method in the next
+section (which unfortunately doesn't apply to recurrence (4.14)) or the
+Akra-Bazzi method (which does, but requires calculus). Even if you use
+a powerful method, a recursion tree can improve your intuition for
+what's going on beneath the heavy math.
+
+Exercises
+
+4.4-1
+
+For each of the following recurrences, sketch its recursion tree, and
+guess a good asymptotic upper bound on its solution. Then use the
+substitution method to verify your answer.
+
+a. T (n) = T (n/2) + n3.
+
+b. T (n) = 4T (n/3) + n.
+
+c. T (n) = 4T (n/2) + n.
+
+d. T (n) = 3T (n 1) + 1.
+
+4.4-2
+
+Use the substitution method to prove that recurrence (4.15) has the
+
+asymptotic lower bound L(n) = (n). Conclude that L(n) = (n).
+
+4.4-3
+
+Use the substitution method to prove that recurrence (4.14) has the
+
+solution T (n) = (n lg n). Conclude that T (n) = (n lg n).
+
+4.4-4
+
+Use a recursion tree to justify a good guess for the solution to the
+
+recurrence T (n) = T (n)+T ((1)n)+(n), where is a constant in the
+
+range 0 < < 1.

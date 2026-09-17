@@ -1,0 +1,232 @@
+7.2 Performance of quicksort
+
+The running time of quicksort depends on how balanced each
+partitioning is, which in turn depends on which elements are used as
+pivots. If the two sides of a partition are about the same size--the
+partitioning is balanced--then the algorithm runs asymptotically as fast
+as merge sort. If the partitioning is unbalanced, however, it can run
+asymptotically as slowly as insertion sort. To allow you to gain some
+intuition before diving into a formal analysis, this section informally
+investigates how quicksort performs under the assumptions of balanced
+versus unbalanced partitioning.
+
+But first, let's briefly look at the maximum amount of memory that
+quicksort requires. Although quicksort sorts in place according to the
+definition on page 158, the amount of memory it uses--aside from the
+array being sorted--is not constant. Since each recursive call requires a
+constant amount of space on the runtime stack, outside of the array
+being sorted, quicksort requires space proportional to the maximum
+
+depth of the recursion. As we'll see now, that could be as bad as (n) in
+
+the worst case.
+
+Worst-case partitioning
+
+The worst-case behavior for quicksort occurs when the partitioning
+
+produces one subproblem with n 1 elements and one with 0 elements.
+
+(See Section 7.4.1.) Let us assume that this unbalanced partitioning
+
+arises in each recursive call. The partitioning costs (n) time. Since the
+
+recursive call on an array of size 0 just returns without doing anything,
+
+T (0) = (1), and the recurrence for the running time is
+
+T (n) = T (n 1) + T (0) + (n)
+= T (n 1) + (n).
+
+By summing the costs incurred at each level of the recursion, we obtain
+an arithmetic series (equation (A.3) on page 1141), which evaluates to
+
+(n2). Indeed, the substitution method can be used to prove that the
+recurrence T (n) = T (n 1) + (n) has the solution T (n) = (n2). (See
+
+Exercise 7.2-1.)
+Thus, if the partitioning is maximally unbalanced at every recursive
+
+level of the algorithm, the running time is (n2). The worst-case
+
+running time of quicksort is therefore no better than that of insertion
+
+sort. Moreover, the (n2) running time occurs when the input array is
+
+already completely sorted--a situation in which insertion sort runs in
+
+O(n) time.
+
+Best-case partitioning
+
+In the most even possible split, PARTITION produces two
+
+subproblems, each of size no more than n/2, since one is of size (n
+1)/2 n/2 and one of size (n 1)/2 1 n/2. In this case, quicksort
+
+runs much faster. An upper bound on the running time can then be
+described by the recurrence
+
+T (n) = 2T (n/2) + (n).
+
+By case 2 of the master theorem (Theorem 4.1 on page 102), this
+
+recurrence has the solution T (n) = (n lg n). Thus, if the partitioning is
+
+equally balanced at every level of the recursion, an asymptotically
+faster algorithm results.
+
+Balanced partitioning
+
+As the analyses in Section 7.4 will show, the average-case running time
+of quicksort is much closer to the best case than to the worst case. By
+appreciating how the balance of the partitioning affects the recurrence
+describing the running time, we can gain an understanding of why.
+
+Suppose, for example, that the partitioning algorithm always
+produces a 9-to-1 proportional split, which at first blush seems quite
+unbalanced. We then obtain the recurrence
+
+T (n) = T (9n/10) + T (n/10) + (n),
+
+on the running time of quicksort. Figure 7.4 shows the recursion tree
+
+for this recurrence, where for simplicity the (n) driving function has
+been replaced by n, which won't affect the asymptotic solution of the
+
+recurrence (as Exercise 4.7-1 on page 118 justifies). Every level of the
+
+tree has cost n, until the recursion bottoms out in a base case at depth
+log10 n = (lg n), and then the levels have cost at most n. The recursion
+terminates at depth log10/9 n = (lg n). Thus, with a 9-to-1
+
+proportional split at every level of recursion, which intuitively seems
+
+highly unbalanced, quicksort runs in O(n lg n) time--asymptotically the
+
+same as if the split were right down the middle. Indeed, even a 99-to-1
+
+split yields an O(n lg n) running time. In fact, any split of constant
+proportionality yields a recursion tree of depth (lg n), where the cost
+at each level is O(n). The running time is therefore O(n lg n) whenever
+
+the split has constant proportionality. The ratio of the split affects only
+
+the constant hidden in the O-notation.
+
+Figure 7.4 A recursion tree for QUICKSORT in which PARTITION always produces a 9-to-1
+
+split, yielding a running time of O(n lg n). Nodes show subproblem sizes, with per-level costs
+
+on the right.
+
+Intuition for the average case
+
+To develop a clear notion of the expected behavior of quicksort, we
+must assume something about how its inputs are distributed. Because
+quicksort determines the sorted order using only comparisons between
+input elements, its behavior depends on the relative ordering of the
+values in the array elements given as the input, not on the particular
+values in the array. As in the probabilistic analysis of the hiring problem
+in Section 5.2, assume that all permutations of the input numbers are
+equally likely and that the elements are distinct.
+
+When quicksort runs on a random input array, the partitioning is
+highly unlikely to happen in the same way at every level, as our informal
+analysis has assumed. We expect that some of the splits will be
+reasonably well balanced and that some will be fairly unbalanced. For
+example, Exercise 7.2-6 asks you to show that about 80% of the time
+PARTITION produces a split that is at least as balanced as 9 to 1, and
+
+about 20% of the time it produces a split that is less balanced than 9 to
+1.
+
+Figure 7.5 (a) Two levels of a recursion tree for quicksort. The partitioning at the root costs n
+and produces a "bad" split: two subarrays of sizes 0 and n 1. The partitioning of the
+subarray of size n 1 costs n 1 and produces a "good" split: subarrays of size (n 1)/2 1
+and (n 1)/2. (b) A single level of a recursion tree that is well balanced. In both parts, the
+partitioning cost for the subproblems shown with blue shading is (n). Yet the subproblems
+
+remaining to be solved in (a), shown with tan shading, are no larger than the corresponding
+subproblems remaining to be solved in (b).
+
+In the average case, PARTITION produces a mix of "good" and
+"bad" splits. In a recursion tree for an average-case execution of
+PARTITION, the good and bad splits are distributed randomly
+throughout the tree. Suppose for the sake of intuition that the good and
+bad splits alternate levels in the tree, and that the good splits are bestcase splits and the bad splits are worst-case splits. Figure 7.5(a) shows
+the splits at two consecutive levels in the recursion tree. At the root of
+
+the tree, the cost is n for partitioning, and the subarrays produced have
+sizes n 1 and 0: the worst case. At the next level, the subarray of size n
+1 undergoes best-case partitioning into subarrays of size (n 1)/2 1
+and (n 1)/2. Let's assume that the base-case cost is 1 for the subarray
+
+of size 0.
+The combination of the bad split followed by the good split produces
+
+three subarrays of sizes 0, (n 1)/2 1, and (n 1)/2 at a combined
+partitioning cost of (n) + (n 1) = (n). This situation is at most a
+
+constant factor worse than that in Figure 7.5(b), namely, where a single
+
+level of partitioning produces two subarrays of size (n 1)/2, at a cost
+of (n). Yet this latter situation is balanced! Intuitively, the (n 1) cost
+of the bad split in Figure 7.5(a) can be absorbed into the (n) cost of
+
+the good split, and the resulting split is good. Thus, the running time of
+
+quicksort, when levels alternate between good and bad splits, is like the
+
+running time for good splits alone: still O(n lg n), but with a slightly
+larger constant hidden by the O-notation. We'll analyze the expected
+
+running time of a randomized version of quicksort rigorously in Section
+7.4.2.
+
+Exercises
+
+7.2-1
+Use the substitution method to prove that the recurrence T (n) = T (n
+1) + (n) has the solution T (n) = (n2), as claimed at the beginning of
+
+Section 7.2.
+
+7.2-2
+What is the running time of QUICKSORT when all elements of array A
+
+have the same value?
+
+7.2-3
+Show that the running time of QUICKSORT is (n2) when the array A
+
+contains distinct elements and is sorted in decreasing order.
+
+7.2-4
+
+Banks often record transactions on an account in order of the times of
+the transactions, but many people like to receive their bank statements
+with checks listed in order by check number. People usually write
+checks in order by check number, and merchants usually cash them
+with reasonable dispatch. The problem of converting time-oftransaction ordering to check-number ordering is therefore the problem
+of sorting almost-sorted input. Explain persuasively why the procedure
+INSERTION-SORT might tend to beat the procedure QUICKSORT on
+this problem.
+
+7.2-5
+
+Suppose that the splits at every level of quicksort are in the constant
+proportion to , where + = 1 and 0 < < 1. Show that the
+
+minimum depth of a leaf in the recursion tree is approximately log1/ n
+
+and that the maximum depth is approximately log1/ n. (Don't worry
+
+about integer round-off.)
+
+7.2-6
+
+Consider an array with distinct elements and for which all permutations
+of the elements are equally likely. Argue that for any constant 0 <
+1/2, the probability is approximately 1 2 that PARTITION produces
+a split at least as balanced as 1 to .

@@ -1,0 +1,939 @@
+5.4 Probabilistic analysis and further uses of indicator
+random variables
+
+This advanced section further illustrates probabilistic analysis by way of
+
+four examples. The first determines the probability that in a room of k
+
+people, two of them share the same birthday. The second example
+examines what happens when randomly tossing balls into bins. The
+third investigates "streaks" of consecutive heads when flipping coins.
+The final example analyzes a variant of the hiring problem in which you
+have to make decisions without actually interviewing all the candidates.
+
+5.4.1 The birthday paradox
+
+Our first example is the birthday paradox. How many people must there
+
+be in a room before there is a 50% chance that two of them were born
+on the same day of the year? The answer is surprisingly few. The
+paradox is that it is in fact far fewer than the number of days in a year,
+or even half the number of days in a year, as we shall see.
+
+To answer this question, we index the people in the room with the
+
+integers 1, 2, ... , k, where k is the number of people in the room. We
+ignore the issue of leap years and assume that all years have n = 365
+days. For i = 1, 2, ... , k, let bi be the day of the year on which person i's
+birthday falls, where 1 bi n. We also assume that birthdays are
+uniformly distributed across the n days of the year, so that Pr {bi = r} =
+1/n for i = 1, 2, ... , k and r = 1, 2, ... , n.
+
+The probability that two given people, say i and j, have matching
+
+birthdays depends on whether the random selection of birthdays is
+independent. We assume from now on that birthdays are independent,
+
+so that the probability that i's birthday and j's birthday both fall on day
+r is
+
+Thus, the probability that they both fall on the same day is
+
+More intuitively, once bi is chosen, the probability that bj is chosen to
+be the same day is 1/n. As long as the birthdays are independent, the
+probability that i and j have the same birthday is the same as the
+
+probability that the birthday of one of them falls on a given day.
+
+We can analyze the probability of at least 2 out of k people having
+
+matching birthdays by looking at the complementary event. The
+probability that at least two of the birthdays match is 1 minus the
+
+probability that all the birthdays are different. The event Bk that k
+
+people have distinct birthdays is
+
+where Ai is the event that person i's birthday is different from person j's
+for all j < i. Since we can write Bk = Ak Bk1, we obtain from
+
+equation (C.18) on page 1189 the recurrence
+
+where we take Pr {B1} = Pr {A1} = 1 as an initial condition. In other
+words, the probability that b1, b2, ... , bk are distinct birthdays equals
+the probability that b1, b2, ... , bk1 are distinct birthdays multiplied by
+
+the probability that bk bi for i = 1, 2, ... , k 1, given that b1, b2, ... ,
+bk1 are distinct.
+
+If b1, b2, ... , bk1 are distinct, the conditional probability that bk
+bi for i = 1, 2, ... , k 1 is Pr {Ak | Bk1} = (n k + 1)/n, since out of
+the n days, n (k 1) days are not taken. We iteratively apply the
+
+recurrence (5.8) to obtain
+
+Inequality (3.14) on page 66, 1 + x ex, gives us
+
+when k(k 1)/2n ln(1/2). The probability that all k birthdays are
+
+distinct is at most 1/2 when k(k 1) 2n ln 2 or, solving the quadratic
+
+equation, when . For n = 365, we must have k
+
+23. Thus, if at least 23 people are in a room, the probability is at least
+
+1/2 that at least two people have the same birthday. Since a year on
+
+Mars is 669 Martian days long, it takes 31 Martians to get the same
+
+effect.
+
+An analysis using indicator random variables
+
+Indicator random variables afford a simpler but approximate analysis of
+
+the birthday paradox. For each pair (i, j) of the k people in the room,
+
+define the indicator random variable Xij, for 1 i < j k, by
+
+By equation (5.7), the probability that two people have matching
+
+birthdays is 1/n, and thus by Lemma 5.1 on page 130, we have
+E [Xij] = Pr {person i and person j have the same birthday}
+
+= 1/n.
+Letting X be the random variable that counts the number of pairs of
+
+individuals having the same birthday, we have
+
+Taking expectations of both sides and applying linearity of expectation,
+we obtain
+
+When k(k 1) 2n, therefore, the expected number of pairs of people
+
+with the same birthday is at least 1. Thus, if we have at least
+individuals in a room, we can expect at least two to have the same
+
+birthday. For n = 365, if k = 28, the expected number of pairs with the
+
+same birthday is (28 · 27)/(2 · 365) 1.0356. Thus, with at least 28
+people, we expect to find at least one matching pair of birthdays. On
+Mars, with 669 days per year, we need at least 38 Martians.
+
+The first analysis, which used only probabilities, determined the
+
+number of people required for the probability to exceed 1/2 that a
+
+matching pair of birthdays exists, and the second analysis, which used
+
+indicator random variables, determined the number such that the
+
+expected number of matching birthdays is 1. Although the exact
+
+numbers of people differ for the two situations, they are the same
+
+asymptotically: .
+
+5.4.2 Balls and bins
+
+Consider a process in which you randomly toss identical balls into b
+bins, numbered 1, 2, ... , b. The tosses are independent, and on each
+
+toss the ball is equally likely to end up in any bin. The probability that a
+
+tossed ball lands in any given bin is 1/b. If we view the ball-tossing
+
+process as a sequence of Bernoulli trials (see Appendix C.4), where
+success means that the ball falls in the given bin, then each trial has a
+
+probability 1/b of success. This model is particularly useful for analyzing
+
+hashing (see Chapter 11), and we can answer a variety of interesting
+questions about the ball-tossing process. (Problem C-2 asks additional
+questions about balls and bins.)
+
+How many balls fall in a given bin? The number of balls that fall in
+a given bin follows the binomial distribution b(k;n, 1/b). If you
+toss n balls, equation (C.41) on page 1199 tells us that the
+expected number of balls that fall in the given bin is n/b.
+
+How many balls must you toss, on the average, until a given bin
+contains a ball? The number of tosses until the given bin receives a
+ball follows the geometric distribution with probability 1/b and, by
+
+equation (C.36) on page 1197, the expected number of tosses until
+
+success is 1/(1/b) = b.
+
+How many balls must you toss until every bin contains at least one
+ball? Let us call a toss in which a ball falls into an empty bin a
+"hit." We want to know the expected number n of tosses required
+to get b hits.
+
+Using the hits, we can partition the n tosses into stages. The ith
+stage consists of the tosses after the (i 1)st hit up to and
+
+including the ith hit. The first stage consists of the first toss, since
+
+you are guaranteed to have a hit when all bins are empty. For
+
+each toss during the ith stage, i 1 bins contain balls and b i + 1
+bins are empty. Thus, for each toss in the ith stage, the probability
+of obtaining a hit is (b i + 1)/b.
+
+Let ni denote the number of tosses in the ith stage. The number of
+
+tosses required to get b hits is . Each random variable
+
+ni has a geometric distribution with probability of success (b i +
+
+1)/b and thus, by equation (C.36), we have
+
+By linearity of expectation, we have
+
+It therefore takes approximately b ln b tosses before we can
+
+expect that every bin has a ball. This problem is also known as the
+
+coupon collector's problem, which says that if you are trying to
+collect each of b different coupons, then you should expect to
+acquire approximately b ln b randomly obtained coupons in order
+
+to succeed.
+
+5.4.3 Streaks
+
+Suppose that you flip a fair coin n times. What is the longest streak of
+
+consecutive heads that you expect to see? We'll prove upper and lower
+
+bounds separately to show that the answer is (lg n).
+
+We first prove that the expected length of the longest streak of heads
+
+is O(lg n). The probability that each coin flip is a head is 1/2. Let Aik be
+the event that a streak of heads of length at least k begins with the ith
+coin flip or, more precisely, the event that the k consecutive coin flips i, i
++ 1, ... , i + k 1 yield only heads, where 1 k n and 1 i n k + 1.
+Since coin flips are mutually independent, for any given event Aik, the
+probability that all k flips are heads is
+
+and thus the probability that a streak of heads of length at least 2 lg n
+begins in position i is quite small. There are at most n 2 lg n + 1
+
+positions where such a streak can begin. The probability that a streak
+
+of heads of length at least 2 lg n begins anywhere is therefore
+
+We can use inequality (5.10) to bound the length of the longest
+
+streak. For j = 0, 1, 2, ... , n, let Lj be the event that the longest streak
+of heads has length exactly j, and let L be the length of the longest
+
+streak. By the definition of expected value, we have
+
+We could try to evaluate this sum using upper bounds on each Pr {Lj}
+
+similar to those computed in inequality (5.10). Unfortunately, this
+
+method yields weak bounds. We can use some intuition gained by the
+
+above analysis to obtain a good bound, however. For no individual term
+
+in the summation in equation (5.11) are both the factors j and Pr {Lj}
+
+large. Why? When j 2 lg n, then Pr {Lj} is very small, and when j < 2
+
+lg n, then j is fairly small. More precisely, since the events Lj for j = 0,
+
+1, ... , n are disjoint, the probability that a streak of heads of length at
+
+least 2 lg n begins anywhere is . Inequality (5.10) tells us
+
+that the probability that a streak of heads of length at least 2 lg n
+
+begins anywhere is less than 1/n, which means that .
+
+Also, noting that , we have that . Thus,
+we obtain
+
+The probability that a streak of heads exceeds r lg n flips
+diminishes quickly with r. Let's get a rough bound on the probability
+that a streak of at least r lg n heads occurs, for r 1. The probability
+that a streak of at least r lg n heads starts in position i is
+
+A streak of at least r lg n heads cannot start in the last n r lg n + 1
+
+flips, but let's overestimate the probability of such a streak by allowing it
+
+to start anywhere within the n coin flips. Then the probability that a
+streak of at least r lg n heads occurs is at most
+
+Equivalently, the probability is at least 1 1/nr1 that the longest streak
+has length less than r lg n.
+
+As an example, during n = 1000 coin flips, the probability of
+encountering a streak of at least 2 lg n = 20 heads is at most 1/n =
+1/1000. The chance of a streak of at least 3 lg n = 30 heads is at most
+
+1/n2 = 1/1,000,000.
+
+Let's now prove a complementary lower bound: the expected length
+
+of the longest streak of heads in n coin flips is (lg n). To prove this
+bound, we look for streaks of length s by partitioning the n flips into
+approximately n/s groups of s flips each. If we choose s = (lg n)/2, we'll
+
+see that it is likely that at least one of these groups comes up all heads,
+
+which means that it's likely that the longest streak has length at least s =
+(lg n). We'll then show that the longest streak has expected length (lg
+n).
+
+Let's partition the n coin flips into at least n/ (lg n)/2 groups of
+(lg n)/2 consecutive flips and bound the probability that no group
+
+comes up all heads. By equation (5.9), the probability that the group
+
+starting in position i comes up all heads is
+
+The probability that a streak of heads of length at least (lg n)/2 does
+
+not begin in position i is therefore at most . Since the n/ (lg
+
+n)/2 groups are formed from mutually exclusive, independent coin
+
+flips, the probability that every one of these groups fails to be a streak
+
+of length (lg n)/2 is at most
+
+For this argument, we used inequality (3.14), 1 + x ex, on page 66 and
+
+the fact, which you may verify, that for sufficiently
+
+large n.
+
+We want to bound the probability that the longest streak equals or
+
+exceeds (lg n)/2. To do so, let L be the event that the longest streak of
+
+heads equals or exceeds s = (lg n)/2. Let L be the complementary
+
+event, that the longest streak of heads is strictly less than s, so that Pr
+
+{L} + Pr {L} = 1. Let F be the event that every group of s flips fails to
+
+be a streak of s heads. By inequality (5.12), we have Pr {F} = O(1/n). If
+
+the longest streak of heads is less than s, then certainly every group of s
+
+flips fails to be a streak of s heads, which means that event L implies
+
+event F. Of course, event F could occur even if event L does not (for
+
+example, if a streak of s or more heads crosses over the boundary
+
+between two groups), and so we have Pr {L} Pr {F} = O(1/n). Since
+
+Pr {L} + Pr {L} = 1, we have that
+
+Pr {L} = 1 Pr {L}
+1 Pr {F}
+= 1 O(1/n).
+
+That is, the probability that the longest streak equals or exceeds (lg
+
+n)/2 is
+
+We can now calculate a lower bound on the expected length of the
+longest streak, beginning with equation (5.11) and proceeding in a
+manner similar to our analysis of the upper bound:
+
+As with the birthday paradox, we can obtain a simpler, but
+approximate, analysis using indicator random variables. Instead of
+determining the expected length of the longest streak, we'll find the
+
+expected number of streaks with at least a given length. Let Xik = I
+{Aik} be the indicator random variable associated with a streak of
+heads of length at least k beginning with the ith coin flip. To count the
+
+total number of such streaks, define
+
+Taking expectations and using linearity of expectation, we have
+
+By plugging in various values for k, we can calculate the expected
+number of streaks of length at least k. If this expected number is large
+(much greater than 1), then we expect many streaks of length k to
+
+occur, and the probability that one occurs is high. If this expected
+number is small (much less than 1), then we expect to see few streaks of
+
+length k, and the probability that one occurs is low. If k = c lg n, for
+some positive constant c, we obtain
+
+If c is large, the expected number of streaks of length c lg n is small, and
+we conclude that they are unlikely to occur. On the other hand, if c =
+1/2, then we obtain E [X(1/2) lg n] = (1/n1/21) = (n1/2), and we
+expect there to be numerous streaks of length (1/2) lg n. Therefore, one
+
+streak of such a length is likely to occur. We can conclude that the
+
+expected length of the longest streak is (lg n).
+
+5.4.4 The online hiring problem
+
+As a final example, let's consider a variant of the hiring problem.
+
+Suppose now that you do not wish to interview all the candidates in
+
+order to find the best one. You also want to avoid hiring and firing as
+
+you find better and better applicants. Instead, you are willing to settle
+
+for a candidate who is close to the best, in exchange for hiring exactly
+
+once. You must obey one company requirement: after each interview
+
+you must either immediately offer the position to the applicant or
+
+immediately reject the applicant. What is the trade-off between
+
+minimizing the amount of interviewing and maximizing the quality of
+
+the candidate hired?
+
+We can model this problem in the following way. After meeting an
+
+applicant, you are able to give each one a score. Let score(i) denote the
+score you give to the ith applicant, and assume that no two applicants
+receive the same score. After you have seen j applicants, you know
+which of the j has the highest score, but you do not know whether any
+of the remaining n j applicants will receive a higher score. You decide
+to adopt the strategy of selecting a positive integer k < n, interviewing
+and then rejecting the first k applicants, and hiring the first applicant
+
+thereafter who has a higher score than all preceding applicants. If it
+
+turns out that the best-qualified applicant was among the first k
+interviewed, then you hire the nth applicant--the last one interviewed.
+We formalize this strategy in the procedure ONLINE-MAXIMUM(k,
+n), which returns the index of the candidate you wish to hire.
+
+ONLINE-MAXIMUM(k, n)
+
+1 best-score =
+2 for i = 1 to k
+
+3 if score(i) > best-score
+
+4 best-score = score(i)
+
+5 for i = k + 1 to n
+
+6 if score(i) > best-score
+
+7 return i
+
+8 return n
+
+If we determine, for each possible value of k, the probability that you
+
+hire the most qualified applicant, then you can choose the best possible
+
+k and implement the strategy with that value. For the moment, assume
+
+that k is fixed. Let M(j) = max {score(i) : 1 i j} denote the maximum
+
+score among applicants 1 through j. Let S be the event that you succeed
+
+in choosing the best-qualified applicant, and let Si be the event that you
+
+succeed when the best-qualified applicant is the ith one interviewed.
+
+Since the various Si are disjoint, we have that .
+
+Noting that you never succeed when the best-qualified applicant is one
+
+of the first k, we have that Pr {Si} = 0 for i = 1, 2, ... , k. Thus, we
+
+obtain
+
+We now compute Pr {Si}. In order to succeed when the bestqualified applicant is the ith one, two things must happen. First, the
+best-qualified applicant must be in position i, an event which we denote
+by Bi. Second, the algorithm must not select any of the applicants in
+positions k + 1 through i 1, which happens only if, for each j such that
+k + 1 j i 1, line 6 finds that score(j) < best-score. (Because scores
+are unique, we can ignore the possibility of score(j) = best-score.) In
+other words, all of the values score(k + 1) through score(i 1) must be
+less than M(k). If any are greater than M(k), the algorithm instead
+returns the index of the first one that is greater. We use Oi to denote the
+event that none of the applicants in position k + 1 through i 1 are
+chosen. Fortunately, the two events Bi and Oi are independent. The
+event Oi depends only on the relative ordering of the values in positions
+1 through i 1, whereas Bi depends only on whether the value in
+position i is greater than the values in all other positions. The ordering
+of the values in positions 1 through i 1 does not affect whether the
+value in position i is greater than all of them, and the value in position i
+does not affect the ordering of the values in positions 1 through i 1.
+
+Thus, we can apply equation (C.17) on page 1188 to obtain
+
+Pr {Si} = Pr {Bi Oi} = Pr {Bi} Pr {Oi}.
+We have Pr {Bi} = 1/n since the maximum is equally likely to be in any
+one of the n positions. For event Oi to occur, the maximum value in
+positions 1 through i 1, which is equally likely to be in any of these i 1
+positions, must be in one of the first k positions. Consequently, Pr {Oi}
+= k/(i 1) and Pr {Si} = k/(n(i 1)). Using equation (5.14), we have
+
+We approximate by integrals to bound this summation from above and
+below. By the inequalities (A.19) on page 1150, we have
+
+Evaluating these definite integrals gives us the bounds
+
+which provide a rather tight bound for Pr {S}. Because you wish to
+
+maximize your probability of success, let us focus on choosing the value
+
+of k that maximizes the lower bound on Pr {S}. (Besides, the lower-
+
+bound expression is easier to maximize than the upper-bound
+
+expression.) Differentiating the expression (k/n)(ln n ln k) with respect
+to k, we obtain
+
+Setting this derivative equal to 0, we see that you maximize the lower
+
+bound on the probability when ln k = ln n 1 = ln(n/e) or, equivalently,
+when k = n/e. Thus, if you implement our strategy with k = n/e, you
+
+succeed in hiring the best-qualified applicant with probability at least
+
+1/e.
+
+Exercises
+
+5.4-1
+
+How many people must there be in a room before the probability that
+someone has the same birthday as you do is at least 1/2? How many
+people must there be before the probability that at least two people have
+a birthday on July 4 is greater than 1/2?
+
+5.4-2
+
+How many people must there be in a room before the probability that
+two people have the same birthday is at least 0.99? For that many
+people, what is the expected number of pairs of people who have the
+same birthday?
+
+5.4-3
+You toss balls into b bins until some bin contains two balls. Each toss is
+
+independent, and each ball is equally likely to end up in any bin. What is
+the expected number of ball tosses?
+
+5.4-4
+
+For the analysis of the birthday paradox, is it important that the
+birthdays be mutually independent, or is pairwise independence
+sufficient? Justify your answer.
+
+5.4-5
+
+How many people should be invited to a party in order to make it likely
+
+that there are three people with the same birthday?
+
+5.4-6
+What is the probability that a k-string (defined on page 1179) over a set
+of size n forms a k-permutation? How does this question relate to the
+
+birthday paradox?
+
+5.4-7
+You toss n balls into n bins, where each toss is independent and the ball
+
+is equally likely to end up in any bin. What is the expected number of
+empty bins? What is the expected number of bins with exactly one ball?
+
+5.4-8
+Sharpen the lower bound on streak length by showing that in n flips of a
+fair coin, the probability is at least 1 1/n that a streak of length lg n 2
+lg lg n consecutive heads occurs.
+
+Problems
+
+5-1 Probabilistic counting
+
+With a b-bit counter, we can ordinarily only count up to 2b 1. With R.
+Morris's probabilistic counting, we can count up to a much larger value
+
+at the expense of some loss of precision.
+
+We let a counter value of i represent a count of ni for i = 0, 1, ... , 2b
+1, where the ni form an increasing sequence of nonnegative values. We
+
+assume that the initial value of the counter is 0, representing a count of
+
+n0 = 0. The INCREMENT operation works on a counter containing
+the value i in a probabilistic manner. If i = 2b 1, then the operation
+
+reports an overflow error. Otherwise, the INCREMENT operation
+
+increases the counter by 1 with probability 1/(ni + 1 ni), and it leaves
+the counter unchanged with probability 1 1/(ni + 1 ni).
+
+If we select ni = i for all i 0, then the counter is an ordinary one.
+More interesting situations arise if we select, say, ni = 2i 1 for i > 0 or
+ni = Fi (the ith Fibonacci number--see equation (3.31) on page 69).
+
+For this problem, assume that is large enough that the
+
+probability of an overflow error is negligible.
+
+a. Show that the expected value represented by the counter after n
+INCREMENT operations have been performed is exactly n.
+
+b. The analysis of the variance of the count represented by the counter
+depends on the sequence of the ni. Let us consider a simple case: ni =
+100i for all i 0. Estimate the variance in the value represented by the
+register after n INCREMENT operations have been performed.
+
+5-2 Searching an unsorted array
+This problem examines three algorithms for searching for a value x in
+an unsorted array A consisting of n elements.
+
+Consider the following randomized strategy: pick a random index i
+into A. If A[i] = x, then terminate; otherwise, continue the search by
+picking a new random index into A. Continue picking random indices
+into A until you find an index j such that A[j] = x or until every element
+of A has been checked. This strategy may examine a given element more
+
+than once, because it picks from the whole set of indices each time.
+
+a. Write pseudocode for a procedure RANDOM-SEARCH to
+
+implement the strategy above. Be sure that your algorithm terminates
+
+when all indices into A have been picked.
+
+b. Suppose that there is exactly one index i such that A[i] = x. What is
+the expected number of indices into A that must be picked before x is
+
+found and RANDOM-SEARCH terminates?
+
+c. Generalizing your solution to part (b), suppose that there are k 1
+indices i such that A[i] = x. What is the expected number of indices
+into A that must be picked before x is found and RANDOM-
+SEARCH terminates? Your answer should be a function of n and k.
+
+d. Suppose that there are no indices i such that A[i] = x. What is the
+expected number of indices into A that must be picked before all
+elements of A have been checked and RANDOM-SEARCH
+
+terminates?
+
+Now consider a deterministic linear search algorithm. The algorithm,
+
+which we call DETERMINISTIC-SEARCH, searches A for x in order,
+
+considering A[1], A[2], A[3], ... , A[n] until either it finds A[i] = x or it
+
+reaches the end of the array. Assume that all possible permutations of
+the input array are equally likely.
+
+e. Suppose that there is exactly one index i such that A[i] = x. What is
+
+the average-case running time of DETERMINISTIC-SEARCH?
+What is the worst-case running time of DETERMINISTIC-
+SEARCH?
+
+f. Generalizing your solution to part (e), suppose that there are k 1
+indices i such that A[i] = x. What is the average-case running time of
+
+DETERMINISTIC-SEARCH? What is the worst-case running time
+of DETERMINISTIC-SEARCH? Your answer should be a function
+
+of n and k.
+
+g. Suppose that there are no indices i such that A[i] = x. What is the
+
+average-case running time of DETERMINISTIC-SEARCH? What is
+the worst-case running time of DETERMINISTIC-SEARCH?
+
+Finally, consider a randomized algorithm SCRAMBLE-SEARCH that
+first randomly permutes the input array and then runs the deterministic
+linear search given above on the resulting permuted array.
+
+h. Letting k be the number of indices i such that A[i] = x, give the worst-
+
+case and expected running times of SCRAMBLE-SEARCH for the
+
+cases in which k = 0 and k = 1. Generalize your solution to handle the
+case in which k 1.
+
+i. Which of the three searching algorithms would you use? Explain your
+
+answer.
+
+Chapter notes
+
+Bollobás [65], Hofri [223], and Spencer [420] contain a wealth of
+advanced probabilistic techniques. The advantages of randomized
+algorithms are discussed and surveyed by Karp [249] and Rabin [372].
+The textbook by Motwani and Raghavan [336] gives an extensive
+treatment of randomized algorithms.
+
+The RANDOMLY-PERMUTE procedure is by Durstenfeld [128],
+based on an earlier procedure by Fisher and Yates [143, p. 34].
+
+Several variants of the hiring problem have been widely studied.
+These problems are more commonly referred to as "secretary
+problems." Examples of work in this area are the paper by Ajtai,
+Meggido, and Waarts [11] and another by Kleinberg [258], which ties
+the secretary problem to online ad auctions.
+
+Part II Sorting and Order Statistics
+
+Introduction
+
+This part presents several algorithms that solve the following sorting
+problem:
+
+Input: A sequence of n numbers a1, a2, ... , an.
+
+Output: A permutation (reordering) of the input sequence
+
+such that .
+
+The input sequence is usually an n-element array, although it may be
+
+represented in some other fashion, such as a linked list.
+
+The structure of the data
+
+In practice, the numbers to be sorted are rarely isolated values. Each is
+
+usually part of a collection of data called a record. Each record contains
+a key, which is the value to be sorted. The remainder of the record
+consists of satellite data, which are usually carried around with the key.
+
+In practice, when a sorting algorithm permutes the keys, it must
+permute the satellite data as well. If each record includes a large
+amount of satellite data, it often pays to permute an array of pointers
+to the records rather than the records themselves in order to minimize
+data movement.
+
+In a sense, it is these implementation details that distinguish an
+algorithm from a full-blown program. A sorting algorithm describes the
+
+method to determine the sorted order, regardless of whether what's
+
+being sorted are individual numbers or large records containing many
+
+bytes of satellite data. Thus, when focusing on the problem of sorting,
+we typically assume that the input consists only of numbers. Translating
+an algorithm for sorting numbers into a program for sorting records is
+conceptually straightforward, although in a given engineering situation
+other subtleties may make the actual programming task a challenge.
+
+Why sorting?
+
+Many computer scientists consider sorting to be the most fundamental
+problem in the study of algorithms. There are several reasons:
+
+Sometimes an application inherently needs to sort information.
+For example, in order to prepare customer statements, banks
+need to sort checks by check number.
+
+Algorithms often use sorting as a key subroutine. For example, a
+program that renders graphical objects which are layered on top
+of each other might have to sort the objects according to an
+"above" relation so that it can draw these objects from bottom to
+top. We will see numerous algorithms in this text that use sorting
+as a subroutine.
+
+We can draw from among a wide variety of sorting algorithms,
+and they employ a rich set of techniques. In fact, many important
+techniques used throughout algorithm design appear in sorting
+algorithms that have been developed over the years. In this way,
+sorting is also a problem of historical interest.
+
+We can prove a nontrivial lower bound for sorting (as we'll do in
+Chapter 8). Since the best upper bounds match the lower bound
+asymptotically, we can conclude that certain of our sorting
+algorithms are asymptotically optimal. Moreover, we can use the
+lower bound for sorting to prove lower bounds for various other
+problems.
+
+Many engineering issues come to the fore when implementing
+sorting algorithms. The fastest sorting program for a particular
+situation may depend on many factors, such as prior knowledge
+about the keys and satellite data, the memory hierarchy (caches
+
+and virtual memory) of the host computer, and the software
+environment. Many of these issues are best dealt with at the
+algorithmic level, rather than by "tweaking" the code.
+
+Sorting algorithms
+
+We introduced two algorithms that sort n real numbers in Chapter 2.
+Insertion sort takes (n2) time in the worst case. Because its inner loops
+
+are tight, however, it is a fast sorting algorithm for small input sizes.
+
+Moreover, unlike merge sort, it sorts in place, meaning that at most a
+
+constant number of elements of the input array are ever stored outside
+the array, which can be advantageous for space efficiency. Merge sort
+
+has a better asymptotic running time, (n lg n), but the MERGE
+
+procedure it uses does not operate in place. (We'll see a parallelized
+version of merge sort in Section 26.3.)
+
+This part introduces two more algorithms that sort arbitrary real
+
+numbers. Heapsort, presented in Chapter 6, sorts n numbers in place in
+O(n lg n) time. It uses an important data structure, called a heap, which
+
+can also implement a priority queue.
+
+Quicksort, in Chapter 7, also sorts n numbers in place, but its worstcase running time is (n2). Its expected running time is (n lg n),
+
+however, and it generally outperforms heapsort in practice. Like
+insertion sort, quicksort has tight code, and so the hidden constant
+factor in its running time is small. It is a popular algorithm for sorting
+large arrays.
+
+Insertion sort, merge sort, heapsort, and quicksort are all
+comparison sorts: they determine the sorted order of an input array by
+comparing elements. Chapter 8 begins by introducing the decision-tree
+model in order to study the performance limitations of comparison
+
+sorts. Using this model, we prove a lower bound of (n lg n) on the
+worst-case running time of any comparison sort on n inputs, thus
+
+showing that heapsort and merge sort are asymptotically optimal
+comparison sorts.
+
+Chapter 8 then goes on to show that we might be able to beat this
+
+lower bound of (n lg n) if an algorithm can gather information about
+
+the sorted order of the input by means other than comparing elements.
+
+The counting sort algorithm, for example, assumes that the input
+
+numbers belong to the set {0, 1, ... , k}. By using array indexing as a
+tool for determining relative order, counting sort can sort n numbers in
+(k + n) time. Thus, when k = O(n), counting sort runs in time that is
+
+linear in the size of the input array. A related algorithm, radix sort, can
+
+be used to extend the range of counting sort. If there are n integers to
+sort, each integer has d digits, and each digit can take on up to k
+possible values, then radix sort can sort the numbers in (d(n + k))
+time. When d is a constant and k is O(n), radix sort runs in linear time.
+
+A third algorithm, bucket sort, requires knowledge of the probabilistic
+
+distribution of numbers in the input array. It can sort n real numbers
+
+uniformly distributed in the half-open interval [0, 1) in average-case
+
+O(n) time.
+
+The table on the following page summarizes the running times of the
+
+sorting algorithms from Chapters 2 and 68. As usual, n denotes the
+
+number of items to sort. For counting sort, the items to sort are
+
+integers in the set {0, 1, ... , k}. For radix sort, each item is a d-digit
+number, where each digit takes on k possible values. For bucket sort, we
+
+assume that the keys are real numbers uniformly distributed in the half-
+
+open interval [0, 1). The rightmost column gives the average-case or
+
+expected running time, indicating which one it gives when it differs from
+
+the worst-case running time. We omit the average-case running time of
+
+heapsort because we do not analyze it in this book.
+
+Worst-case Average-case/expected
+running time
+Algorithm running time
+(n2)
+Insertion (n2)
+(n lg n)
+sort
+--
+Merge (n lg n)
+sort (n lg n) (expected)
+(k + n)
+Heapsort O(n lg n)
+
+Quicksort (n2)
+
+Counting (k + n)
+
+sort
+
+Radix (d(n + k)) (d(n + k))
+sort (n2) (n) (average-case)
+Bucket
+sort
+
+Order statistics
+
+The ith order statistic of a set of n numbers is the ith smallest number in
+the set. You can, of course, select the ith order statistic by sorting the
+input and indexing the ith element of the output. With no assumptions
+about the input distribution, this method runs in (n lg n) time, as the
+
+lower bound proved in Chapter 8 shows.
+
+Chapter 9 shows how to find the ith smallest element in O(n) time,
+
+even when the elements are arbitrary real numbers. We present a
+
+randomized algorithm with tight pseudocode that runs in (n2) time in
+the worst case, but whose expected running time is O(n). We also give a
+more complicated algorithm that runs in O(n) worst-case time.
+
+Background
+
+Although most of this part does not rely on difficult mathematics, some
+sections do require mathematical sophistication. In particular, analyses
+of quicksort, bucket sort, and the order-statistic algorithm use
+probability, which is reviewed in Appendix C, and the material on
+probabilistic analysis and randomized algorithms in Chapter 5.
+
+6 Heapsort
+
+This chapter introduces another sorting algorithm: heapsort. Like
+
+merge sort, but unlike insertion sort, heapsort's running time is O(n lg
+n). Like insertion sort, but unlike merge sort, heapsort sorts in place:
+
+only a constant number of array elements are stored outside the input
+array at any time. Thus, heapsort combines the better attributes of the
+two sorting algorithms we have already discussed.
+
+Heapsort also introduces another algorithm design technique: using
+a data structure, in this case one we call a "heap," to manage
+information. Not only is the heap data structure useful for heapsort,
+but it also makes an efficient priority queue. The heap data structure
+will reappear in algorithms in later chapters.
+
+The term "heap" was originally coined in the context of heapsort,
+but it has since come to refer to "garbage-collected storage," such as
+the programming languages Java and Python provide. Please don't be
+
+confused. The heap data structure is not garbage-collected storage. This
+
+book is consistent in using the term "heap" to refer to the data
+structure, not the storage class.

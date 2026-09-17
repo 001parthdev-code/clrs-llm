@@ -1,0 +1,227 @@
+20.1 Representations of graphs
+
+You can choose between two standard ways to represent a graph G =
+(V, E): as a collection of adjacency lists or as an adjacency matrix.
+
+Either way applies to both directed and undirected graphs. Because the
+
+adjacency-list representation provides a compact way to represent
+
+sparse graphs--those for which |E| is much less than |V|2--it is usually
+
+the method of choice. Most of the graph algorithms presented in this
+book assume that an input graph is represented in adjacency-list form.
+You might prefer an adjacency-matrix representation, however, when
+
+the graph is dense--|E| is close to |V|2--or when you need to be able to
+
+tell quickly whether there is an edge connecting two given vertices. For
+example, two of the all-pairs shortest-paths algorithms presented in
+Chapter 23 assume that their input graphs are represented by
+adjacency matrices.
+
+Figure 20.1 Two representations of an undirected graph. (a) An undirected graph G with 5
+vertices and 7 edges. (b) An adjacency-list representation of G. (c) The adjacency-matrix
+representation of G.
+
+Figure 20.2 Two representations of a directed graph. (a) A directed graph G with 6 vertices
+and 8 edges. (b) An adjacency-list representation of G. (c) The adjacency-matrix
+representation of G.
+
+The adjacency-list representation of a graph G = (V, E) consists of an
+array Adj of |V| lists, one for each vertex in V. For each u V, the
+adjacency list Adj[u] contains all the vertices v such that there is an edge
+(u, v) E. That is, Adj[u] consists of all the vertices adjacent to u in G.
+
+(Alternatively, it can contain pointers to these vertices.) Since the
+
+adjacency lists represent the edges of a graph, our pseudocode treats
+
+the array Adj as an attribute of the graph, just like the edge set E. In
+pseudocode, therefore, you will see notation such as G.Adj[u]. Figure
+
+20.1(b) is an adjacency-list representation of the undirected graph in
+
+Figure 20.1(a). Similarly, Figure 20.2(b) is an adjacency-list
+
+representation of the directed graph in Figure 20.2(a).
+
+If G is a directed graph, the sum of the lengths of all the adjacency
+lists is |E|, since an edge of the form (u, v) is represented by having v
+appear in Adj[u]. If G is an undirected graph, the sum of the lengths of
+all the adjacency lists is 2 |E|, since if (u, v) is an undirected edge, then u
+appears in v's adjacency list and vice versa. For both directed and
+
+undirected graphs, the adjacency-list representation has the desirable
+
+property that the amount of memory it requires is (V + E). Finding
+each edge in the graph also takes (V + E) time, rather than just (E),
+since each of the |V| adjacency lists must be examined. Of course, if |E|
+= (V)--such as in a connected, undirected graph or a strongly
+
+connected, directed graph--we can say that finding each edge takes
+
+(E) time.
+Adjacency lists can also represent weighted graphs, that is, graphs for
+
+which each edge has an associated weight given by a weight function w :
+E . For example, let G = (V, E) be a weighted graph with weight
+function w. Then you can simply store the weight w(u, v) of the edge (u,
+v) E with vertex v in u's adjacency list. The adjacency-list
+
+representation is quite robust in that you can modify it to support many
+
+other graph variants.
+
+A potential disadvantage of the adjacency-list representation is that
+
+it provides no quicker way to determine whether a given edge (u, v) is
+present in the graph than to search for v in the adjacency list Adj[u]. An
+
+adjacency-matrix representation of the graph remedies this
+
+disadvantage, but at the cost of using asymptotically more memory.
+
+(See Exercise 20.1-8 for suggestions of variations on adjacency lists that
+
+permit faster edge lookup.)
+
+The adjacency-matrix representation of a graph G = (V, E) assumes
+that the vertices are numbered 1, 2, ... , |V| in some arbitrary manner.
+
+Then the adjacency-matrix representation of a graph G consists of a |V|
+× |V| matrix A = (aij) such that
+
+Figures 20.1(c) and 20.2(c) are the adjacency matrices of the undirected
+and directed graphs in Figures 20.1(a) and 20.2(a), respectively. The
+
+adjacency matrix of a graph requires (V2) memory, independent of
+
+the number of edges in the graph. Because finding each edge in the
+graph requires examining the entire adjacency matrix, doing so takes
+
+(V2) time.
+
+Observe the symmetry along the main diagonal of the adjacency
+
+matrix in Figure 20.1(c). Since in an undirected graph, (u, v) and (v, u)
+
+represent the same edge, the adjacency matrix A of an undirected graph
+
+is its own transpose: A = AT. In some applications, it pays to store only
+
+the entries on and above the diagonal of the adjacency matrix, thereby
+cutting the memory needed to store the graph almost in half.
+
+Like the adjacency-list representation of a graph, an adjacency
+
+matrix can represent a weighted graph. For example, if G = (V, E) is a
+weighted graph with edge-weight function w, you can store the weight
+w(u, v) of the edge (u, v) E as the entry in row u and column v of the
+
+adjacency matrix. If an edge does not exist, you can store a NIL value
+as its corresponding matrix entry, though for many problems it is
+convenient to use a value such as 0 or .
+
+Although the adjacency-list representation is asymptotically at least
+as space-efficient as the adjacency-matrix representation, adjacency
+matrices are simpler, and so you might prefer them when graphs are
+reasonably small. Moreover, adjacency matrices carry a further
+advantage for unweighted graphs: they require only one bit per entry.
+
+Representing attributes
+
+Most algorithms that operate on graphs need to maintain attributes for
+vertices and/or edges. We indicate these attributes using our usual
+
+notation, such as v.d for an attribute d of a vertex v. When we indicate
+
+edges as pairs of vertices, we use the same style of notation. For
+
+example, if edges have an attribute f, then we denote this attribute for
+edge (u, v) by (u, v).f. For the purpose of presenting and understanding
+
+algorithms, our attribute notation suffices.
+Implementing vertex and edge attributes in real programs can be
+
+another story entirely. There is no one best way to store and access
+vertex and edge attributes. For a given situation, your decision will likely
+depend on the programming language you are using, the algorithm you
+are implementing, and how the rest of your program uses the graph. If
+you represent a graph using adjacency lists, one design choice is to
+
+represent vertex attributes in additional arrays, such as an array d[1 :
+|V|] that parallels the Adj array. If the vertices adjacent to u belong to
+Adj[u], then the attribute u.d can actually be stored in the array entry
+d[u]. Many other ways of implementing attributes are possible. For
+
+example, in an object-oriented programming language, vertex attributes
+might be represented as instance variables within a subclass of a Vertex
+class.
+
+Exercises
+
+20.1-1
+
+Given an adjacency-list representation of a directed graph, how long
+does it take to compute the out-degree of every vertex? How long does
+it take to compute the in-degrees?
+
+20.1-2
+
+Give an adjacency-list representation for a complete binary tree on 7
+vertices. Give an equivalent adjacency-matrix representation. Assume
+that the edges are undirected and that the vertices are numbered from 1
+to 7 as in a binary heap.
+
+20.1-3
+The transpose of a directed graph G = (V, E) is the graph GT = (V, ET),
+where ET = {(v, u) V × V : (u, v) E}. That is, GT is G with all its
+edges reversed. Describe efficient algorithms for computing GT from G,
+
+for both the adjacency-list and adjacency-matrix representations of G.
+
+Analyze the running times of your algorithms.
+
+20.1-4
+Given an adjacency-list representation of a multigraph G = (V, E),
+describe an O(V + E)-time algorithm to compute the adjacency-list
+representation of the "equivalent" undirected graph G = (V, E), where
+E consists of the edges in E with all multiple edges between two vertices
+
+replaced by a single edge and with all self-loops removed.
+
+20.1-5
+The square of a directed graph G = (V, E) is the graph G2 = (V, E2)
+such that (u, v) E2 if and only if G contains a path with at most two
+edges between u and v. Describe efficient algorithms for computing G2
+from G for both the adjacency-list and adjacency-matrix
+representations of G. Analyze the running times of your algorithms.
+
+20.1-6
+
+Most graph algorithms that take an adjacency-matrix representation as
+
+input require (V2) time, but there are some exceptions. Show how to
+determine whether a directed graph G contains a universal sink--a
+vertex with in-degree |V| 1 and out-degree 0--in O(V) time, given an
+adjacency matrix for G.
+
+20.1-7
+The incidence matrix of a directed graph G = (V, E) with no self-loops is
+a |V| × |E| matrix B = (bij) such that
+
+Describe what the entries of the matrix product BBT represent, where
+BT is the transpose of B.
+
+20.1-8
+
+Suppose that instead of a linked list, each array entry Adj[u] is a hash
+table containing the vertices v for which (u, v) E, with collisions
+
+resolved by chaining. Under the assumption of uniform independent
+hashing, if all edge lookups are equally likely, what is the expected time
+to determine whether an edge is in the graph? What disadvantages does
+this scheme have? Suggest an alternate data structure for each edge list
+that solves these problems. Does your alternative have disadvantages
+compared with the hash table?

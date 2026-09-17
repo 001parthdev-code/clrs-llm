@@ -1,0 +1,192 @@
+35.3 The set-covering problem
+
+The set-covering problem is an optimization problem that models many
+problems that require resources to be allocated. Its corresponding
+decision problem generalizes the NP-complete vertex-cover problem
+and is therefore also NP-hard. The approximation algorithm developed
+to handle the vertex-cover problem doesn't apply here, however.
+Instead, this section investigates a simple greedy heuristic with a
+logarithmic approximation ratio. That is, as the size of the instance gets
+larger, the size of the approximate solution may grow, relative to the size
+of an optimal solution. Because the logarithm function grows rather
+slowly, however, this approximation algorithm may nonetheless give
+useful results.
+
+An instance (X, ) of the set-covering problem consists of a finite set
+X and a family of subsets of X, such that every element of X belongs
+
+to at least one subset in :
+
+We say that a subfamily C covers a set of elements U if
+
+The problem is to find a minimum-size subfamily C whose
+
+members cover all of X:
+
+Figure 35.3 illustrates the set-covering problem. The size of C is the
+number of sets it contains, rather than the number of individual
+
+elements in these sets, since every subfamily C that covers X must
+contain all |X| individual elements. In Figure 35.3, the minimum set
+
+cover has size 3.
+The set-covering problem abstracts many commonly arising
+
+combinatorial problems. As a simple example, suppose that X
+
+represents a set of skills that are needed to solve a problem and that
+
+you have a given set of people available to work on the problem. You
+wish to form a committee, containing as few people as possible, such
+
+that for every requisite skill in X, at least one member of the committee
+
+has that skill. The decision version of the set-covering problem asks
+
+whether a covering exists with size at most k, where k is an additional
+
+parameter specified in the problem instance. The decision version of the
+problem is NP-complete, as Exercise 35.3-2 asks you to show.
+
+A greedy approximation algorithm
+The greedy method in the procedure GREEDY-SET-COVER on the
+
+facing page works by picking, at each stage, the set S that covers the
+
+greatest number of remaining elements that are uncovered. In the
+example of Figure 35.3, GREEDY-SET-COVER adds to C, in order,
+
+the sets S1, S4, and S5, followed by either S3 or S6.
+
+Figure 35.3 An instance (X, ) of the set-covering problem, where X consists of the 12 tan
+points and = {S1, S2, S3, S4, S5, S6, S4, S5}, Each set Si is outlined in blue. A
+minimum-size set cover C = {S3, S4, S5}, with size 3. The greedy algorithm produces a cover
+of size 4 by selecting either the sets S1, S4, S5, and S3 or the sets S1, S4, S5, and S6, in order.
+
+GREEDY-SET-COVER (X, )
+1 U0 = X
+
+2C = Ø
+
+3i = 0
+
+4
+
+while Ui Ø
+5 select S that maximizes |S Ui|
+6 Ui+1 = Ui - S
+7 C = C {S}
+8 i=i+1
+
+9 return C
+
+The greedy algorithm works as follows. At the start of each iteration,
+
+Ui is a subset of X containing the remaining uncovered elements, with
+the initial subset U0 containing all the elements in X. The set C contains
+
+the subfamily being constructed. Line 5 is the greedy decision-making
+
+step, choosing a subset S that covers as many uncovered elements as
+possible (breaking ties arbitrarily). After S is selected, line 6 updates the
+set of remaining uncovered elements, denoting it by Ui+1, and line 7
+places S into C. When the algorithm terminates, C is a subfamily of
+that covers X.
+
+Analysis
+
+We now show that the greedy algorithm returns a set cover that is not
+too much larger than an optimal set cover.
+
+Theorem 35.4
+The procedure GREEDY-SET-COVER run on a set X and family of
+subsets is a polynomial-time O(lg X)-approximation algorithm.
+
+Proof Let's first show that the algorithm runs in time that is
+polynomial in |X| and ||. The number of iterations of the loop in lines
+47 is bounded above by min {|X|, ||} = O(|X| + ||). The loop body
+can be implemented to run in O(|X|·||) time. Thus the algorithm runs
+in O(|X|·||·(|X|+||)) time, which is polynomial in the input size.
+
+(Exercise 35.3-3 asks for a linear-time algorithm.)
+To prove the approximation bound, let C* be an optimal set cover
+
+for the original instance (X, ), and let k = |C*|. Since C* is also a set
+
+cover of each subset Ui of X constructed by the algorithm, we know
+that any subset Ui constructed by the algorithm can be covered by k
+sets. Therefore, if (Ui, ) is an instance of the set-covering problem, its
+optimal set cover has size at most k.
+
+If an optimal set cover for an instance (Ui, ) has size at most k, at
+least one of the sets in C covers at least |Ui|/k new elements. Thus, line 5
+
+of GREEDY-SET-COVER, which chooses a set with the maximum
+number of uncovered elements, must choose a set in which the number
+
+of newly covered elements is at least |Ui|/k. These elements are removed
+when constructing Ui+1, giving
+
+Iterating inequality (35.8) gives
+
+|U0| = |X|,
+|U1| |U0| (1 - 1/k),
+|U2| |U1| (1 - 1/k) = |U| (1 - 1/k)2,
+
+and in general
+
+The algorithm stops when Ui = Ø, which means that |Ui| < 1. Thus an
+
+upper bound on the number of iterations of the algorithm is the
+
+smallest value of i for which |Ui| < 1.
+Since 1 + x ex for all real x (see inequality (3.14) on page 66), by
+
+letting x = -1/k, we have 1 - 1/k e-1/k, so that (1 - 1/k)k (e-1/k)k
+= 1/e. Denoting the number i of iterations by ck for some nonnegative
+integer c, we want c such that
+
+Multiplying both sides by ec and then taking the natural logarithm of
+both sides gives c ln |X|, so we can choose for c any integer that is at
+least ln |X|. We choose c = ln |X|. Since i = ck is an upper bound on the
+number of iterations, which equals the size of C, and k = |C*|, we have
+|C| i = ck = c |C*| = |C*| ln |X|, and the theorem follows.
+
+Exercises
+
+35.3-1
+
+Consider each of the following words as a set of letters: {arid, dash,
+drain, heard, lost, nose, shun, slate, snare, thread}. Show
+which set cover GREEDY-SET-COVER produces when you break ties
+in favor of the word that appears first in the dictionary.
+
+35.3-2
+
+Show that the decision version of the set-covering problem is NPcomplete by reducing the vertex-cover problem to it.
+
+35.3-3
+Show how to implement GREEDY-SET-COVER to run in O(S |S|)
+
+time.
+
+35.3-4
+
+The proof of Theorem 35.4 says that when GREEDY-SET-COVER,
+
+run on the instance (X, ), returns the subfamily C, then |C| |C*| ln
+X. Show that the following weaker bound is trivially true:
+
+|C| |C*| max {|S| : S }.
+
+35.3-5
+
+GREEDY-SET-COVER can return a number of different solutions,
+depending on how it breaks ties in line 5. Give a procedure BAD-SET-
+
+COVER-INSTANCE (n) that returns an n-element instance of the set-
+
+covering problem for which, depending on how line 5 breaks ties,
+GREEDY-SET-COVER can return a number of different solutions that
+
+is exponential in n.

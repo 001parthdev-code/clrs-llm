@@ -1,0 +1,406 @@
+2.1 Insertion sort
+
+Our first algorithm, insertion sort, solves the sorting problem introduced
+
+in Chapter 1:
+
+Input: A sequence of n numbers a1, a2, ... , an.
+
+Output: A permutation (reordering) of the input sequence
+
+such that .
+
+The numbers to be sorted are also known as the keys. Although the
+
+problem is conceptually about sorting a sequence, the input comes in
+
+the form of an array with n elements. When we want to sort numbers,
+
+it's often because they are the keys associated with other data, which we
+
+call satellite data. Together, a key and satellite data form a record. For
+
+example, consider a spreadsheet containing student records with many
+associated pieces of data such as age, grade-point average, and number
+of courses taken. Any one of these quantities could be a key, but when
+the spreadsheet sorts, it moves the associated record (the satellite data)
+with the key. When describing a sorting algorithm, we focus on the keys,
+but it is important to remember that there usually is associated satellite
+data.
+
+In this book, we'll typically describe algorithms as procedures
+
+written in a pseudocode that is similar in many respects to C, C++, Java,
+
+Python,1 or JavaScript. (Apologies if we've omitted your favorite
+programming language. We can't list them all.) If you have been
+introduced to any of these languages, you should have little trouble
+understanding algorithms "coded" in pseudocode. What separates
+pseudocode from real code is that in pseudocode, we employ whatever
+expressive method is most clear and concise to specify a given
+algorithm. Sometimes the clearest method is English, so do not be
+surprised if you come across an English phrase or sentence embedded
+within a section that looks more like real code. Another difference
+between pseudocode and real code is that pseudocode often ignores
+aspects of software engineering--such as data abstraction, modularity,
+and error handling--in order to convey the essence of the algorithm
+more concisely.
+
+We start with insertion sort, which is an efficient algorithm for
+
+sorting a small number of elements. Insertion sort works the way you
+might sort a hand of playing cards. Start with an empty left hand and
+the cards in a pile on the table. Pick up the first card in the pile and hold
+it with your left hand. Then, with your right hand, remove one card at a
+time from the pile, and insert it into the correct position in your left
+hand. As Figure 2.1 illustrates, you find the correct position for a card
+by comparing it with each of the cards already in your left hand,
+
+starting at the right and moving left. As soon as you see a card in your
+left hand whose value is less than or equal to the card you're holding in
+your right hand, insert the card that you're holding in your right hand
+just to the right of this card in your left hand. If all the cards in your
+left hand have values greater than the card in your right hand, then
+place this card as the leftmost card in your left hand. At all times, the
+cards held in your left hand are sorted, and these cards were originally
+the top cards of the pile on the table.
+
+The pseudocode for insertion sort is given as the procedure
+INSERTION-SORT on the facing page. It takes two parameters: an
+
+array A containing the values to be sorted and the number n of values
+of sort. The values occupy positions A[1] through A[n] of the array,
+which we denote by A[1 : n]. When the INSERTION-SORT procedure is
+finished, array A[1 : n] contains the original values, but in sorted order.
+
+Figure 2.1 Sorting a hand of cards using insertion sort.
+
+INSERTION-SORT(A, n)
+1 for i = 2 to n
+2 key = A[i]
+3 // Insert A[i] into the sorted subarray A[1 : i 1].
+4 j=i1
+
+5
+
+while j > 0 and A[j] > key
+
+6 A[j + 1] = A[j]
+
+7 j=j1
+
+8 A[j + 1] = key
+
+Loop invariants and the correctness of insertion sort
+
+Figure 2.2 shows how this algorithm works for an array A that starts
+out with the sequence 5, 2, 4, 6, 1, 3. The index i indicates the "current
+
+card" being inserted into the hand. At the beginning of each iteration of
+
+the for loop, which is indexed by i, the subarray (a contiguous portion
+of the array) consisting of elements A[1 : i 1] (that is, A[1] through A[i
+
+1]) constitutes the currently sorted hand, and the remaining subarray
+
+A[i + 1 : n] (elements A[i + 1] through A[n]) corresponds to the pile of
+cards still on the table. In fact, elements A[1 : i 1] are the elements
+originally in positions 1 through i 1, but now in sorted order. We state
+these properties of A[1 : i 1] formally as a loop invariant:
+
+Figure 2.2 The operation of INSERTION-SORT(A, n), where A initially contains the
+sequence 5, 2, 4, 6, 1, 3 and n = 6. Array indices appear above the rectangles, and values
+
+stored in the array positions appear within the rectangles. (a)(e) The iterations of the for loop
+
+of lines 18. In each iteration, the blue rectangle holds the key taken from A[i], which is
+
+compared with the values in tan rectangles to its left in the test of line 5. Orange arrows show
+array values moved one position to the right in line 6, and blue arrows indicate where the key
+moves to in line 8. (f) The final sorted array.
+
+At the start of each iteration of the for loop of lines 18, the
+
+subarray A[1 : i 1] consists of the elements originally in A[1 : i
+
+1], but in sorted order.
+
+Loop invariants help us understand why an algorithm is correct.
+When you're using a loop invariant, you need to show three things:
+
+Initialization: It is true prior to the first iteration of the loop.
+
+Maintenance: If it is true before an iteration of the loop, it remains true
+before the next iteration.
+
+Termination: The loop terminates, and when it terminates, the invariant
+--usually along with the reason that the loop terminated--gives us a
+useful property that helps show that the algorithm is correct.
+
+When the first two properties hold, the loop invariant is true prior to
+every iteration of the loop. (Of course, you are free to use established
+facts other than the loop invariant itself to prove that the loop invariant
+remains true before each iteration.) A loop-invariant proof is a form of
+mathematical induction, where to prove that a property holds, you
+prove a base case and an inductive step. Here, showing that the
+invariant holds before the first iteration corresponds to the base case,
+and showing that the invariant holds from iteration to iteration
+corresponds to the inductive step.
+
+The third property is perhaps the most important one, since you are
+using the loop invariant to show correctness. Typically, you use the loop
+invariant along with the condition that caused the loop to terminate.
+Mathematical induction typically applies the inductive step infinitely,
+but in a loop invariant the "induction" stops when the loop terminates.
+
+Let's see how these properties hold for insertion sort.
+
+Initialization: We start by showing that the loop invariant holds before
+
+the first loop iteration, when i = 2.2 The subarray A[1 : i 1] consists
+of just the single element A[1], which is in fact the original element in
+A[1]. Moreover, this subarray is sorted (after all, how could a
+
+subarray with just one value not be sorted?), which shows that the
+loop invariant holds prior to the first iteration of the loop.
+
+Maintenance: Next, we tackle the second property: showing that each
+iteration maintains the loop invariant. Informally, the body of the for
+
+loop works by moving the values in A[i 1], A[i 2], A[i 3], and so on
+by one position to the right until it finds the proper position for A[i]
+
+(lines 47), at which point it inserts the value of A[i] (line 8). The
+subarray A[1 : i] then consists of the elements originally in A[1 : i], but
+in sorted order. Incrementing i (increasing its value by 1) for the next
+
+iteration of the for loop then preserves the loop invariant.
+
+A more formal treatment of the second property would require us to
+state and show a loop invariant for the while loop of lines 57. Let's
+not get bogged down in such formalism just yet. Instead, we'll rely on
+our informal analysis to show that the second property holds for the
+outer loop.
+
+Termination: Finally, we examine loop termination. The loop variable i
+starts at 2 and increases by 1 in each iteration. Once i's value exceeds
+n in line 1, the loop terminates. That is, the loop terminates once i
+equals n + 1. Substituting n + 1 for i in the wording of the loop
+invariant yields that the subarray A[1 : n] consists of the elements
+originally in A[1 : n], but in sorted order. Hence, the algorithm is
+
+correct.
+
+This method of loop invariants is used to show correctness in
+various places throughout this book.
+
+Pseudocode conventions
+
+We use the following conventions in our pseudocode.
+
+Indentation indicates block structure. For example, the body of
+the for loop that begins on line 1 consists of lines 28, and the
+body of the while loop that begins on line 5 contains lines 67 but
+not line 8. Our indentation style applies to if-else statements3 as
+well. Using indentation instead of textual indicators of block
+structure, such as begin and end statements or curly braces,
+reduces clutter while preserving, or even enhancing, clarity.4
+
+The looping constructs while, for, and repeat-until and the if-else
+conditional construct have interpretations similar to those in C,
+C++, Java, Python, and JavaScript.5 In this book, the loop
+counter retains its value after the loop is exited, unlike some
+
+situations that arise in C++ and Java. Thus, immediately after a
+for loop, the loop counter's value is the value that first exceeded
+the for loop bound.6 We used this property in our correctness
+
+argument for insertion sort. The for loop header in line 1 is for i =
+2 to n, and so when this loop terminates, i equals n + 1. We use the
+
+keyword to when a for loop increments its loop counter in each
+iteration, and we use the keyword downto when a for loop
+
+decrements its loop counter (reduces its value by 1 in each
+
+iteration). When the loop counter changes by an amount greater
+than 1, the amount of change follows the optional keyword by.
+
+The symbol "//" indicates that the remainder of the line is a
+comment.
+
+Variables (such as i, j, and key) are local to the given procedure.
+
+We won't use global variables without explicit indication.
+
+We access array elements by specifying the array name followed
+
+by the index in square brackets. For example, A[i] indicates the ith
+element of the array A.
+
+Although many programming languages enforce 0-origin indexing
+for arrays (0 is the smallest valid index), we choose whichever
+indexing scheme is clearest for human readers to understand.
+Because people usually start counting at 1, not 0, most--but not
+all--of the arrays in this book use 1-origin indexing. To be clear
+about whether a particular algorithm assumes 0-origin or 1-origin
+indexing, we'll specify the bounds of the arrays explicitly. If you
+are implementing an algorithm that we specify using 1-origin
+indexing, but you're writing in a programming language that
+enforces 0-origin indexing (such as C, C++, Java, Python, or
+JavaScript), then give yourself credit for being able to adjust. You
+can either always subtract 1 from each index or allocate each
+array with one extra position and just ignore position 0.
+
+The notation ":" denotes a subarray. Thus, A[i : j] indicates the
+subarray of A consisting of the elements A[i], A[i + 1], ... , A[j].7
+
+We also use this notation to indicate the bounds of an array, as we
+
+did earlier when discussing the array A[1 : n].
+
+We typically organize compound data into objects, which are
+composed of attributes. We access a particular attribute using the
+
+syntax found in many object-oriented programming languages:
+
+the object name, followed by a dot, followed by the attribute
+
+name. For example, if an object x has attribute f, we denote this
+attribute by x.f.
+
+We treat a variable representing an array or object as a pointer
+
+(known as a reference in some programming languages) to the
+
+data representing the array or object. For all attributes f of an
+object x, setting y = x causes y.f to equal x.f. Moreover, if we now
+set x.f = 3, then afterward not only does x.f equal 3, but y.f equals
+3 as well. In other words, x and y point to the same object after
+the assignment y = x. This way of treating arrays and objects is
+
+consistent with most contemporary programming languages.
+
+Our attribute notation can "cascade." For example, suppose that
+
+the attribute f is itself a pointer to some type of object that has an
+attribute g. Then the notation x.f.g is implicitly parenthesized as
+(x.f).g. In other words, if we had assigned y = x.f, then x.f.g is the
+same as y.g.
+
+Sometimes a pointer refers to no object at all. In this case, we give
+
+it the special value NIL.
+
+We pass parameters to a procedure by value: the called procedure
+
+receives its own copy of the parameters, and if it assigns a value
+
+to a parameter, the change is not seen by the calling procedure.
+
+When objects are passed, the pointer to the data representing the
+
+object is copied, but the object's attributes are not. For example, if
+
+x is a parameter of a called procedure, the assignment x = y
+
+within the called procedure is not visible to the calling procedure.
+
+The assignment x.f = 3, however, is visible if the calling procedure
+has a pointer to the same object as x. Similarly, arrays are passed
+
+by pointer, so that a pointer to the array is passed, rather than the
+
+entire array, and changes to individual array elements are visible
+
+to the calling procedure. Again, most contemporary programming
+languages work this way.
+
+A return statement immediately transfers control back to the
+point of call in the calling procedure. Most return statements also
+take a value to pass back to the caller. Our pseudocode differs
+from many programming languages in that we allow multiple
+values to be returned in a single return statement without having
+to create objects to package them together.8
+
+The boolean operators "and" and "or" are short circuiting. That
+is, evaluate the expression "x and y" by first evaluating x. If x
+
+evaluates to FALSE, then the entire expression cannot evaluate to
+
+TRUE, and therefore y is not evaluated. If, on the other hand, x
+evaluates to TRUE, y must be evaluated to determine the value of
+the entire expression. Similarly, in the expression "x or y" the
+expression y is evaluated only if x evaluates to FALSE. Short-
+
+circuiting operators allow us to write boolean expressions such as
+
+"x NIL and x.f = y" without worrying about what happens
+upon evaluating x.f when x is NIL.
+
+The keyword error indicates that an error occurred because
+conditions were wrong for the procedure to have been called, and
+the procedure immediately terminates. The calling procedure is
+responsible for handling the error, and so we do not specify what
+action to take.
+
+Exercises
+
+2.1-1
+
+Using Figure 2.2 as a model, illustrate the operation of INSERTIONSORT on an array initially containing the sequence 31, 41, 59, 26, 41,
+58.
+
+2.1-2
+
+Consider the procedure SUM-ARRAY on the facing page. It computes
+
+the sum of the n numbers in array A[1 : n]. State a loop invariant for this
+
+procedure, and use its initialization, maintenance, and termination
+
+properties to show that the SUM-ARRAY procedure returns the sum
+
+of the numbers in A[1 : n].
+
+SUM-ARRAY(A, n)
+
+1 sum = 0
+2 for i = 1 to n
+3 sum = sum + A[i]
+4 return sum
+
+2.1-3
+
+Rewrite the INSERTION-SORT procedure to sort into monotonically
+decreasing instead of monotonically increasing order.
+
+2.1-4
+Consider the searching problem:
+
+Input: A sequence of n numbers a1, a2, ... , an stored in array A[1 : n]
+and a value x.
+
+Output: An index i such that x equals A[i] or the special value NIL if x
+does not appear in A.
+
+Write pseudocode for linear search, which scans through the array
+from beginning to end, looking for x. Using a loop invariant, prove that
+
+your algorithm is correct. Make sure that your loop invariant fulfills the
+
+three necessary properties.
+
+2.1-5
+Consider the problem of adding two n-bit binary integers a and b,
+stored in two n-element arrays A[0 : n 1] and B[0 : n 1], where each
+
+element is either 0 or 1, , and . The sum
+
+c = a + b of the two integers should be stored in binary form in an (n +
+
+1)-element array C [0 : n], where . Write a procedure
+
+ADD-BINARY-INTEGERS that takes as input arrays A and B, along
+
+with the length n, and returns array C holding the sum.

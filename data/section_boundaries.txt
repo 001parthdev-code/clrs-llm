@@ -1,0 +1,135 @@
+1.1 | Algorithms | 787 | 1131
+1.2 | Algorithms as a technology | 1132 | 1378
+2.1 | Insertion sort | 1379 | 1785
+2.2 | Analyzing algorithms | 1786 | 2249
+2.3 | Designing algorithms | 2250 | 3071
+3.1 | O-notation, -notation, and -notation | 3072 | 3271
+3.2 | Asymptotic notation: formal definitions | 3272 | 3794
+3.3 | Standard notations and common functions | 3795 | 4577
+4.1 | Multiplying square matrices | 4578 | 4845
+4.2 | Strassen's algorithm for matrix multiplication | 4846 | 5100
+4.3 | The substitution method for solving recurrences | 5101 | 5407
+4.4 | The recursion-tree method for solving recurrences | 5408 | 5715
+4.5 | The master method for solving recurrences | 5716 | 6108
+4.6 | Proof of the continuous master theorem | 6109 | 6430
+4.7 | Akra-Bazzi recurrences | 6431 | 6970
+5.1 | The hiring problem | 6971 | 7181
+5.2 | Indicator random variables | 7182 | 7392
+5.3 | Randomized algorithms | 7393 | 7707
+5.4 | Probabilistic analysis and further uses of indicator | 7708 | 8647
+6.1 | Heaps | 8648 | 8786
+6.2 | Maintaining the heap property | 8787 | 8905
+6.3 | Building a heap | 8906 | 9025
+6.4 | The heapsort algorithm | 9026 | 9101
+6.5 | Priority queues | 9102 | 9608
+7.1 | Description of quicksort | 9609 | 9799
+7.2 | Performance of quicksort | 9800 | 10032
+7.3 | A randomized version of quicksort | 10033 | 10088
+7.4 | Analysis of quicksort | 10089 | 10746
+8.1 | Lower bounds for sorting | 10747 | 10904
+8.2 | Counting sort | 10905 | 11080
+8.3 | Radix sort | 11081 | 11278
+8.4 | Bucket sort | 11279 | 11921
+9.1 | Minimum and maximum | 11922 | 12039
+9.2 | Selection in expected linear time | 12040 | 12376
+9.3 | Selection in worst-case linear time | 12377 | 13228
+10.1 | Simple array-based data structures: arrays, matrices, | 13229 | 13530
+10.2 | Linked lists | 13531 | 13825
+10.3 | Representing rooted trees | 13826 | 14212
+11.1 | Direct-address tables | 14213 | 14305
+11.2 | Hash tables | 14306 | 14671
+11.3 | Hash functions | 14672 | 15257
+11.4 | Open addressing | 15258 | 15689
+11.5 | Practical considerations | 15690 | 16241
+12.1 | What is a binary search tree? | 16242 | 16384
+12.2 | Querying a binary search tree | 16385 | 16633
+12.3 | Insertion and deletion | 16634 | 17098
+13.1 | Properties of red-black trees | 17099 | 17301
+13.2 | Rotations | 17302 | 17419
+13.3 | Insertion | 17420 | 17895
+13.4 | Deletion | 17896 | 18722
+14.1 | Rod cutting | 18723 | 19302
+14.2 | Matrix-chain multiplication | 19303 | 19782
+14.3 | Elements of dynamic programming | 19783 | 20472
+14.4 | Longest common subsequence | 20473 | 20830
+14.5 | Optimal binary search trees | 20831 | 21773
+15.1 | An activity-selection problem | 21774 | 22182
+15.2 | Elements of the greedy strategy | 22183 | 22493
+15.3 | Huffman codes | 22494 | 22877
+15.4 | Offline caching | 22878 | 23420
+16.1 | Aggregate analysis | 23421 | 23616
+16.2 | The accounting method | 23617 | 23778
+16.3 | The potential method | 23779 | 24001
+16.4 | Dynamic tables | 24002 | 24933
+17.1 | Dynamic order statistics | 24934 | 25254
+17.2 | How to augment a data structure | 25255 | 25437
+17.3 | Interval trees | 25438 | 25992
+18.1 | Definition of B-trees | 25993 | 26112
+18.2 | Basic operations on B-trees | 26113 | 26532
+18.3 | Deleting a key from a B-tree | 26533 | 26859
+19.1 | Disjoint-set operations | 26860 | 27003
+19.2 | Linked-list representation of disjoint sets | 27004 | 27202
+19.3 | Disjoint-set forests | 27203 | 27399
+19.4 | Analysis of union by rank with path compression | 27400 | 28236
+20.1 | Representations of graphs | 28237 | 28464
+20.2 | Breadth-first search | 28465 | 28968
+20.3 | Depth-first search | 28969 | 29411
+20.4 | Topological sort | 29412 | 29546
+20.5 | Strongly connected components | 29547 | 30057
+21.1 | Growing a minimum spanning tree | 30058 | 30297
+21.2 | The algorithms of Kruskal and Prim | 30298 | 31323
+22.1 | The Bellman-Ford algorithm | 31324 | 31548
+22.2 | Single-source shortest paths in directed acyclic graphs | 31549 | 31698
+22.3 | Dijkstra's algorithm | 31699 | 32051
+22.4 | Difference constraints and shortest paths | 32052 | 32373
+22.5 | Proofs of shortest-paths properties | 32374 | 33221
+23.1 | Shortest paths and matrix multiplication | 33222 | 33560
+23.2 | The Floyd-Warshall algorithm | 33561 | 33900
+23.3 | Johnson's algorithm for sparse graphs | 33901 | 34378
+24.1 | Flow networks | 34379 | 34603
+24.2 | The Ford-Fulkerson method | 34604 | 35337
+24.3 | Maximum bipartite matching | 35338 | 35978
+25.1 | Maximum bipartite matching (revisited) | 35979 | 36518
+25.2 | The stable-marriage problem | 36519 | 36938
+25.3 | The Hungarian algorithm for the assignment problem | 36939 | 38129
+26.1 | The basics of fork-join parallelism | 38130 | 39266
+26.2 | Parallel matrix multiplication | 39267 | 39560
+26.3 | Parallel merge sort | 39561 | 40532
+27.1 | Waiting for an elevator | 40533 | 40711
+27.2 | Maintaining a search list | 40712 | 41049
+27.3 | Online caching | 41050 | 42001
+28.1 | Solving systems of linear equations | 42002 | 42602
+28.2 | Inverting matrices | 42603 | 42868
+28.3 | Symmetric positive-definite matrices and least-squares | 42869 | 43457
+29.1 | Linear programming formulations and algorithms | 43458 | 43815
+29.2 | Formulating problems as linear programs | 43816 | 44130
+29.3 | Duality | 44131 | 44757
+30.1 | Representing polynomials | 44758 | 45066
+30.2 | The DFT and FFT | 45067 | 45408
+30.3 | FFT circuits | 45409 | 45933
+31.1 | Elementary number-theoretic notions | 45934 | 46262
+31.2 | Greatest common divisor | 46263 | 46552
+31.3 | Modular arithmetic | 46553 | 46902
+31.4 | Solving modular linear equations | 46903 | 47122
+31.5 | The Chinese remainder theorem | 47123 | 47304
+31.6 | Powers of an element | 47305 | 47524
+31.7 | The RSA public-key cryptosystem | 47525 | 47874
+31.8 | Primality testing | 47875 | 48938
+32.1 | The naive string-matching algorithm | 48939 | 49043
+32.2 | The Rabin-Karp algorithm | 49044 | 49297
+32.3 | String matching with finite automata | 49298 | 49687
+32.4 | The Knuth-Morris-Pratt algorithm | 49688 | 50253
+32.5 | Suffix arrays | 50254 | 51412
+33.1 | Clustering | 51413 | 51815
+33.2 | Multiplicative-weights algorithms | 51816 | 52233
+33.3 | Gradient descent | 52234 | 53513
+34.1 | Polynomial time | 53514 | 53955
+34.2 | Polynomial-time verification | 53956 | 54199
+34.3 | NP-completeness and reducibility | 54200 | 54766
+34.4 | NP-completeness proofs | 54767 | 55164
+34.5 | NP-complete problems | 55165 | 56522
+35.1 | The vertex-cover problem | 56523 | 56679
+35.2 | The traveling-salesperson problem | 56680 | 56985
+35.3 | The set-covering problem | 56986 | 57178
+35.4 | Randomization and linear programming | 57179 | 57411
+35.5 | The subset-sum problem | 57412 | 63492

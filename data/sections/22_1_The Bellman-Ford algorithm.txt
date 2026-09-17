@@ -1,0 +1,224 @@
+22.1 The Bellman-Ford algorithm
+
+The Bellman-Ford algorithm solves the single-source shortest-paths
+
+problem in the general case in which edge weights may be negative.
+
+Given a weighted, directed graph G = (V, E) with source vertex s and
+weight function w : E , the Bellman-Ford algorithm returns a
+
+boolean value indicating whether there is a negative-weight cycle that is
+
+reachable from the source. If there is such a cycle, the algorithm
+
+indicates that no solution exists. If there is no such cycle, the algorithm
+
+produces the shortest paths and their weights.
+
+The procedure BELLMAN-FORD relaxes edges, progressively
+
+decreasing an estimate v.d on the weight of a shortest path from the
+source s to each vertex v V until it achieves the actual shortest-path
+weight (s, v). The algorithm returns TRUE if and only if the graph
+
+contains no negative-weight cycles that are reachable from the source.
+
+BELLMAN-FORD(G, w, s)
+
+1 INITIALIZE-SINGLE-SOURCE(G, s)
+
+2 for i = 1 to |G.V| - 1
+
+3 for each edge (u, v) G.E
+
+4 RELAX(u, v, w)
+
+5 for each edge (u, v) = G.E
+
+6 if v.d > u.d + w(u, v)
+
+7 return FALSE
+
+8 return TRUE
+
+Figure 22.4 shows the execution of the Bellman-Ford algorithm on a
+
+graph with 5 vertices. After initializing the d and values of all vertices
+in line 1, the algorithm makes |V| - 1 passes over the edges of the graph.
+
+Each pass is one iteration of the for loop of lines 24 and consists of
+
+relaxing each edge of the graph once. Figures 22.4(b)(e) show the state
+
+of the algorithm after each of the four passes over the edges. After
+
+making |V| - 1 passes, lines 58 check for a negative-weight cycle and
+
+return the appropriate boolean value. (We'll see a little later why this
+
+check works.)
+
+Figure 22.4 The execution of the Bellman-Ford algorithm. The source is vertex s. The d values
+appear within the vertices, and blue edges indicate predecessor values: if edge (u, v) is blue,
+then v. = u. In this particular example, each pass relaxes the edges in the order (t, x), (t, y), (t,
+z), (x, t), (y, x), (y, z), (z, x), (z, s), (s, t), (s, y). (a) The situation just before the first pass over
+
+the edges. (b)(e) The situation after each successive pass over the edges. Vertices whose
+shortest-path estimates and predecessors have changed due to a pass are highlighted in
+
+orange. The d and values in part (e) are the final values. The Bellman-Ford algorithm returns
+
+TRUE in this example.
+
+The Bellman-Ford algorithm runs in O(V2 + VE) time when the
+
+graph is represented by adjacency lists, since the initialization in line 1
+
+takes (V) time, each of the |V| - 1 passes over the edges in lines 24
+takes (V + E) time (examining |V| adjacency lists to find the |E| edges),
+and the for loop of lines 57 takes O(V + E) time. Fewer than |V| - 1
+
+passes over the edges sometimes suffice (see Exercise 22.1-3), which is
+
+why we say O(V2+VE) time, rather than (V2+VE) time. In the
+frequent case where |E| = (V), we can express this running time as
+O(VE). Exercise 22.1-5 asks you to make the Bellman-Ford algorithm
+run in O(VE) time even when |E| = o(V).
+
+To prove the correctness of the Bellman-Ford algorithm, we start by
+
+showing that if there are no negative-weight cycles, the algorithm
+
+computes correct shortest-path weights for all vertices reachable from
+
+the source.
+
+Lemma 22.2
+Let G = (V, E) be a weighted, directed graph with source vertex s and
+weight function w : E , and assume that G contains no negativeweight cycles that are reachable from s. Then, after the |V| - 1 iterations
+of the for loop of lines 24 of BELLMAN-FORD, v.d = (s, v) for all
+vertices v that are reachable from s.
+
+Proof We prove the lemma by appealing to the path-relaxation
+property. Consider any vertex v that is reachable from s, and let p = v0,
+v1, ... , vk, where v0 = s and vk = v, be any shortest path from s to v.
+Because shortest paths are simple, p has at most |V| - 1 edges, and so k
+|V| - 1. Each of the |V| - 1 iterations of the for loop of lines 24
+relaxes all |E| edges. Among the edges relaxed in the ith iteration, for i =
+1, 2, ... , k, is (vi-1, vi). By the path-relaxation property, therefore, v.d =
+vk.d = (s, vk) = (s, v).
+
+Corollary 22.3
+Let G = (V, E) be a weighted, directed graph with source vertex s and
+weight function w : E . Then, for each vertex v V, there is a path
+from s to v if and only if BELLMAN-FORD terminates with v.d <
+when it is run on G.
+
+Proof The proof is left as Exercise 22.1-2.
+
+Theorem 22.4 (Correctness of the Bellman-Ford algorithm)
+Let BELLMAN-FORD be run on a weighted, directed graph G = (V,
+E) with source vertex s and weight function w : E . If G contains no
+negative-weight cycles that are reachable from s, then the algorithm
+returns TRUE, v.d = (s, v) for all vertices v V, and the predecessor
+subgraph G is a shortest-paths tree rooted at s. If G does contain a
+negative-weight cycle reachable from s, then the algorithm returns
+
+FALSE.
+
+Proof Suppose that graph G contains no negative-weight cycles that
+
+are reachable from the source s. We first prove the claim that at
+
+termination, v.d = (s, v) for all vertices v V. If vertex v is reachable
+from s, then Lemma 22.2 proves this claim. If v is not reachable from s,
+
+then the claim follows from the no-path property. Thus, the claim is
+proven. The predecessor-subgraph property, along with the claim,
+
+implies that G is a shortest-paths tree. Now we use the claim to show
+that BELLMAN-FORD returns TRUE. At termination, for all edges (u,
+v) E we have
+
+v.d = (s, v)
+(s, u) + w(u, v) (by the triangle inequality)
+= u.d + w(u, v),
+
+and so none of the tests in line 6 causes BELLMAN-FORD to return
+FALSE. Therefore, it returns TRUE.
+
+Now, suppose that graph G contains a negative-weight cycle
+reachable from the source s. Let this cycle be c = v0, v1, ... , vk, where
+v0 = vk, in which case we have
+
+Assume for the purpose of contradiction that the Bellman-Ford
+
+algorithm returns TRUE. Thus, vi.d vi-1.d + w(vi-1, vi) for i = 1, 2, ...
+, k. Summing the inequalities around cycle c gives
+
+Since v0 = vk, each vertex in c appears exactly once in each of the
+
+summations and , and so
+
+Moreover, by Corollary 22.3, vi.d is finite for i = 1, 2, ... , k. Thus,
+
+which contradicts inequality (22.1). We conclude that the Bellman-Ford
+
+algorithm returns TRUE if graph G contains no negative-weight cycles
+
+reachable from the source, and FALSE otherwise.
+
+Exercises
+
+22.1-1
+
+Run the Bellman-Ford algorithm on the directed graph of Figure 22.4,
+
+using vertex z as the source. In each pass, relax edges in the same order
+as in the figure, and show the d and values after each pass. Now,
+change the weight of edge (z, x) to 4 and run the algorithm again, using
+s as the source.
+
+22.1-2
+
+Prove Corollary 22.3.
+
+22.1-3
+Given a weighted, directed graph G = (V, E) with no negative-weight
+cycles, let m be the maximum over all vertices v V of the minimum
+number of edges in a shortest path from the source s to v. (Here, the
+
+shortest path is by weight, not the number of edges.) Suggest a simple
+
+change to the Bellman-Ford algorithm that allows it to terminate in m +
+1 passes, even if m is not known in advance.
+
+22.1-4
+Modify the Bellman-Ford algorithm so that it sets v.d to - for all
+vertices v for which there is a negative-weight cycle on some path from
+the source to v.
+
+22.1-5
+
+Suppose that the graph given as input to the Bellman-Ford algorithm is
+
+represented with a list of |E| edges, where each edge indicates the
+
+vertices it leaves and enters, along with its weight. Argue that the
+
+Bellman-Ford algorithm runs in O(VE) time without the constraint that
+|E| = (V). Modify the Bellman-Ford algorithm so that it runs in O(VE)
+
+time in all cases when the input graph is represented with adjacency
+lists.
+
+22.1-6
+Let G = (V, E) be a weighted, directed graph with weight function w : E
+. Give an O(VE)-time algorithm to find, for all vertices v V, the
+value *(v) = min {(u, v) : u V}.
+
+22.1-7
+Suppose that a weighted, directed graph G = (V, E) contains a negative-
+
+weight cycle. Give an efficient algorithm to list the vertices of one such
+cycle. Prove that your algorithm is correct.

@@ -1,0 +1,689 @@
+14.3 Elements of dynamic programming
+
+Although you have just seen two complete examples of the dynamicprogramming method, you might still be wondering just when the
+method applies. From an engineering perspective, when should you look
+for a dynamic-programming solution to a problem? In this section, we'll
+examine the two key ingredients that an optimization problem must
+have in order for dynamic programming to apply: optimal substructure
+and overlapping subproblems. We'll also revisit and discuss more fully
+how memoization might help you take advantage of the overlappingsubproblems property in a top-down recursive approach.
+
+Optimal substructure
+
+The first step in solving an optimization problem by dynamic
+programming is to characterize the structure of an optimal solution.
+
+Recall that a problem exhibits optimal substructure if an optimal
+
+solution to the problem contains within it optimal solutions to
+subproblems. When a problem exhibits optimal substructure, that gives
+you a good clue that dynamic programming might apply. (As Chapter
+15 discusses, it also might mean that a greedy strategy applies, however.)
+Dynamic programming builds an optimal solution to the problem from
+optimal solutions to subproblems. Consequently, you must take care to
+ensure that the range of subproblems you consider includes those used
+in an optimal solution.
+
+Optimal substructure was key to solving both of the previous
+problems in this chapter. In Section 14.1, we observed that the optimal
+
+way of cutting up a rod of length n (if Serling Enterprises makes any
+
+cuts at all) involves optimally cutting up the two pieces resulting from
+the first cut. In Section 14.2, we noted that an optimal parenthesization
+
+of the matrix chain product AiAi+1 Aj that splits the product
+between Ak and Ak+1 contains within it optimal solutions to the
+problems of parenthesizing AiAi+1 Ak and Ak+1Ak+2 Aj.
+
+You will find yourself following a common pattern in discovering
+optimal substructure:
+
+1. You show that a solution to the problem consists of making a
+choice, such as choosing an initial cut in a rod or choosing an
+index at which to split the matrix chain. Making this choice
+leaves one or more subproblems to be solved.
+
+2. You suppose that for a given problem, you are given the choice
+that leads to an optimal solution. You do not concern yourself
+yet with how to determine this choice. You just assume that it
+has been given to you.
+
+3. Given this choice, you determine which subproblems ensue and
+how to best characterize the resulting space of subproblems.
+
+4. You show that the solutions to the subproblems used within an
+optimal solution to the problem must themselves be optimal by
+using a "cut-and-paste" technique. You do so by supposing that
+each of the subproblem solutions is not optimal and then
+deriving a contradiction. In particular, by "cutting out" the
+nonoptimal solution to each subproblem and "pasting in" the
+optimal one, you show that you can get a better solution to the
+original problem, thus contradicting your supposition that you
+already had an optimal solution. If an optimal solution gives rise
+to more than one subproblem, they are typically so similar that
+you can modify the cut-and-paste argument for one to apply to
+the others with little effort.
+
+To characterize the space of subproblems, a good rule of thumb says
+to try to keep the space as simple as possible and then expand it as
+necessary. For example, the space of subproblems for the rod-cutting
+problem contained the problems of optimally cutting up a rod of length
+
+i for each size i. This subproblem space worked well, and it was not
+
+necessary to try a more general space of subproblems.
+Conversely, suppose that you tried to constrain the subproblem
+
+space for matrix-chain multiplication to matrix products of the form
+
+A1A2 Aj. As before, an optimal parenthesization must split this
+product between Ak and Ak+1 for some 1 k < j. Unless you can
+guarantee that k always equals j - 1, you will find that you have
+subproblems of the form A1A2 Ak and Ak+1Ak+2 Aj. Moreover,
+the latter subproblem does not have the form A1A2 Aj. To solve this
+
+problem by dynamic programming, you need to allow the subproblems
+
+to vary at "both ends." That is, both i and j need to vary in the
+subproblem of parenthesizing the product AiAi+1 Aj.
+
+Optimal substructure varies across problem domains in two ways:
+
+1. how many subproblems an optimal solution to the original
+problem uses, and
+
+2. how many choices you have in determining which subproblem(s)
+to use in an optimal solution.
+
+In the rod-cutting problem, an optimal solution for cutting up a rod of
+
+size n uses just one subproblem (of size n - i), but we have to consider n
+choices for i in order to determine which one yields an optimal solution.
+Matrix-chain multiplication for the subchain AiAi+1 Aj serves an
+example with two subproblems and j - i choices. For a given matrix Ak
+
+where the product splits, two subproblems arise--parenthesizing
+
+AiAi+1 Ak and parenthesizing Ak+1Ak+2 Aj--and we have to
+solve both of them optimally. Once we determine the optimal solutions
+to subproblems, we choose from among j - i candidates for the index k.
+
+Informally, the running time of a dynamic-programming algorithm
+
+depends on the product of two factors: the number of subproblems
+
+overall and how many choices you look at for each subproblem. In rod
+
+cutting, we had (n) subproblems overall, and at most n choices to
+examine for each, yielding an O(n2) running time. Matrix-chain
+multiplication had (n2) subproblems overall, and each had at most n -
+1 choices, giving an O(n3) running time (actually, a (n3) running time,
+
+by Exercise 14.2-5).
+
+Usually, the subproblem graph gives an alternative way to perform
+
+the same analysis. Each vertex corresponds to a subproblem, and the
+
+choices for a subproblem are the edges incident from that subproblem.
+
+Recall that in rod cutting, the subproblem graph has n vertices and at
+most n edges per vertex, yielding an O(n2) running time. For matrix-
+
+chain multiplication, if you were to draw the subproblem graph, it
+
+would have (n2) vertices and each vertex would have degree at most n
+- 1, giving a total of O(n3) vertices and edges.
+
+Dynamic programming often uses optimal substructure in a bottom-
+
+up fashion. That is, you first find optimal solutions to subproblems and,
+
+having solved the subproblems, you find an optimal solution to the
+
+problem. Finding an optimal solution to the problem entails making a
+
+choice among subproblems as to which you will use in solving the
+
+problem. The cost of the problem solution is usually the subproblem
+
+costs plus a cost that is directly attributable to the choice itself. In rod
+
+cutting, for example, first we solved the subproblems of determining
+
+optimal ways to cut up rods of length i for i = 0, 1, ..., n - 1, and then
+
+we determined which of these subproblems yielded an optimal solution
+
+for a rod of length n, using equation (14.2). The cost attributable to the
+choice itself is the term pi in equation (14.2). In matrix-chain
+
+multiplication, we determined optimal parenthesizations of subchains of
+
+AiAi+1 Aj, and then we chose the matrix Ak at which to split the
+product. The cost attributable to the choice itself is the term pi-1 pk pj.
+
+Chapter 15 explores "greedy algorithms," which have many
+similarities to dynamic programming. In particular, problems to which
+greedy algorithms apply have optimal substructure. One major
+difference between greedy algorithms and dynamic programming is that
+instead of first finding optimal solutions to subproblems and then
+making an informed choice, greedy algorithms first make a "greedy"
+choice--the choice that looks best at the time--and then solve a
+resulting subproblem, without bothering to solve all possible related
+smaller subproblems. Surprisingly, in some cases this strategy works!
+
+Subtleties
+
+You should be careful not to assume that optimal substructure applies
+when it does not. Consider the following two problems whose input
+
+consists of a directed graph G = (V, E) and vertices u, v V.
+
+Unweighted shortest path:5 Find a path from u to v consisting of the
+
+fewest edges. Such a path must be simple, since removing a cycle from
+a path produces a path with fewer edges.
+
+Unweighted longest simple path: Find a simple path from u to v
+
+consisting of the most edges. (Without the requirement that the path
+must be simple, the problem is undefined, since repeatedly traversing a
+cycle creates paths with an arbitrarily large number of edges.)
+
+The unweighted shortest-path problem exhibits optimal
+
+substructure. Here's how. Suppose that u v, so that the problem is
+nontrivial. Then, any path p from u to v must contain an intermediate
+vertex, say w. (Note that w may be u or v.) Then, we can decompose the
+
+path into subpaths . The number of edges in p equals
+
+the number of edges in p1 plus the number of edges in p2. We claim that
+
+if p is an optimal (i.e., shortest) path from u to v, then p1 must be a
+
+shortest path from u to w. Why? As suggested earlier, use a "cut-and-
+
+paste" argument: if there were another path, say , from u to w with
+
+fewer edges than p1, then we could cut out p1 and paste in to
+
+produce a path with fewer edges than p, thus contradicting
+
+p's optimality. Likewise, p2 must be a shortest path from w to v. Thus, to
+
+find a shortest path from u to v, consider all intermediate vertices w,
+
+find a shortest path from u to w and a shortest path from w to v, and
+
+choose an intermediate vertex w that yields the overall shortest path.
+
+Section 23.2 uses a variant of this observation of optimal substructure
+
+to find a shortest path between every pair of vertices on a weighted,
+
+directed graph.
+
+You might be tempted to assume that the problem of finding an
+
+unweighted longest simple path exhibits optimal substructure as well.
+
+After all, if we decompose a longest simple path into subpaths
+
+, then mustn't p1 be a longest simple path from u to w, and
+
+mustn't p2 be a longest simple path from w to v? The answer is no!
+
+Figure 14.6 supplies an example. Consider the path q r t, which is
+
+a longest simple path from q to t. Is q r a longest simple path from q
+
+to r? No, for the path q s t r is a simple path that is longer. Is r
+
+t a longest simple path from r to t? No again, for the path r q s
+
+t is a simple path that is longer.
+
+Figure 14.6 A directed graph showing that the problem of finding a longest simple path in an
+
+unweighted directed graph does not have optimal substructure. The path q r t is a
+longest simple path from q to t, but the subpath q r is not a longest simple path from q to r,
+nor is the subpath r t a longest simple path from r to t.
+
+This example shows that for longest simple paths, not only does the
+
+problem lack optimal substructure, but you cannot necessarily assemble
+
+a "legal" solution to the problem from solutions to subproblems. If you
+
+combine the longest simple paths q s t r and r q s t,
+you get the path q s t r q s t, which is not simple.
+
+Indeed, the problem of finding an unweighted longest simple path does
+
+not appear to have any sort of optimal substructure. No efficient
+
+dynamic-programming algorithm for this problem has ever been found.
+
+In fact, this problem is NP-complete, which--as we shall see in Chapter
+
+34--means that we are unlikely to find a way to solve it in polynomial
+
+time.
+
+Why is the substructure of a longest simple path so different from
+
+that of a shortest path? Although a solution to a problem for both
+
+longest and shortest paths uses two subproblems, the subproblems in
+
+finding the longest simple path are not independent, whereas for
+
+shortest paths they are. What do we mean by subproblems being
+
+independent? We mean that the solution to one subproblem does not
+
+affect the solution to another subproblem of the same problem. For the
+
+example of Figure 14.6, we have the problem of finding a longest simple
+
+path from q to t with two subproblems: finding longest simple paths
+from q to r and from r to t. For the first of these subproblems, we chose
+the path q s t r, which used the vertices s and t. These vertices
+
+cannot appear in a solution to the second subproblem, since the
+
+combination of the two solutions to subproblems yields a path that is
+
+not simple. If vertex t cannot be in the solution to the second problem,
+then there is no way to solve it, since t is required to be on the path that
+
+forms the solution, and it is not the vertex where the subproblem
+
+solutions are "spliced" together (that vertex being r). Because vertices s
+and t appear in one subproblem solution, they cannot appear in the
+
+other subproblem solution. One of them must be in the solution to the
+
+other subproblem, however, and an optimal solution requires both.
+
+Thus, we say that these subproblems are not independent. Looked at
+
+another way, using resources in solving one subproblem (those
+
+resources being vertices) renders them unavailable for the other
+
+subproblem.
+
+Why, then, are the subproblems independent for finding a shortest
+
+path? The answer is that by nature, the subproblems do not share
+
+resources. We claim that if a vertex w is on a shortest path p from u to v,
+
+then we can splice together any shortest path and any shortest
+
+path to produce a shortest path from u to v. We are assured that,
+
+other than w, no vertex can appear in both paths p1 and p2. Why?
+
+Suppose that some vertex x w appears in both p1 and p2, so that we
+
+can decompose p1 as and p2 as . By the optimal
+
+substructure of this problem, path p has as many edges as p1 and p2
+
+together. Let's say that p has e edges. Now let us construct a path
+
+from u to v. Because we have excised the paths from x
+
+to w and from w to x, each of which contains at least one edge, path p
+
+contains at most e - 2 edges, which contradicts the assumption that p is
+
+a shortest path. Thus, we are assured that the subproblems for the
+
+shortest-path problem are independent.
+
+The two problems examined in Sections 14.1 and 14.2 have
+
+independent subproblems. In matrix-chain multiplication, the
+
+subproblems are multiplying subchains AiAi+1 Ak and Ak+1Ak+2
+
+Aj. These subchains are disjoint, so that no matrix could possibly be
+
+included in both of them. In rod cutting, to determine the best way to
+
+cut up a rod of length n, we looked at the best ways of cutting up rods
+
+of length i for i = 0, 1, ..., n - 1. Because an optimal solution to the
+
+length-n problem includes just one of these subproblem solutions (after
+
+cutting off the first piece), independence of subproblems is not an issue.
+
+Overlapping subproblems
+
+The second ingredient that an optimization problem must have for
+dynamic programming to apply is that the space of subproblems must
+be "small" in the sense that a recursive algorithm for the problem solves
+the same subproblems over and over, rather than always generating new
+subproblems. Typically, the total number of distinct subproblems is a
+polynomial in the input size. When a recursive algorithm revisits the
+same problem repeatedly, we say that the optimization problem has
+
+overlapping subproblems.6 In contrast, a problem for which a divide-
+
+and-conquer approach is suitable usually generates brand-new
+problems at each step of the recursion. Dynamic-programming
+algorithms typically take advantage of overlapping subproblems by
+solving each subproblem once and then storing the solution in a table
+where it can be looked up when needed, using constant time per lookup.
+
+Figure 14.7 The recursion tree for the computation of RECURSIVE-MATRIX-CHAIN(p, 1,
+4). Each node contains the parameters i and j. The computations performed in a subtree
+
+shaded blue are replaced by a single table lookup in MEMOIZED-MATRIX-CHAIN.
+
+In Section 14.1, we briefly examined how a recursive solution to rod
+cutting makes exponentially many calls to find solutions of smaller
+subproblems. The dynamic-programming solution reduces the running
+time from the exponential time of the recursive algorithm down to
+quadratic time.
+
+To illustrate the overlapping-subproblems property in greater detail,
+let's revisit the matrix-chain multiplication problem. Referring back to
+Figure 14.5, observe that MATRIX-CHAIN-ORDER repeatedly looks
+up the solution to subproblems in lower rows when solving subproblems
+
+in higher rows. For example, it references entry m[3, 4] four times:
+during the computations of m[2, 4], m[1, 4], m[3, 5], and m[3, 6]. If the
+algorithm were to recompute m[3, 4] each time, rather than just looking
+
+it up, the running time would increase dramatically. To see how, consider
+the inefficient recursive procedure RECURSIVE-MATRIX-CHAIN on
+
+the facing page, which determines m[i, j], the minimum number of scalar
+
+multiplications needed to compute the matrix-chain product Ai:j =
+AiAi+1 Aj. The procedure is based directly on the recurrence (14.7).
+
+Figure 14.7 shows the recursion tree produced by the call
+
+RECURSIVE-MATRIX-CHAIN(p, 1, 4). Each node is labeled by the
+values of the parameters i and j. Observe that some pairs of values
+
+occur many times.
+
+In fact, the time to compute m[1, n] by this recursive procedure is at
+least exponential in n. To see why, let T(n) denote the time taken by
+
+RECURSIVE-MATRIX-CHAIN to compute an optimal
+
+parenthesization of a chain of n matrices. Because the execution of lines
+
+12 and of lines 67 each take at least unit time, as does the
+
+multiplication in line 5, inspection of the procedure yields the
+
+recurrence
+
+RECURSIVE-MATRIX-CHAIN(p, i, j)
+
+1 if i == j
+
+2 return 0
+
+3 m[i, j] =
+
+4 for k = i to j - 1
+
+5 q = RECURSIVE-MATRIX-CHAIN(p, i, k)
+
++ RECURSIVE-MATRIX-CHAIN(p, k + 1, j)
+
++ pi-1 pk pj
+
+6 if q < m[i, j]
+
+7 m[i, j] = q
+
+8 return m[i, j]
+
+Noting that for i = 1, 2, ..., n - 1, each term T(i) appears once as T(k)
+and once as T(n - k), and collecting the n - 1 1s in the summation
+
+together with the 1 out front, we can rewrite the recurrence as
+
+Let's prove that T(n) = (2n) using the substitution method.
+Specifically, we'll show that T(n) 2n-1 for all n 1. For the base case n
+= 1, the summation is empty, and we get T(1) 1 = 20. Inductively, for n
+
+2 we have
+
+which completes the proof. Thus, the total amount of work performed
+
+by the call RECURSIVE-MATRIX-CHAIN(p, 1, n) is at least
+exponential in n.
+
+Compare this top-down, recursive algorithm (without memoization)
+with the bottom-up dynamic-programming algorithm. The latter is
+more efficient because it takes advantage of the overlapping-
+
+subproblems property. Matrix-chain multiplication has only (n2)
+
+distinct subproblems, and the dynamic-programming algorithm solves
+each exactly once. The recursive algorithm, on the other hand, must
+solve each subproblem every time it reappears in the recursion tree.
+Whenever a recursion tree for the natural recursive solution to a
+problem contains the same subproblem repeatedly, and the total
+number of distinct subproblems is small, dynamic programming can
+improve efficiency, sometimes dramatically.
+
+Reconstructing an optimal solution
+As a practical matter, you'll often want to store in a separate table
+which choice you made in each subproblem so that you do not have to
+
+reconstruct this information from the table of costs.
+
+For matrix-chain multiplication, the table s[i, j] saves a significant
+
+amount of work when we need to reconstruct an optimal solution.
+Suppose that the MATRIX-CHAIN-ORDER procedure on page 378
+
+did not maintain the s[i, j] table, so that it filled in only the table m[i, j]
+
+containing optimal subproblem costs. The procedure chooses from
+
+among j - i possibilities when determining which subproblems to use in
+an optimal solution to parenthesizing AiAi+1 Aj, and j - i is not a
+constant. Therefore, it would take (j -i) = (1) time to reconstruct
+
+which subproblems it chose for a solution to a given problem. Because
+
+MATRIX-CHAIN-ORDER stores in s[i, j] the index of the matrix at
+which it split the product AiAi+1 Aj, the PRINT-OPTIMALPARENS procedure on page 381 can look up each choice in O(1) time.
+
+Memoization
+
+As we saw for the rod-cutting problem, there is an alternative approach
+to dynamic programming that often offers the efficiency of the bottomup dynamic-programming approach while maintaining a top-down
+
+strategy. The idea is to memoize the natural, but inefficient, recursive
+
+algorithm. As in the bottom-up approach, you maintain a table with
+subproblem solutions, but the control structure for filling in the table is
+more like the recursive algorithm.
+
+A memoized recursive algorithm maintains an entry in a table for the
+solution to each subproblem. Each table entry initially contains a
+special value to indicate that the entry has yet to be filled in. When the
+subproblem is first encountered as the recursive algorithm unfolds, its
+solution is computed and then stored in the table. Each subsequent
+encounter of this subproblem simply looks up the value stored in the
+table and returns it.7
+
+The procedure MEMOIZED-MATRIX-CHAIN is a memoized
+version of the procedure RECURSIVE-MATRIX-CHAIN on page
+389. Note where it resembles the memoized top-down method on page
+369 for the rod-cutting problem.
+
+MEMOIZED-MATRIX-CHAIN(p, n)
+
+1 let m[1 : n, 1 : n] be a new table
+
+2 for i = 1 to n
+
+3 for j = i to n
+
+4 m[i, j] =
+
+5 return LOOKUP-CHAIN(m, p, 1, n)
+
+LOOKUP-CHAIN(m, p, i, j)
+
+1 if m[i, j] <
+
+2 return m[i, j]
+
+3 if i == j
+
+4 m[i, j] = 0
+
+5 else for k = i to j - 1
+
+6 q = LOOKUP-CHAIN(m, p, i, k)
+
++ LOOKUP-CHAIN(m, p, k + 1, j) + pi-1 pk pj
+
+7 if q < m[i, j]
+
+8 m[i, j] = q
+
+9 return m[i, j]
+
+The MEMOIZED-MATRIX-CHAIN procedure, like the bottom-up
+
+MATRIX-CHAIN-ORDER procedure on page 378, maintains a table
+
+m[1 : n, 1 : n] of computed values of m[i, j], the minimum number of
+scalar multiplications needed to compute the matrix Ai:j. Each table
+
+entry initially contains the value to indicate that the entry has yet to
+
+be filled in. Upon calling LOOKUP-CHAIN(m, p, i, j), if line 1 finds that
+m[i, j] < , then the procedure simply returns the previously computed
+cost m[i, j] in line 2. Otherwise, the cost is computed as in
+RECURSIVE-MATRIX-CHAIN, stored in m[i, j], and returned. Thus,
+LOOKUP-CHAIN(m, p, i, j) always returns the value of m[i, j], but it
+
+computes it only upon the first call of LOOKUP-CHAIN with these
+
+specific values of i and j. Figure 14.7 illustrates how MEMOIZED-
+
+MATRIX-CHAIN saves time compared with RECURSIVE-MATRIX-
+
+CHAIN. Subtrees shaded blue represent values that are looked up
+
+rather than recomputed.
+
+Like the bottom-up procedure MATRIX-CHAIN-ORDER, the
+
+memoized procedure MEMOIZED-MATRIX-CHAIN runs in O(n3)
+
+time. To begin with, line 4 of MEMOIZED-MATRIX-CHAIN executes
+
+(n2) times, which dominates the running time outside of the call to
+
+LOOKUP-CHAIN in line 5. We can categorize the calls of LOOKUPCHAIN into two types:
+
+1. calls in which m[i, j] = , so that lines 39 execute, and
+
+2. calls in which m[i, j] < , so that LOOKUP-CHAIN simply
+
+returns in line 2.
+
+There are (n2) calls of the first type, one per table entry. All calls of
+
+the second type are made as recursive calls by calls of the first type.
+Whenever a given call of LOOKUP-CHAIN makes recursive calls, it
+
+makes O(n) of them. Therefore, there are O(n3) calls of the second type
+in all. Each call of the second type takes O(1) time, and each call of the
+first type takes O(n) time plus the time spent in its recursive calls. The
+total time, therefore, is O(n3). Memoization thus turns an (2n)-time
+algorithm into an O(n3)-time algorithm.
+
+We have seen how to solve the matrix-chain multiplication problem
+by either a top-down, memoized dynamic-programming algorithm or a
+
+bottom-up dynamic-programming algorithm in O(n3) time. Both the
+
+bottom-up and memoized methods take advantage of the overlapping-
+
+subproblems property. There are only (n2) distinct subproblems in
+
+total, and either of these methods computes the solution to each
+subproblem only once. Without memoization, the natural recursive
+algorithm runs in exponential time, since solved subproblems are
+repeatedly solved.
+
+In general practice, if all subproblems must be solved at least once, a
+bottom-up dynamic-programming algorithm usually outperforms the
+corresponding top-down memoized algorithm by a constant factor,
+because the bottom-up algorithm has no overhead for recursion and
+less overhead for maintaining the table. Moreover, for some problems
+you can exploit the regular pattern of table accesses in the dynamic-
+
+programming algorithm to reduce time or space requirements even
+further. On the other hand, in certain situations, some of the
+subproblems in the subproblem space might not need to be solved at all.
+In that case, the memoized solution has the advantage of solving only
+those subproblems that are definitely required.
+
+Exercises
+
+14.3-1
+
+Which is a more efficient way to determine the optimal number of
+multiplications in a matrix-chain multiplication problem: enumerating
+all the ways of parenthesizing the product and computing the number
+of multiplications for each, or running RECURSIVE-MATRIXCHAIN? Justify your answer.
+
+14.3-2
+
+Draw the recursion tree for the MERGE-SORT procedure from Section
+2.3.1 on an array of 16 elements. Explain why memoization fails to
+speed up a good divide-and-conquer algorithm such as MERGE-SORT.
+
+14.3-3
+
+Consider the antithetical variant of the matrix-chain multiplication
+problem where the goal is to parenthesize the sequence of matrices so
+as to maximize, rather than minimize, the number of scalar
+multiplications. Does this problem exhibit optimal substructure?
+
+14.3-4
+
+As stated, in dynamic programming, you first solve the subproblems
+and then choose which of them to use in an optimal solution to the
+problem. Professor Capulet claims that she does not always need to
+solve all the subproblems in order to find an optimal solution. She
+suggests that she can find an optimal solution to the matrix-chain
+
+multiplication problem by always choosing the matrix Ak at which to
+split the subproduct AiAi+1 Aj (by selecting k to minimize the
+quantity pi-1 pk pj) before solving the subproblems. Find an instance of
+
+the matrix-chain multiplication problem for which this greedy approach
+yields a suboptimal solution.
+
+14.3-5
+Suppose that the rod-cutting problem of Section 14.1 also had a limit li
+on the number of pieces of length i allowed to be produced, for i = 1, 2,
+..., n. Show that the optimal-substructure property described in Section
+
+14.1 no longer holds.

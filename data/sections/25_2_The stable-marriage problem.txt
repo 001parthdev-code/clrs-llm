@@ -1,0 +1,419 @@
+25.2 The stable-marriage problem
+
+In Section 25.1, the goal was to find a maximum matching in an
+
+undirected bipartite graph. If you know that the graph G = (V, E) with
+vertex partition V = L R is a complete bipartite graph1--containing
+an edge from every vertex in L to every vertex in R--then you can find
+
+a maximum matching by a simple greedy algorithm.
+When a graph can have several matchings, you might want to decide
+
+which matchings are most desirable. In Section 25.3, we'll add weights
+to the edges and find a matching of maximum weight. In this section,
+we will instead add some information to each vertex in a complete
+bipartite graph: a ranking of the vertices in the other side. That is, each
+
+vertex in L has an ordered list of all the vertices in R, and vice-versa. To
+keep things simple, let's assume that L and R each contain n vertices.
+The goal here is to match each vertex in L with a vertex in R in a
+
+"stable" way.
+
+This problem derives its name, the stable-marriage problem, from the
+notion of heterosexual marriage, viewing L as a set of women and R as
+
+a set of men.2 Each woman ranks all the men in terms of desirability,
+and each man does the same with all the women. The goal is to pair up
+women and men (a matching) so that if a woman and a man are not
+matched to each other, then at least one of them prefers their assigned
+partner.
+
+If a woman and a man are not matched to each other but each
+
+prefers the other over their assigned partner, they form a blocking pair.
+
+A blocking pair has incentive to opt out of the assigned pairing and get
+
+together on their own. If that were to occur, then this pair would block
+
+the matching from being "stable." A stable matching, therefore, is a
+
+matching that has no blocking pair. If there is a blocking pair, then the
+
+matching is unstable.
+
+Let's look at an example with four women--Wanda, Emma, Lacey,
+and Karen--and four men--Oscar, Davis, Brent, and Hank--having
+the following preferences:
+
+Wanda:Brent, Hank, Oscar, Davis
+Emma: Davis, Hank, Oscar, Brent
+Lacey: Brent, Davis, Hank, Oscar
+Karen: Brent, Hank, Davis, Oscar
+
+Oscar: Wanda, Karen, Lacey, Emma
+Davis: Wanda, Lacey, Karen, Emma
+Brent: Lacey, Karen, Wanda, Emma
+Hank: Lacey, Wanda, Emma, Karen
+
+A stable matching comprises the following pairs:
+
+Lacey and Brent
+Wanda and Hank
+Karen and Davis
+Emma and Oscar
+
+You can verify that this matching has no blocking pair. For example,
+even though Karen prefers Brent and Hank to her partner Davis, Brent
+prefers his partner Lacey to Karen, and Hank prefers his partner
+Wanda to Karen, so that neither Karen and Brent nor Karen and Hank
+form a blocking pair. In fact, this stable matching is unique. Suppose
+instead that the last two pairs were
+
+Emma and Davis
+Karen and Oscar
+
+Then Karen and Davis would be a blocking pair, because they were not
+paired together, Karen prefers Davis to Oscar, and Davis prefers Karen
+to Emma. Therefore, this matching is not stable.
+
+Stable matchings need not be unique. For example, suppose that
+there are three women--Monica, Phoebe, and Rachel--and three men
+--Chandler, Joey, and Ross--with these preferences:
+
+Monica: Chandler, Joey, Ross
+Phoebe: Joey, Ross, Chandler
+Rachel: Ross, Chandler, Joey
+
+Chandler: Phoebe, Rachel, Monica
+Joey: Rachel, Monica, Phoebe
+Ross: Monica, Phoebe, Rachel
+
+In this case, there are three stable matchings:
+
+Matching 1 Matching 2 Matching 3
+
+Monica and Chandler Phoebe and Chandler Rachel and Chandler
+
+Phoebe and Joey Rachel and Joey Monica and Joey
+
+Rachel and Ross Monica and Ross Phoebe and Ross
+
+In matching 1, all women get their first choice and all men get their last
+choice. Matching 2 is the opposite, with all men getting their first choice
+and all women getting their last choice. When all the women or all the
+men get their first choice, there plainly cannot be a blocking pair. In
+matching 3, everyone gets their second choice. You can verify that there
+are no blocking pairs.
+
+You might wonder whether it is always possible to come up with a
+stable matching no matter what rankings each participant provides. The
+answer is yes. (Exercise 25.2-3 asks you to show that even in the
+scenario of the National Resident Matching Program, where each
+hospital takes on multiple students, it is always possible to devise a
+stable assignment.) A simple algorithm known as the Gale-Shapley
+algorithm always finds a stable matching. The algorithm has two
+variants, which mirror each other: "woman-oriented" and "manoriented." Let's examine the woman-oriented version. Each participant
+is either "free" or "engaged." Everyone starts out free. Engagements
+occur when a free woman proposes to a man. When a man is first
+proposed to, he goes from free to engaged, and he always stays
+
+engaged, though not necessarily to the same woman. If an engaged man
+receives a proposal from a woman whom he prefers to the woman he's
+currently engaged to, that engagement is broken, the woman to whom
+he had been engaged becomes free, and the man and the woman whom
+he prefers become engaged. Each woman proposes to the men in her
+preference list, in order, until the last time she becomes engaged. When
+a woman is engaged, she temporarily stops proposing, but if she
+becomes free again, she continues down her list. Once everyone is
+engaged, the algorithm terminates. The procedure GALE-SHAPLEY
+on the next page makes this process more concrete. The procedure
+allows for some choice: any free woman may be selected in line 2. We'll
+see that the procedure produces a stable matching regardless of the
+order in which line 2 chooses free women. For the man-oriented
+version, just reverse the roles of men and women in the procedure.
+
+Let's see how the GALE-SHAPLEY procedure executes on the
+example with Wanda, Emma, Lacey, Karen, Oscar, Davis, Brent, and
+Hank. After everyone is initialized to free, here is one possible version
+of what can occur in successive iterations of the while loop of lines 29:
+
+1. Wanda proposes to Brent. Brent is free, so that Wanda and
+Brent become engaged and no longer free.
+
+2. Emma proposes to Davis. Davis is free, so that Emma and Davis
+become engaged and no longer free.
+
+3. Lacey proposes to Brent. Brent is engaged to Wanda, but he
+prefers Lacey. Brent breaks the engagement to Wanda, who
+becomes free. Lacey and Brent become engaged, with Lacey no
+longer free.
+
+4. Karen proposes to Brent. Brent is engaged to Lacey, whom he
+prefers to Karen. Brent rejects Karen, who remains free.
+
+5. Karen proposes to Hank. Hank is free, so that Karen and Hank
+become engaged and no longer free.
+
+6. Wanda proposes to Hank. Hank is engaged to Karen, but he
+prefers Wanda. Hank breaks the engagement with Karen, who
+
+becomes free. Wanda and Hank become engaged, with Wanda
+no longer free.
+
+7. Karen proposes to Davis. Davis is engaged to Emma, but he
+prefers Karen. Davis breaks the engagement to Emma, who
+becomes free. Karen and Davis become engaged, with Karen no
+longer free.
+
+8. Emma proposes to Hank. Hank is engaged to Wanda, whom he
+prefers to Emma. Hank rejects Emma, who remains free.
+
+9. Emma proposes to Oscar. Oscar is free, so that Emma and Oscar
+become engaged and no longer free.
+
+GALE-SHAPLEY (men, women, rankings)
+
+1assign each woman and man as free
+
+2while some woman w is free
+
+3 let m be the first man on w's ranked list to whom she has not
+
+proposed
+
+4 if m is free
+
+5 w and m become engaged to each other (and not free)
+
+6 elseif m ranks w higher than the woman w he is currently
+
+engaged to
+
+7 m breaks the engagement to w, who becomes free
+
+8 w and m become engaged to each other (and not free)
+
+9 else m rejects w, with w remaining free
+
+10return the stable matching consisting of the engaged pairs
+
+At this point, everyone is engaged and nobody is free, so the while loop
+terminates. The procedure returns the stable matching we saw earlier.
+
+The following theorem shows that not only does GALE-SHAPLEY
+terminate, but that it always returns a stable matching, thereby proving
+that a stable matching always exists.
+
+Theorem 25.9
+
+The procedure GALE-SHAPLEY always terminates and returns a
+stable matching.
+
+Proof Let's first show that the while loop of lines 29 always
+
+terminates, so that the procedure terminates. The proof is by
+
+contradiction. If the loop fails to terminate, it is because some woman
+
+remains free. In order for a woman to remain free, she must have
+
+proposed to all the men and been rejected by each one. In order for a
+
+man to reject a woman, he must be already engaged. Therefore, all the
+
+men are engaged. Once engaged, a man stays engaged (though not
+
+necessarily to the same woman). There are an equal number n of women
+
+and men, however, which means that every woman is engaged, leading
+
+to the contradiction that no women are free. We must also show that
+
+the while loop makes a bounded number of iterations. Since each of the
+
+n women goes through her ranking of the n men in order, possibly not
+
+reaching the end of her list, the total number of iterations is at most n2.
+
+Therefore, the while loop always terminates, and the procedure returns
+
+a matching.
+
+We need to show that there are no blocking pairs. We first observe
+
+that once a man m is engaged to a woman w, all subsequent actions for
+m occur in lines 68. Therefore, once a man is engaged, he stays
+engaged, and any time he breaks an engagement to a woman w, it's for a
+woman whom he prefers to w. Suppose that a woman w is matched with
+a man m, but she prefers man m. We'll show that w and m is not a
+blocking pair, because m does not prefer w to his partner. Because w
+ranks m higher than m, she must have proposed to m before proposing
+to m, and m either rejected her proposal or accepted it and later broke
+the engagement. If m rejected the proposal from w, it is because he was
+already engaged to some woman he prefers to w. If m accepted and
+later broke the engagement, he was at some point engaged to w but later
+accepted a proposal from a woman he prefers to w. In either case, he
+ultimately ends up with a partner whom he prefers to w. We conclude
+that even though w might prefer m to her partner m, it is not also the
+case that m prefers w to his partner. Therefore, the procedure returns a
+
+matching containing no blocking pairs.
+
+Exercise 25.2-1 asks you to provide the proof of the following
+corollary.
+
+Corollary 25.10
+Given preference rankings for n women and n men, the Gale-Shapley
+algorithm can be implemented to run in O(n2) time.
+
+Because line 2 can choose any free woman, you might wonder
+whether different choices can produce different stable matchings. The
+answer is no: as the following theorem shows, every execution of the
+GALE-SHAPLEY produces exactly the same result. Moreover, the
+stable matching returned is optimal for the women.
+
+Theorem 25.11
+
+Regardless of how women are chosen in line 2 of GALE-SHAPLEY,
+the procedure always returns the same stable matching, and in this
+stable matching, each woman has the best partner possible in any stable
+matching.
+
+Proof The proof that each woman has the best partner possible in any
+
+stable matching is by contradiction. Suppose that the GALE-
+
+SHAPLEY procedure returns a stable matching M, but that there is a
+different stable matching M in which some woman w prefers her
+partner m to the partner m she has in M. Because w ranks m higher
+than m, she must have proposed to m before proposing to m. Then
+there is a woman w whom m prefers to w, and m was already engaged
+to w when w proposed or m accepted the proposal from w and later
+broke the engagement in favor of w. Either way, there is a moment
+when m decided against w in favor of w. Now suppose, without loss of
+
+generality, that this moment was the first time that any man rejected a
+partner who belongs to some stable matching.
+
+We claim that w cannot have a partner m in a stable matching
+whom she prefers to m. If there were such a man m, then in order for
+w to propose to m, she would have proposed to m and been rejected at
+some point before proposing to m. If m accepted the proposal from w
+and later broke it to accept w, then since this was the first rejection in a
+
+stable matching, we get the contradiction that m could not have
+rejected w beforehand. If m was already engaged to w when w
+proposed, then again, m could not have rejected w beforehand, thus
+
+proving the claim.
+
+Since w does not prefer anyone to m in a stable matching and w is
+not matched with m in M (because m is matched with w in M), w
+prefers m to her partner in M. Since w prefers m over her partner in
+M and m prefers w over his partner w in M, the pair w and m is a
+blocking pair in M. Because M has a blocking pair, it cannot be a
+
+stable matching, thereby contradicting the assumption that there exists
+some stable matching in which each woman has the best partner
+
+possible other than the matching M returned by GALE-SHAPLEY.
+
+We put no condition on the execution of the procedure, which means
+that all possible orders in which line 2 selects women result in the same
+stable matching being returned.
+
+Corollary 25.12
+
+There can be stable matchings that the GALE-SHAPLEY procedure
+does not return.
+
+Proof Theorem 25.11 says that for a given set of rankings, GALE-
+
+SHAPLEY returns just one matching, no matter how it chooses women
+in line 2. The earlier example of three women and three men with three
+different stable matchings shows that there can be multiple stable
+matchings for a given set of rankings. A call of GALE-SHAPLEY is
+capable of returning only one of these stable matchings.
+
+Although the GALE-SHAPLEY procedure gives the best possible
+outcome for the women, the following corollary shows that it also
+produces the worst possible outcome for the men.
+
+Corollary 25.13
+
+In the stable matching returned by the procedure GALE-SHAPLEY,
+each man has the worst partner possible in any stable matching.
+
+Proof Let M be the matching returned by a call to GALE-SHAPLEY.
+Suppose that there is another stable matching M and a man m who
+prefers his partner w in M to his partner w in M. Let the partner of w
+in M be m. By Theorem 25.11, m is the best partner that w can have in
+any stable matching, which means that w prefers m to m. Since m
+prefers w to w, the pair w and m is a blocking pair in M, contradicting
+the assumption that M is a stable matching.
+
+Exercises
+
+25.2-1
+
+Describe how to implement the Gale-Shapley algorithm so that it runs
+
+in O(n2) time.
+
+25.2-2
+
+Is it possible to have an unstable matching with just two women and two
+men? If so, provide and justify an example. If not, argue why not.
+
+25.2-3
+
+The National Resident Matching Program differs from the scenario for
+the stable-marriage problem set out in this section in two ways. First, a
+
+hospital may be matched with more than one student, so that hospital h
+takes rh 1 students. Second, the number of students might not equal
+
+the number of hospitals. Describe how to modify the Gale-Shapley
+algorithm to fit the requirements of the National Resident Matching
+Program.
+
+25.2-4
+Prove the following property, which is known as weak Pareto optimality:
+
+Let M be the stable matching produced by the GALE-
+
+SHAPLEY procedure, with women proposing to men. Then, for
+a given instance of the stable-marriage problem there is no
+matching--stable or unstable--such that every woman has a
+
+partner whom she prefers to her partner in the stable matching
+
+M.
+
+25.2-5
+The stable-roommates problem is similar to the stable-marriage problem,
+
+except that the graph is a complete graph, not bipartite, with an even
+number of vertices. Each vertex represents a person, and each person
+ranks all the other people. The definitions of blocking pairs and stable
+matching extend in the natural way: a blocking pair comprises two
+people who both prefer each other to their current partner, and a
+matching is stable if there are no blocking pairs. For example, consider
+four people--Wendy, Xenia, Yolanda, and Zelda--with the following
+preference lists:
+
+Wendy: Xenia, Yolanda, Zelda
+Xenia: Wendy, Zelda, Yolanda
+Yolanda: Wendy, Zelda, Xenia
+Zelda: Xenia, Yolanda, Wendy
+
+You can verify that the following matching is stable:
+
+Wendy and Xenia
+Yolanda and Zelda
+
+Unlike the stable-marriage problem, the stable-roommates problem can
+have inputs for which no stable matching exists. Find such an input and
+explain why no stable matching exists.

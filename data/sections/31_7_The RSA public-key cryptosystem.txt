@@ -1,0 +1,349 @@
+31.7 The RSA public-key cryptosystem
+
+With a public-key cryptosystem, you can encrypt messages sent
+
+between two communicating parties so that an eavesdropper who
+
+overhears the encrypted messages will not be able to decode, or decrypt,
+
+them. A public-key cryptosystem also enables a party to append an
+unforgeable "digital signature" to the end of an electronic message.
+Such a signature is the electronic version of a handwritten signature on
+a paper document. It can be easily checked by anyone, forged by no
+one, yet loses its validity if any bit of the message is altered. It therefore
+provides authentication of both the identity of the signer and the
+contents of the signed message. It is the perfect tool for electronically
+signed business contracts, electronic checks, electronic purchase orders,
+and other electronic communications that parties wish to authenticate.
+
+The RSA public-key cryptosystem relies on the dramatic difference
+between the ease of finding large prime numbers and the difficulty of
+factoring the product of two large prime numbers. Section 31.8
+describes an efficient procedure for finding large prime numbers.
+
+Public-key cryptosystems
+
+In a public-key cryptosystem, each participant has both a public key
+and a secret key. Each key is a piece of information. For example, in the
+
+RSA cryptosystem, each key consists of a pair of integers. The
+participants "Alice" and "Bob" are traditionally used in cryptography
+
+examples. We denote the public keys for Alice and Bob as PA and PB,
+respectively, and likewise the secret keys are SA for Alice and SB for
+
+Bob.
+Each participant creates his or her own public and secret keys.
+
+Secret keys are kept secret, but public keys can be revealed to anyone or
+even published. In fact, it is often convenient to assume that everyone's
+public key is available in a public directory, so that any participant can
+easily obtain the public key of any other participant.
+
+Figure 31.5 Encryption in a public key system. Bob encrypts the message M using Alice's
+public key PA and transmits the resulting ciphertext C = PA(M) over a communication
+
+channel to Alice. An eavesdropper who captures the transmitted ciphertext gains no
+
+information about M. Alice receives C and decrypts it using her secret key to obtain the
+original message M = SA(C).
+
+The public and secret keys specify functions that can be applied to
+any message. Let D denote the set of permissible messages. For
+example, D might be the set of all finite-length bit sequences. The
+simplest, and original, formulation of public-key cryptography requires
+one-to-one functions from D to itself, based on the public and secret
+
+keys. We denote the function based on Alice's public key PA by PA()
+and the function based on her secret key SA by SA(). The functions
+PA() and SA() are thus permutations of D. We assume that the
+functions PA() and SA() are efficiently computable given the
+corresponding keys PA and SA.
+
+The public and secret keys for any participant are a "matched pair"
+in that they specify functions that are inverses of each other. That is,
+
+for any message M D. Transforming M with the two keys PA and SA
+successively, in either order, yields back the original message M.
+
+A public-key cryptosystem requires that Alice, and only Alice, be
+
+able to compute the function SA() in any practical amount of time. This
+
+assumption is crucial to keeping encrypted messages sent to Alice
+private and to knowing that Alice's digital signatures are authentic.
+
+Alice must keep her key SA secret. If she does not, whoever else has
+
+access to SA can decrypt messages intended only for Alice and can also
+
+forge her digital signature. The assumption that only Alice can
+
+reasonably compute SA() must hold even though everyone knows PA
+and can compute PA(), the inverse function to SA(), efficiently. These
+
+requirements appear formidable, but we'll see how to satisfy them.
+In a public-key cryptosystem, encryption works as shown in Figure
+
+31.5. Suppose that Bob wishes to send Alice a message M encrypted so
+
+that it looks like
+
+Figure 31.6 Digital signatures in a public-key system. Alice signs the message M by
+appending her digital signature = SA(M) to it. She transmits the message/signature pair (M,
+) to Bob, who verifies it by checking the equation M = PA(). If the equation holds, he
+accepts (M, ) as a message that Alice has signed.
+
+unintelligible gibberish to an eavesdropper. The scenario for sending the
+message goes as follows.
+
+Bob obtains Alice's public key PA, perhaps from a public
+
+directory or perhaps directly from Alice.
+
+Bob computes the ciphertext C = PA(M) corresponding to the
+message M and sends C to Alice.
+When Alice receives the ciphertext C, she applies her secret key
+SA to retrieve the original message: SA(C) = SA(PA(M)) = M.
+Because SA() and PA() are inverse functions, Alice can compute M
+from C. Because only Alice is able to compute SA(), only Alice can
+compute M from C. Because Bob encrypts M using PA(), only Alice
+
+can understand the transmitted message.
+
+Digital signatures can be implemented within this formulation of a
+public-key cryptosystem. (There are other ways to construct digital
+signatures, but we won't go into them here.) Suppose now that Alice
+
+wishes to send Bob a digitally signed response M. Figure 31.6 shows
+
+how the digital-signature scenario proceeds.
+
+Alice computes her digital signature for the message M using
+her secret key SA and the equation = SA(M).
+
+Alice sends the message/signature pair (M, ) to Bob.
+
+When Bob receives (M, ), he can verify that it originated from
+Alice by using Alice's public key to verify the equation M =
+PA(). (Presumably, M contains Alice's name, so that Bob knows
+
+whose public key to use.) If the equation holds, then Bob
+
+concludes that the message M was actually signed by Alice. If the
+
+equation fails to hold, Bob concludes either that the information
+he received was corrupted by transmission errors or that the pair
+
+(M, ) is an attempted forgery.
+
+Because a digital signature provides both authentication of the signer's
+identity and authentication of the contents of the signed message, it is
+analogous to a handwritten signature at the end of a written document.
+
+A digital signature must be verifiable by anyone who has access to
+the signer's public key. A signed message can be verified by one party
+and then passed on to other parties who can also verify the signature.
+For example, the message might be an electronic check from Alice to
+Bob. After Bob verifies Alice's signature on the check, he can give the
+check to his bank, who can then also verify the signature and effect the
+appropriate funds transfer.
+
+A signed message may or may not be encrypted. The message can be
+"in the clear" and not protected from disclosure. By composing the
+above protocols for encryption and for signatures, Alice can create a
+message to Bob that is both signed and encrypted. Alice first appends
+her digital signature to the message and then encrypts the resulting
+message/signature pair with Bob's public key. Bob decrypts the received
+message with his secret key to obtain both the original message and its
+
+digital signature. Bob can then verify the signature using Alice's public
+key. The corresponding combined process using paper-based systems
+would be to sign the paper document and then seal the document inside
+a paper envelope that is opened only by the intended recipient.
+
+The RSA cryptosystem
+
+In the RSA public-key cryptosystem, a participant creates a public key
+
+and a secret key with the following procedure:
+
+1. Select at random two large prime numbers p and q such that p
+q. The primes p and q might be, say, 1024 bits each.
+
+2. Compute n = pq.
+3. Select a small odd integer e that is relatively prime to (n),
+
+which, by equation (31.21), equals (p 1)(q 1).
+4. Compute d as the multiplicative inverse of e, modulo (n).
+
+(Corollary 31.26 guarantees that d exists and is uniquely defined.
+You can use the technique of Section 31.4 to compute d, given e
+and (n).)
+5. Publish the pair P = (e, n) as the participant's RSA public key.
+6. Keep secret the pair S = (d, n) as the participant's RSA secret
+key.
+
+For this scheme, the domain D is the set n. To transform a message
+M associated with a public key P = (e, n), compute
+
+To transform a ciphertext C associated with a secret key S = (d, n),
+
+compute
+
+These equations apply to both encryption and signatures. To create a
+signature, the signer's secret key is applied to the message to be signed,
+rather than to a ciphertext. To verify a signature, the public key of the
+
+signer is applied to the signature rather than to a message to be
+
+encrypted.
+
+To implement the public-key and secret-key operations (31.37) and
+
+(31.38), you can use the procedure MODULAR-EXPONENTIATION
+
+described in Section 31.6. To analyze the running time of these
+
+operations, assume that the public key (e, n) and secret key (d, n) satisfy
+1g e = O(1), 1g d , and 1g n . Then, applying a public key requires
+O(1) modular multiplications and uses O(2) bit operations. Applying a
+secret key requires O() modular multiplications, using O(3) bit
+
+operations.
+
+Theorem 31.36 (Correctness of RSA)
+
+The RSA equations (31.37) and (31.38) define inverse transformations
+
+of n satisfying equations (31.35) and (31.36).
+
+Proof From equations (31.37) and (31.38), we have that for any M
+n,
+P(S(M)) = S(P(M)) = Med (mod n).
+Since e and d are multiplicative inverses modulo (n) = (p 1)(q 1),
+ed = 1 + k(p 1)(q 1)
+for some integer k. But then, if M 0 (mod p), we have
+
+Med = M(Mp1)k(q1) (mod p)
+
+= M((M mod p)p1)k(q1) (mod p)
+
+= M(1)k(q1) (mod p) (by Theorem 31.31)
+
+=M (mod p)
+
+Also, Med = M (mod p) if M = 0 (mod p). Thus,
+Med = M (mod p)
+for all M. Similarly,
+
+Med = M (mod q)
+
+for all M. Thus, by Corollary 31.29 to the Chinese remainder theorem,
+
+Med = M (mod n)
+
+for all M.
+
+The security of the RSA cryptosystem rests in large part on the
+difficulty of factoring large integers. If an adversary can factor the
+
+modulus n in a public key, then the adversary can derive the secret key
+from the public key, using the knowledge of the factors p and q in the
+
+same way that the creator of the public key used them. Therefore, if
+factoring large integers is easy, then breaking the RSA cryptosystem is
+easy. The converse statement, that if factoring large integers is hard,
+then breaking RSA is hard, is unproven. After two decades of research,
+however, no easier method has been found to break the RSA public-key
+
+cryptosystem than to factor the modulus n. And factoring large
+
+integers is surprisingly difficult. By randomly selecting and multiplying
+together two 1024-bit primes, you can create a public key that cannot be
+"broken" in any feasible amount of time with current technology. In the
+absence of a fundamental breakthrough in the design of numbertheoretic algorithms, and when implemented with care following
+recommended standards, the RSA cryptosystem is capable of providing
+a high degree of security in applications.
+
+In order to achieve security with the RSA cryptosystem, however,
+you should use integers that are quite long--more than 1000 bits--to
+resist possible advances in the art of factoring. In 2021, RSA moduli
+are commonly in the range of 2048 to 4096 bits. To create moduli of
+such sizes, you must find large primes efficiently. Section 31.8 addresses
+this problem.
+
+For efficiency, RSA is often used in a "hybrid" or "keymanagement" mode with fast cryptosystems that are not public-key
+
+cryptosystems. With such a symmetric-key system, the encryption and
+decryption keys are identical. If Alice wishes to send a long message M
+to Bob privately, she selects a random key K for the fast symmetric-key
+
+cryptosystem and encrypts M using K, obtaining ciphertext C, where C
+is as long as M, but K is quite short. Then she encrypts K using Bob's
+public RSA key. Since K is short, computing PB(K) is fast (much faster
+than computing PB(M)). She then transmits (C, PB(K)) to Bob, who
+decrypts PB(K) to obtain K and then uses K to decrypt C, obtaining M.
+
+A similar hybrid approach creates digital signatures efficiently. This
+
+approach combines RSA with a public collision-resistant hash function h
+
+--a function that is easy to compute but for which it is computationally
+
+infeasible to find two messages M and M such that h(M) = h(M). The
+value h(M) is a short (say, 256-bit) "fingerprint" of the message M. If
+Alice wishes to sign a message M, she first applies h to M to obtain the
+fingerprint h(M), which she then encrypts with her secret key. She sends
+(M, SA(h(M))) to Bob as her signed version of M. Bob can verify the
+signature by computing h(M) and verifying that PA applied to
+SA(h(M)) as received equals h(M). Because no one can create two
+
+messages with the same fingerprint, it is computationally infeasible to
+
+alter a signed message and preserve the validity of the signature.
+
+One way to distribute public keys uses certificates. For example,
+assume that there is a "trusted authority" T whose public key is known
+by everyone. Alice can obtain from T a signed message (her certificate)
+stating that "Alice's public key is PA." This certificate is "selfauthenticating" since everyone knows PT. Alice can include her
+
+certificate with her signed messages, so that the recipient has Alice's
+
+public key immediately available in order to verify her signature.
+
+Because her key was signed by T, the recipient knows that Alice's key is
+
+really Alice's.
+
+Exercises
+
+31.7-1
+Consider an RSA key set with p = 11, q = 29, n = 319, and e = 3. What
+value of d should be used in the secret key? What is the encryption of
+the message M = 100?
+
+31.7-2
+Prove that if Alice's public exponent e is 3 and an adversary obtains
+Alice's secret exponent d, where 0 < d < (n), then the adversary can
+factor Alice's modulus n in time polynomial in the number of bits in n.
+
+(Although you are not asked to prove it, you might be interested to
+
+know that this result remains true even if the condition e = 3 is
+
+removed. See Miller [327].)
+
+31.7-3
+
+Prove that RSA is multiplicative in the sense that
+
+PA(M1)PA(M2) = PA(M1M2) (mod n).
+
+Use this fact to prove that if an adversary had a procedure that could
+
+efficiently decrypt 1% of messages from n encrypted with PA, then the
+
+adversary could employ a probabilistic algorithm to decrypt every
+
+message encrypted with PA with high probability.

@@ -1,0 +1,118 @@
+6.2 Maintaining the heap property
+
+The procedure MAX-HEAPIFY on the facing page maintains the max-
+
+heap property. Its inputs are an array A with the heap-size attribute and
+an index i into the array. When it is called, MAX-HEAPIFY assumes
+that the binary trees rooted at LEFT(i) and RIGHT(i) are max-heaps,
+but that A[i] might be smaller than its children, thus violating the maxheap property. MAX-HEAPIFY lets the value at A[i] "float down" in
+the max-heap so that the subtree rooted at index i obeys the max-heap
+
+property.
+Figure 6.2 illustrates the action of MAX-HEAPIFY. Each step
+
+determines the largest of the elements A[i], A[LEFT(i)], and
+A[RIGHT(i)] and stores the index of the largest element in largest. If
+A[i] is largest, then the subtree rooted at node i is already a max-heap
+
+and nothing else needs to be done. Otherwise, one of the two children
+
+contains the largest element. Positions i and largest swap their contents,
+which causes node i and its children to satisfy the max-heap property.
+The node indexed by largest, however, just had its value decreased, and
+thus the subtree rooted at largest might violate the max-heap property.
+
+Consequently, MAX-HEAPIFY calls itself recursively on that subtree.
+
+Figure 6.2 The action of MAX-HEAPIFY(A, 2), where A.heap-size = 10. The node that
+
+potentially violates the max-heap property is shown in blue. (a) The initial configuration, with
+
+A[2] at node i = 2 violating the max-heap property since it is not larger than both children.
+The max-heap property is restored for node 2 in (b) by exchanging A[2] with A[4], which
+destroys the max-heap property for node 4. The recursive call MAX-HEAPIFY(A, 4) now has
+i = 4. After A[4] and A[9] are swapped, as shown in (c), node 4 is fixed up, and the recursive
+call MAX-HEAPIFY(A, 9) yields no further change to the data structure.
+
+MAX-HEAPIFY(A, i)
+
+1l = LEFT(i)
+2r = RIGHT(i)
+3if l A.heap-size and A[l] > A[i]
+4 largest = l
+5else largest = i
+6if r A.heap-size and A[r] > A[largest]
+7 largest = r
+
+8if largest i
+9 exchange A[i] with A[largest]
+10 MAX-HEAPIFY(A, largest)
+
+To analyze MAX-HEAPIFY, let T (n) be the worst-case running
+time that the procedure takes on a subtree of size at most n. For a tree
+rooted at a given node i, the running time is the (1) time to fix up the
+relationships among the elements A[i], A[LEFT(i)], and A[RIGHT(i)],
+
+plus the time to run MAX-HEAPIFY on a subtree rooted at one of the
+
+children of node i (assuming that the recursive call occurs). The
+children's subtrees each have size at most 2n/3 (see Exercise 6.2-2), and
+
+therefore we can describe the running time of MAX-HEAPIFY by the
+recurrence
+
+The solution to this recurrence, by case 2 of the master theorem
+
+(Theorem 4.1 on page 102), is T (n) = O(lg n). Alternatively, we can
+
+characterize the running time of MAX-HEAPIFY on a node of height
+
+h as O(h).
+
+Exercises
+
+6.2-1
+
+Using Figure 6.2 as a model, illustrate the operation of MAX-
+
+HEAPIFY(A, 3) on the array A = 27, 17, 3, 16, 13, 10, 1, 5, 7, 12, 4, 8,
+
+9, 0.
+
+6.2-2
+Show that each child of the root of an n-node heap is the root of a
+subtree containing at most 2n/3 nodes. What is the smallest constant
+such that each subtree has at most n nodes? How does that affect the
+
+recurrence (6.1) and its solution?
+
+6.2-3
+
+Starting with the procedure MAX-HEAPIFY, write pseudocode for the
+
+procedure MIN-HEAPIFY(A, i), which performs the corresponding
+
+manipulation on a min-heap. How does the running time of MINHEAPIFY compare with that of MAX-HEAPIFY?
+
+6.2-4
+What is the effect of calling MAX-HEAPIFY(A, i) when the element
+A[i] is larger than its children?
+
+6.2-5
+What is the effect of calling MAX-HEAPIFY(A, i) for i > A.heapsize/2?
+
+6.2-6
+
+The code for MAX-HEAPIFY is quite efficient in terms of constant
+factors, except possibly for the recursive call in line 10, for which some
+compilers might produce inefficient code. Write an efficient MAXHEAPIFY that uses an iterative control construct (a loop) instead of
+recursion.
+
+6.2-7
+
+Show that the worst-case running time of MAX-HEAPIFY on a heap
+
+of size n is (lg n). (Hint: For a heap with n nodes, give node values that
+
+cause MAX-HEAPIFY to be called recursively at every node on a
+simple path from the root down to a leaf.)

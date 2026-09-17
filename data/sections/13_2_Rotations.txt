@@ -1,0 +1,117 @@
+13.2 Rotations
+
+The search-tree operations TREE-INSERT and TREE-DELETE, when
+
+run on a red-black tree with n keys, take O(lg n) time. Because they
+
+modify the tree, the result may violate the red-black properties
+enumerated in Section 13.1. To restore these properties, colors and
+pointers within nodes need to change.
+
+The pointer structure changes through rotation, which is a local
+
+operation in a search tree that preserves the binary-search-tree
+property. Figure 13.2 shows the two kinds of rotations: left rotations and
+
+right rotations. Let's look at a left rotation on a node x, which
+
+transforms the structure on the right side of the figure to the structure
+
+on the left. Node x has a right child y, which must not be T.nil. The left
+rotation changes the subtree originally rooted at x by "twisting" the link
+
+between x and y to the left. The new root of the subtree is node y, with
+x as y's left child and y's original left child (the subtree represented by
+in the figure) as x's right child.
+
+The pseudocode for LEFT-ROTATE appearing on the following
+
+page assumes that x.right T.nil and that the root's parent is T.nil.
+
+Figure 13.3 shows an example of how LEFT-ROTATE modifies a binary
+
+search tree. The code for RIGHT-ROTATE is symmetric. Both LEFT-
+
+ROTATE and RIGHT-ROTATE run in O(1) time. Only pointers are
+
+changed by a rotation, and all other attributes in a node remain the
+
+same.
+
+Figure 13.2 The rotation operations on a binary search tree. The operation LEFT-ROTATE(T,
+x) transforms the configuration of the two nodes on the right into the configuration on the left
+by changing a constant number of pointers. The inverse operation RIGHT-ROTATE(T, y)
+
+transforms the configuration on the left into the configuration on the right. The letters , , and
+
+represent arbitrary subtrees. A rotation operation preserves the binary-search-tree property:
+
+the keys in precede x.key, which precedes the keys in , which precede y.key, which precedes
+
+the keys in .
+
+LEFT-ROTATE(T, x)
+
+1y = x.right // turn y's left subtree into x's right subtree
+2x.right = y.left // if y's left subtree is not empty ...
+// ... then x becomes the parent of the subtree's
+3if y.left T.nil
+4 y.left.p = x
+
+root
+
+5y.p = x.p // x's parent becomes y's parent
+
+6if x.p == T.nil // if x was the root ...
+
+7 T.root = y // ... then y becomes the root
+
+8elseif x ==// otherwise, if x was a left child ...
+
+x.p.left
+
+9 x.p.left = y // ... then y becomes a left child
+
+10else x.p.right = y // otherwise, x was a right child, and now y is
+
+11y.left = x // make x become y's left child
+
+12x.p = y
+
+Exercises
+
+13.2-1
+
+Write pseudocode for RIGHT-ROTATE.
+
+Figure 13.3 An example of how the procedure LEFT-ROTATE(T, x) modifies a binary search
+
+tree. Inorder tree walks of the input tree and the modified tree produce the same listing of key
+values.
+
+13.2-2
+Argue that in every n-node binary search tree, there are exactly n - 1
+
+possible rotations.
+
+13.2-3
+Let a, b, and c be arbitrary nodes in subtrees , , and , respectively, in
+the right tree of Figure 13.2. How do the depths of a, b, and c change
+when a left rotation is performed on node x in the figure?
+
+13.2-4
+Show that any arbitrary n-node binary search tree can be transformed
+into any other arbitrary n-node binary search tree using O(n) rotations.
+(Hint: First show that at most n - 1 right rotations suffice to transform
+
+the tree into a right-going chain.)
+
+13.2-5
+We say that a binary search tree T1 can be right-converted to binary
+search tree T2 if it is possible to obtain T2 from T1 via a series of calls
+to RIGHT-ROTATE. Give an example of two trees T1 and T2 such that
+T1 cannot be right-converted to T2. Then, show that if a tree T1 can be
+
+right-converted to T2, it can be right-converted using O(n2) calls to
+
+RIGHT-ROTATE.

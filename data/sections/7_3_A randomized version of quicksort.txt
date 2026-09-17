@@ -1,0 +1,55 @@
+7.3 A randomized version of quicksort
+
+In exploring the average-case behavior of quicksort, we have assumed
+that all permutations of the input numbers are equally likely. This
+assumption does not always hold, however, as, for example, in the
+situation laid out in the premise for Exercise 7.2-4. Section 5.3 showed
+that judicious randomization can sometimes be added to an algorithm
+to obtain good expected performance over all inputs. For quicksort,
+randomization yields a fast and practical algorithm. Many software
+libraries provide a randomized version of quicksort as their algorithm
+of choice for sorting large data sets.
+
+In Section 5.3, the RANDOMIZED-HIRE-ASSISTANT procedure
+explicitly permutes its input and then runs the deterministic HIREASSISTANT procedure. We could do the same for quicksort as well,
+but a different randomization technique yields a simpler analysis.
+
+Instead of always using A[r] as the pivot, a randomized version
+randomly chooses the pivot from the subarray A[p : r], where each
+element in A[p : r] has an equal probability of being chosen. It then
+exchanges that element with A[r] before partitioning. Because the pivot
+
+is chosen randomly, we expect the split of the input array to be
+reasonably well balanced on average.
+
+The changes to PARTITION and QUICKSORT are small. The new
+partitioning procedure, RANDOMIZED-PARTITION, simply swaps
+before performing the partitioning. The new quicksort procedure,
+RANDOMIZED-QUICKSORT, calls RANDOMIZED-PARTITION
+
+instead of PARTITION. We'll analyze this algorithm in the next
+section.
+
+RANDOMIZED-PARTITION(A, p, r)
+1 i = RANDOM(p, r)
+2 exchange A[r] with A[i]
+3 return PARTITION(A, p, r)
+
+RANDOMIZED-QUICKSORT(A, p, r)
+1 if p < r
+2 q = RANDOMIZED-PARTITION(A, p, r)
+3 RANDOMIZED-QUICKSORT(A, p, q 1)
+4 RANDOMIZED-QUICKSORT(A, q + 1, r)
+
+Exercises
+
+7.3-1
+
+Why do we analyze the expected running time of a randomized
+algorithm and not its worst-case running time?
+
+7.3-2
+
+When RANDOMIZED-QUICKSORT runs, how many calls are made
+to the random-number generator RANDOM in the worst case? How
+about in the best case? Give your answer in terms of -notation.
