@@ -32,28 +32,31 @@ The project is being built incrementally, with each stage implemented and valida
 
 Current stage:
 
-**Tokenization complete.**
+**Transformer implementation**
 
 Completed:
 
-* PDF extraction
-* Corpus profiling
-* Corpus cleaning
-* Semantic corpus preparation
-* Table-of-contents extraction
-* Section boundary detection
-* Section extraction
-* Custom BPE tokenizer training
-* Vocabulary construction
-* Token encoding / decoding
+- PDF extraction
+- Corpus profiling
+- Corpus cleaning
+- Semantic corpus preparation
+- Table-of-contents extraction
+- Section boundary detection
+- Section extraction
+- Custom BPE tokenizer training
+- Vocabulary construction
+- Token encoding / decoding
+- Dataset tokenization
+- Training sequence construction
 
 Next:
 
-* Dataset construction
-* Training sequence generation
-* Model architecture
-* Training
-* Evaluation
+- Transformer architecture
+- Multi-head self-attention
+- Feed-forward network
+- Training loop
+- Evaluation
+- Text generation
 
 ---
 
@@ -473,6 +476,66 @@ round trip.
 
 ---
 
+# Phase 4 — Dataset Construction
+
+The tokenized sections are converted into training-ready datasets.
+
+Pipeline:
+
+```text
+Section Text
+        ↓
+BPE Encoding
+        ↓
+Token IDs
+        ↓
+Sliding Context Window
+        ↓
+Input / Target Sequences
+        ↓
+NumPy Training Arrays
+```
+
+Each section is tokenized independently using the custom BPE tokenizer.
+
+Special tokens:
+
+```text
+<BOS>
+<EOS>
+```
+
+are inserted automatically.
+
+The generated token IDs are stored in:
+
+```text
+data/tokenized/
+```
+
+Training examples are then created using a fixed-length sliding context window.
+
+For each context window:
+
+```text
+Input
+↓
+
+Target (shifted by one token)
+```
+
+The resulting dataset is stored as
+
+```text
+data/training/
+
+inputs.npy
+targets.npy
+metadata.json
+```
+
+This representation is directly consumable by PyTorch.
+
 # Current Architecture
 
 The project is currently organized roughly as:
@@ -489,15 +552,19 @@ clrs-llm/
 │   └── sections/
 │
 ├── src/
-│   ├── preprocessing/
-│   │   ├── ...
-│   │   ├── section_boundaries.py
-│   │   └── extract_section.py
-│   │
-│   └── tokenization/
-│       ├── corpus.py
-│       ├── bpe.py
-│       └── tokenizer.py
+├── preprocessing/
+├── tokenization/
+├── dataset/
+│   ├── tokenize_dataset.py
+│   └── build_sequences.py
+│
+├── model/
+│   ├── config.py
+│   ├── embedding.py
+│   └── positional_embedding.py
+│
+├── training/
+└── inference/
 │
 └── README.md
 ```
@@ -540,34 +607,37 @@ The purpose is to understand what actually happens underneath an LLM by implemen
 
 ## Completed
 
-* [x] PDF extraction
-* [x] Raw corpus preservation
-* [x] Corpus profiling
-* [x] Corpus cleaning
-* [x] Semantic corpus preparation
-* [x] TOC extraction
-* [x] Section boundary detection
-* [x] Section extraction
-* [x] Custom BPE trainer
-* [x] Vocabulary construction
-* [x] Token ID mapping
-* [x] Encoding
-* [x] Decoding
+- [x] PDF extraction
+- [x] Raw corpus preservation
+- [x] Corpus profiling
+- [x] Corpus cleaning
+- [x] Semantic corpus preparation
+- [x] TOC extraction
+- [x] Section boundary detection
+- [x] Section extraction
+- [x] Custom BPE trainer
+- [x] Vocabulary construction
+- [x] Token ID mapping
+- [x] Encoding
+- [x] Decoding
+- [x] Dataset tokenization
+- [x] Training sequence construction
+- [x] Model configuration
+- [x] Token embeddings
+- [x] Positional embeddings
 
 ## Next
 
-* [ ] Dataset construction
-* [ ] Training sequence generation
-* [ ] Context window handling
-* [ ] Train/validation split
-* [ ] Transformer architecture
-* [ ] Attention implementation
-* [ ] Positional embeddings
-* [ ] Training loop
-* [ ] Loss calculation
-* [ ] Checkpointing
-* [ ] Evaluation
-* [ ] Text generation
+- [ ] Self-attention
+- [ ] Multi-head attention
+- [ ] Feed-forward network
+- [ ] Transformer block
+- [ ] GPT model
+- [ ] Training loop
+- [ ] Loss calculation
+- [ ] Checkpointing
+- [ ] Evaluation
+- [ ] Text generation
 
 ---
 
