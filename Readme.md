@@ -1,605 +1,212 @@
 # CLRS-LLM
 
-A from-scratch language model trained on *Introduction to Algorithms (CLRS)*.
+A decoder-only GPT-style language model built from scratch using PyTorch.
 
-The goal of this project is not simply to train an LLM, but to understand and implement the complete pipeline involved in building one:
+CLRS-LLM is an educational engineering project whose objective is to implement every major component of a modern language model rather than relying on high-level frameworks. The project covers the complete pipeline from raw PDF extraction to autoregressive text generation.
+
+---
+
+# Objective
+
+The goal of this project is to understand how modern decoder-only language models are engineered by implementing each stage independently.
+
+Rather than using pre-built Transformer implementations, CLRS-LLM implements the complete architecture using PyTorch primitives while documenting the engineering decisions made throughout development.
+
+---
+
+# End-to-End Pipeline
 
 ```text
-PDF
- ↓
+CLRS PDF
+      │
+      ▼
 Text Extraction
- ↓
+      │
+      ▼
+Corpus Profiling
+      │
+      ▼
 Corpus Cleaning
- ↓
+      │
+      ▼
 Semantic Structuring
- ↓
-Section Boundaries
- ↓
-Tokenization
- ↓
-Token IDs
- ↓
-Training Sequences
- ↓
-LLM
-````
-
-The project is being built incrementally, with each stage implemented and validated before moving to the next.
-
----
-
-# Project Status
-
-Current stage:
-
-**Transformer implementation**
-
-Completed:
-
-- PDF extraction
-- Corpus profiling
-- Corpus cleaning
-- Semantic corpus preparation
-- Table-of-contents extraction
-- Section boundary detection
-- Section extraction
-- Custom BPE tokenizer training
-- Vocabulary construction
-- Token encoding / decoding
-- Dataset tokenization
-- Training sequence construction
-
-Next:
-
-- Transformer architecture
-- Multi-head self-attention
-- Feed-forward network
-- Training loop
-- Evaluation
-- Text generation
-
----
-
-# Phase 0 — Data Extraction
-
-The first objective was to convert the CLRS PDF into machine-readable text.
-
-## PDF → Text
-
-I used Poppler's `pdftotext` utility to extract the text.
-
-The first PDF was corrupted and produced `xref` / `trailer` errors during extraction, so it was replaced with a clean copy.
-
-The extracted corpus was stored as:
-
-```text
-data/corpus_raw.txt
-```
-
-Initial corpus statistics:
-
-* Characters: `2,600,328`
-* Lines: `68,590`
-* Empty lines: `23,047`
-* Whitespace-separated words: `447,292`
-* Shortest line: `0`
-* Longest line: `109`
-
-The raw corpus is preserved and is never modified directly.
-
----
-
-# Phase 0.1 — Corpus Profiling
-
-Before cleaning the corpus, I profiled the extracted text to understand its structure and identify extraction artifacts.
-
-The analysis included:
-
-* line-length distribution
-* representative samples from different line-length ranges
-* repeated lines
-* character frequencies
-* non-ASCII characters
-* whitespace patterns
-* suspicious characters
-* number-like lines
-* samples from the beginning, middle, and end of the corpus
-
-An important observation was that short lines were not necessarily garbage.
-
-They contained legitimate structural information such as:
-
-* headings
-* chapter names
-* metadata
-* section titles
-* other book structure
-
-The PDF extraction also preserved some visual formatting through leading spaces.
-
-## Extraction artifacts
-
-Two major extraction artifacts were identified:
-
-```text
-U+00AD SOFT HYPHEN   → 2,462 occurrences
-U+000C FORM FEED     → 1,676 occurrences
-```
-
-However, the corpus also contained legitimate Unicode characters such as:
-
-```text
-×
-·
-±
-```
-
-Therefore, Unicode characters could not simply be removed indiscriminately.
-
-The profiling stage also revealed that the corpus contained several structural regions:
-
-* front matter
-* main book content
-* exercises
-* figures
-* index
-
----
-
-# Phase 1 — Cleaning and Normalization
-
-A separate cleaning pipeline was created instead of modifying the raw corpus.
-
-This allows the entire cleaning process to be reproduced from the original extracted text.
-
-```text
-corpus_raw.txt
-       ↓
-   cleaning
-       ↓
-corpus_clean.txt
-```
-
-Output:
-
-```text
-data/corpus_clean.txt
-```
-
-## Cleaning operations
-
-The first cleaning pass:
-
-* removed soft-hyphen extraction artifacts
-* converted form-feed page boundaries into newlines
-* removed leading and trailing whitespace
-* collapsed repeated spaces
-* repaired words broken across PDF line breaks
-* limited excessive consecutive blank lines
-
-## Cleaned corpus statistics
-
-After cleaning:
-
-* Characters: `2,525,115`
-* Lines: `67,754`
-* Empty lines: `22,596`
-* Whitespace-separated words: `446,163`
-* Shortest line: `0`
-* Longest line: `252`
-* Leading spaces: `0`
-* Trailing spaces: `0`
-* Multiple-space runs: `0`
-* Soft hyphens: `0`
-* Form feeds: `0`
-
----
-
-# Phase 1.1 — Semantic Corpus Preparation
-
-After cleaning, the next step was to remove material that was not useful for the target training domain.
-
-The front matter was removed.
-
-This included:
-
-* title/publication information
-* copyright information
-* author/publisher metadata
-* table of contents
-* preface
-
-The goal was to focus the training corpus on the actual algorithms content.
-
-However, useful structural information was preserved.
-
-The corpus retains:
-
-* chapter headings
-* chapter-level introductions
-* algorithms
-* pseudocode
-* exercises
-* references
-
-This creates a cleaner domain-specific corpus while preserving the semantic structure of the book.
-
----
-
-# Phase 2 — Table of Contents and Section Structure
-
-A major problem with raw PDF text extraction is that the document's visual structure is partially lost.
-
-Instead of relying only on text patterns, the table of contents was used as an authoritative source for identifying section boundaries.
-
-The extracted TOC contains:
-
-```text
-135 sections
-```
-
-Example:
-
-```text
-1.1 | Algorithms
-1.2 | Algorithms as a technology
-2.1 | Insertion sort
-2.2 | Analyzing algorithms
-2.3 | Designing algorithms
-...
-```
-
-The TOC was stored separately:
-
-```text
-data/toc_sections.txt
+      │
+      ▼
+Section Extraction
+      │
+      ▼
+Custom BPE Tokenizer
+      │
+      ▼
+Dataset Tokenization
+      │
+      ▼
+Training Sequence Construction
+      │
+      ▼
+Transformer
+      │
+      ▼
+Training
+      │
+      ▼
+Autoregressive Text Generation
 ```
 
 ---
 
-# Phase 2.1 — Section Boundary Detection
+# Current Status
 
-The body corpus was searched for section-like headings.
+## Data Engineering
 
-A simple section-number match produced false positives because normal prose can contain patterns such as:
+- ✅ PDF Extraction
+- ✅ Corpus Profiling
+- ✅ Corpus Cleaning
+- ✅ Semantic Structuring
+- ✅ Section Extraction
+- ✅ Custom BPE Tokenizer
+- ✅ Vocabulary Construction
+- ✅ Dataset Tokenization
+- ✅ Training Sequence Construction
 
-```text
-3.1 ...
-4.2 ...
-9.1 ...
-```
+## Transformer
 
-Therefore, section numbers alone were not considered sufficient.
+- ✅ Model Configuration
+- ✅ Token Embeddings
+- ✅ Positional Embeddings
+- ✅ GPT-style Multi-Head Self-Attention
+- ✅ Feed Forward Network
+- ✅ Transformer Block
+- ✅ Decoder-only Transformer Architecture
 
-The section detector compares the candidate body heading against the corresponding TOC title using normalized title similarity.
+## Remaining
 
-This produced:
-
-```text
-TOC sections:       135
-Body candidates:    152
-Valid body sections: 135
-```
-
-The additional candidates were rejected as false positives.
-
-The final result:
-
-```text
-135 valid section boundaries
-```
-
-was saved to:
-
-```text
-data/section_boundaries.txt
-```
-
-Each boundary contains:
-
-```text
-section number
-section title
-start line
-end line
-```
-
-This allows the corpus to be reconstructed as semantically meaningful sections instead of treating the entire book as one continuous text stream.
+- 🚧 Training Pipeline
+- ⏳ Checkpointing
+- ⏳ Text Generation
+- ⏳ Evaluation
 
 ---
 
-# Phase 2.2 — Section Extraction
-
-Using the detected boundaries, each section was extracted into its own file.
-
-Output:
-
-```text
-data/sections/
-```
-
-The result:
-
-```text
-135 section files
-```
-
-Each file corresponds to one section of the book.
-
-Example structure:
-
-```text
-data/
-├── corpus_raw.txt
-├── corpus_clean.txt
-├── corpus_semantic_clean.txt
-├── toc_sections.txt
-├── section_boundaries.txt
-└── sections/
-    ├── 1_1_Algorithms.txt
-    ├── 1_2_Algorithms_as_a_technology.txt
-    ├── 2_1_Insertion_sort.txt
-    └── ...
-```
-
-This gives the later training pipeline access to explicit document boundaries.
-
----
-
-# Phase 3 — Tokenization
-
-With the corpus structurally prepared, tokenization was started as a separate module.
-
-The tokenizer is implemented from scratch rather than relying on an existing tokenizer library.
-
-The chosen approach is:
-
-**Byte Pair Encoding (BPE)**
-
-The tokenizer is implemented in:
-
-```text
-src/tokenization/
-```
-
-The tokenizer pipeline consists of:
-
-```text
-Section text
-     ↓
-Initial character vocabulary
-     ↓
-Word frequency counting
-     ↓
-Adjacent pair statistics
-     ↓
-Most frequent pair selection
-     ↓
-Pair merging
-     ↓
-Vocabulary expansion
-     ↓
-BPE vocabulary
-```
-
----
-
-# Phase 3.1 — BPE Training
-
-The initial vocabulary was constructed from characters appearing in the corpus.
-
-The BPE trainer then repeatedly:
-
-1. counts adjacent symbol pairs
-2. finds the most frequent pair
-3. merges the pair
-4. adds the merged token to the vocabulary
-5. records the merge rule
-
-The target vocabulary size was:
-
-```text
-8192
-```
-
-The tokenizer learned:
-
-```text
-Vocabulary size: 8196
-Merges: 8077
-```
-
-The vocabulary is slightly larger than the requested 8192 because special tokens are reserved separately.
-
----
-
-# Phase 3.2 — Token IDs
-
-The learned vocabulary was converted into integer token IDs.
-
-Special tokens were reserved:
-
-```text
-<PAD> → 0
-<UNK> → 1
-<BOS> → 2
-<EOS> → 3
-```
-
-The tokenizer can now perform:
-
-```text
-Text
- ↓
-BPE tokens
- ↓
-Integer token IDs
-```
-
-Example:
-
-```text
-Original:
-
-Algorithms are fundamental to computer science.
-```
-
-produced:
-
-```text
-Token IDs:
-
-[2, 918, 5, 2907, 5, 4531, 5, 7515, 5, 3544, 5, 6868, 372, 3]
-```
-
-Token count:
-
-```text
-14
-```
-
-The tokenizer was also tested by decoding the generated token IDs:
-
-```text
-Algorithms are fundamental to computer science.
-```
-
-The decoded output matched the original text.
-
-This confirms that the current tokenizer can perform the basic:
-
-```text
-encode → decode
-```
-
-round trip.
-
----
-
-# Phase 4 — Dataset Construction
-
-The tokenized sections are converted into training-ready datasets.
-
-Pipeline:
-
-```text
-Section Text
-        ↓
-BPE Encoding
-        ↓
-Token IDs
-        ↓
-Sliding Context Window
-        ↓
-Input / Target Sequences
-        ↓
-NumPy Training Arrays
-```
-
-Each section is tokenized independently using the custom BPE tokenizer.
-
-Special tokens:
-
-```text
-<BOS>
-<EOS>
-```
-
-are inserted automatically.
-
-The generated token IDs are stored in:
-
-```text
-data/tokenized/
-```
-
-Training examples are then created using a fixed-length sliding context window.
-
-For each context window:
-
-```text
-Input
-↓
-
-Target (shifted by one token)
-```
-
-The resulting dataset is stored as
-
-```text
-data/training/
-
-inputs.npy
-targets.npy
-metadata.json
-```
-
-This representation is directly consumable by PyTorch.
-
-# Current Architecture
-
-The project is currently organized roughly as:
+# Project Structure
 
 ```text
 clrs-llm/
-│
+
 ├── data/
-│   ├── corpus_raw.txt
-│   ├── corpus_clean.txt
-│   ├── corpus_semantic_clean.txt
-│   ├── toc_sections.txt
-│   ├── section_boundaries.txt
-│   └── sections/
+│   ├── sections/
+│   ├── tokenized/
+│   └── training/
 │
-├── src/
-├── preprocessing/
-├── tokenization/
-├── dataset/
-│   ├── tokenize_dataset.py
-│   └── build_sequences.py
+├── docs/
 │
-├── model/
-│   ├── config.py
-│   ├── embedding.py
-│   └── positional_embedding.py
+├── scripts/
 │
-├── training/
-└── inference/
-│
-└── README.md
+└── src/
+    ├── preprocessing/
+    ├── tokenization/
+    ├── dataset/
+    ├── model/
+    ├── training/
+    └── inference/
 ```
 
-The exact structure may evolve as the model-training pipeline is implemented.
+---
+
+# Transformer Architecture
+
+```text
+Token IDs
+      │
+      ▼
+Token Embedding
+      │
+      ▼
+Positional Embedding
+      │
+      ▼
+Transformer Block × N
+      │
+      ├── LayerNorm
+      ├── Multi-Head Self-Attention
+      ├── Residual Connection
+      ├── LayerNorm
+      ├── Feed Forward Network
+      └── Residual Connection
+      │
+      ▼
+Final LayerNorm
+      │
+      ▼
+Language Modeling Head
+      │
+      ▼
+Vocabulary Logits
+```
+
+---
+
+# Technologies
+
+- Python
+- PyTorch
+- NumPy
+- Custom Byte Pair Encoding (BPE)
+- Git
+
+---
+
+# Documentation
+
+The repository contains a complete engineering handbook describing every stage of development.
+
+```text
+docs/
+
+00_PROJECT_OVERVIEW.md
+01_DATA_PIPELINE.md
+02_TOKENIZER.md
+03_DATASET.md
+04_TRANSFORMER.md
+05_TRAINING.md
+06_INFERENCE.md
+07_LEARNINGS.md
+```
+
+Each document explains
+
+- the engineering problem,
+- implementation approach,
+- design decisions,
+- validation,
+- lessons learned,
+- and production considerations.
 
 ---
 
 # Design Philosophy
 
-This project is being built from the bottom up.
+CLRS-LLM is built incrementally.
 
-Instead of jumping directly to model training, each stage of the LLM pipeline is implemented and validated independently.
+Every stage is
 
-The current philosophy is:
+- modular,
+- independently testable,
+- reproducible,
+- and validated before introducing additional complexity.
 
-```text
-Understand the data
-        ↓
-Understand the representation
-        ↓
-Build the tokenizer
-        ↓
-Build the dataset
-        ↓
-Build the model
-        ↓
-Train
-        ↓
-Evaluate
-```
+The project deliberately favors engineering understanding over abstraction.
 
-The purpose is not to produce the largest possible model.
+PyTorch primitives such as
 
-The purpose is to understand what actually happens underneath an LLM by implementing the complete pipeline.
+- `nn.Linear`
+- `nn.Embedding`
+- `nn.LayerNorm`
+- Autograd
+
+are reused.
+
+The Transformer architecture itself—including attention, dataset construction, training pipeline, and inference—is implemented manually.
 
 ---
 
@@ -607,66 +214,34 @@ The purpose is to understand what actually happens underneath an LLM by implemen
 
 ## Completed
 
-- [x] PDF extraction
-- [x] Raw corpus preservation
-- [x] Corpus profiling
-- [x] Corpus cleaning
-- [x] Semantic corpus preparation
-- [x] TOC extraction
-- [x] Section boundary detection
-- [x] Section extraction
-- [x] Custom BPE trainer
-- [x] Vocabulary construction
-- [x] Token ID mapping
-- [x] Encoding
-- [x] Decoding
-- [x] Dataset tokenization
-- [x] Training sequence construction
-- [x] Model configuration
-- [x] Token embeddings
-- [x] Positional embeddings
+- [x] Data Engineering Pipeline
+- [x] Custom BPE Tokenizer
+- [x] Dataset Construction
+- [x] GPT-style Transformer Architecture
 
-## Next
+## In Progress
 
-- [ ] Self-attention
-- [ ] Multi-head attention
-- [ ] Feed-forward network
-- [ ] Transformer block
-- [ ] GPT model
-- [ ] Training loop
-- [ ] Loss calculation
-- [ ] Checkpointing
-- [ ] Evaluation
-- [ ] Text generation
+- [ ] Training Pipeline
+
+## Planned
+
+- [ ] Autoregressive Text Generation
+- [ ] Model Evaluation
+- [ ] Training Optimization
+- [ ] Production Improvements
 
 ---
 
-# Goal
+# Why This Project?
 
-Build a working language model from the ground up while understanding every major transformation:
+Many projects demonstrate how to *use* modern language models.
 
-```text
-Raw PDF
-  ↓
-Extracted text
-  ↓
-Clean corpus
-  ↓
-Semantic sections
-  ↓
-BPE tokens
-  ↓
-Token IDs
-  ↓
-Training sequences
-  ↓
-Transformer
-  ↓
-Learned parameters
-  ↓
-Generated text
-```
+CLRS-LLM focuses on understanding how they are built.
 
-This repository documents that process step by step.
+The objective is not to reproduce the scale of production systems such as GPT or Llama, but to engineer every major component—from raw document preprocessing to Transformer architecture—in order to understand the complete lifecycle of a language model.
 
-```
+---
+
+# License
+
+This project is intended for educational and research purposes.
