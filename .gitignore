@@ -38,3 +38,5 @@ logs/
 
 # NumPy training outputs (optional)
 data/training/
+
+.npy 
