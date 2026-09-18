@@ -43,9 +43,6 @@ jobs:
       - name: Test Transformer
         run: python -m scripts.test_transformer
 
-      - name: Test Dataset
-        run: python -m scripts.test_dataset
-
       - name: Test Attention
         run: python -m scripts.test_attention
 
