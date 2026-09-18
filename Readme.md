@@ -1,6 +1,13 @@
 # CLRS-LLM
 
-> **Educational Engineering Project**
+> Educational Engineering Project
+
+[![CI](https://github.com/001parthdev-code/CLRS-LLM/actions/workflows/ci.yml/badge.svg)](https://github.com/001parthdev-code/CLRS-LLM/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.13-blue)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.7-red)
+![License](https://img.shields.io/github/license/001parthdev-code/CLRS-LLM)
+![Release](https://img.shields.io/github/v/release/001parthdev-code/CLRS-LLM)
+![Stars](https://img.shields.io/github/stars/001parthdev-code/CLRS-LLM)
 >
 > CLRS-LLM is a decoder-only GPT-style language model built entirely from scratch using PyTorch. The objective of this project is to understand and implement every major engineering component of a modern language model rather than relying on high-level frameworks.
 
