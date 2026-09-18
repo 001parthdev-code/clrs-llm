@@ -1,0 +1,56 @@
+name: CLRS-LLM CI
+
+on:
+  push:
+    branches: [main]
+
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Test Embedding
+        run: python -m scripts.test_embedding
+
+      - name: Test Positional Embedding
+        run: python -m scripts.test_positional_embedding
+
+      - name: Test Multi-Head Attention
+        run: python -m scripts.test_multihead_attention
+
+      - name: Test Feed Forward
+        run: python -m scripts.test_feedforward
+
+      - name: Test Transformer Block
+        run: python -m scripts.test_block
+
+      - name: Test Transformer
+        run: python -m scripts.test_transformer
+
+      - name: Test Dataset
+        run: python -m scripts.test_dataset
+
+      - name: Test Attention
+        run: python -m scripts.test_attention
+
+      - name: Model Statistics
+        run: python -m scripts.model_stats
