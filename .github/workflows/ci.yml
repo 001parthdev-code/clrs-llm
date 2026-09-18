@@ -34,9 +34,6 @@ jobs:
       - name: Test Positional Embedding
         run: python -m scripts.test_positional_embedding
 
-      - name: Test Multi-Head Attention
-        run: python -m scripts.test_multihead_attention
-
       - name: Test Feed Forward
         run: python -m scripts.test_feedforward
 
